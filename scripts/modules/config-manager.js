@@ -479,7 +479,7 @@ function getParametersForRole(role, explicitRoot = null) {
  * @returns {boolean} True if the API key is set, false otherwise.
  */
 function isApiKeySet(providerName, session = null, projectRoot = null) {
-	// Define the expected environment variable name for each provider
+	// Check for providers that don't need API keys first
 	if (providerName?.toLowerCase() === 'ollama' || providerName?.toLowerCase() === 'claude-code') {
 		return true; // Indicate key status is effectively "OK"
 	}

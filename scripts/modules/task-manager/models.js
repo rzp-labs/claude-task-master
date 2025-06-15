@@ -200,13 +200,17 @@ async function getModelConfiguration(options = {}) {
 		// Get available models to find detailed info
 		const availableModels = getAvailableModels(projectRoot);
 
-		// Find model details
-		const mainModelData = availableModels.find((m) => m.id === mainModelId);
+		// Find model details - match both provider and model ID
+		const mainModelData = availableModels.find(
+			(m) => m.id === mainModelId && m.provider === mainProvider
+		);
 		const researchModelData = availableModels.find(
-			(m) => m.id === researchModelId
+			(m) => m.id === researchModelId && m.provider === researchProvider
 		);
 		const fallbackModelData = fallbackModelId
-			? availableModels.find((m) => m.id === fallbackModelId)
+			? availableModels.find(
+					(m) => m.id === fallbackModelId && m.provider === fallbackProvider
+			  )
 			: null;
 
 		// Return structured configuration data
@@ -422,9 +426,20 @@ async function setModel(role, modelId, options = {}) {
 		const currentConfig = getConfig(projectRoot);
 		let determinedProvider = null; // Initialize provider
 		let warningMessage = null;
+		
+		// Check if modelId includes provider prefix (e.g., "claude-code/claude-opus-4-20250514")
+		let actualModelId = modelId;
+		if (modelId.includes('/')) {
+			const parts = modelId.split('/');
+			if (parts.length === 2) {
+				determinedProvider = parts[0];
+				actualModelId = parts[1];
+				report('info', `Provider '${determinedProvider}' specified in model ID.`);
+			}
+		}
 
 		// Find the model data in internal list initially to see if it exists at all
-		const modelData = availableModels.find((m) => m.id === modelId);
+		const modelData = availableModels.find((m) => m.id === actualModelId);
 
 		// --- Revised Logic: Prioritize providerHint --- //
 
@@ -435,7 +450,7 @@ async function setModel(role, modelId, options = {}) {
 				determinedProvider = providerHint;
 				report(
 					'info',
-					`Model ${modelId} found internally with matching provider hint ${determinedProvider}.`
+					`Model ${actualModelId} found internally with matching provider hint ${determinedProvider}.`
 				);
 			} else {
 				// Either not found internally, OR found but under a DIFFERENT provider than hinted.
@@ -501,12 +516,28 @@ async function setModel(role, modelId, options = {}) {
 			}
 		} else {
 			// No hint provided (flags not used)
-			if (modelData) {
+			// If provider was already determined from the prefix, use it
+			if (determinedProvider) {
+				// Provider specified in model ID prefix
+				// Verify the model exists for this provider
+				const modelForProvider = availableModels.find(
+					(m) => m.id === actualModelId && m.provider === determinedProvider
+				);
+				if (!modelForProvider) {
+					return {
+						success: false,
+						error: {
+							code: 'MODEL_NOT_FOUND',
+							message: `Model '${actualModelId}' not found for provider '${determinedProvider}'.`
+						}
+					};
+				}
+			} else if (modelData) {
 				// Found internally, use the provider from the internal list
 				determinedProvider = modelData.provider;
 				report(
 					'info',
-					`Model ${modelId} found internally with provider ${determinedProvider}.`
+					`Model ${actualModelId} found internally with provider ${determinedProvider}.`
 				);
 			} else {
 				// Model not found and no provider hint was given
@@ -535,8 +566,8 @@ async function setModel(role, modelId, options = {}) {
 		}
 
 		// Map claude-code generic model to specific model ID
-		let mappedModelId = modelId;
-		if (determinedProvider === 'claude-code' && modelId === 'claude-code') {
+		let mappedModelId = actualModelId;
+		if (determinedProvider === 'claude-code' && actualModelId === 'claude-code') {
 			// Use the default mapping from the provider
 			mappedModelId = 'claude-opus-4-20250514'; // Default claude-code model
 		}
