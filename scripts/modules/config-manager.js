@@ -480,7 +480,7 @@ function getParametersForRole(role, explicitRoot = null) {
  */
 function isApiKeySet(providerName, session = null, projectRoot = null) {
 	// Define the expected environment variable name for each provider
-	if (providerName?.toLowerCase() === 'ollama') {
+	if (providerName?.toLowerCase() === 'ollama' || providerName?.toLowerCase() === 'claude-code') {
 		return true; // Indicate key status is effectively "OK"
 	}
 
@@ -577,6 +577,8 @@ function getMcpApiKeyStatus(providerName, projectRoot = null) {
 				break;
 			case 'ollama':
 				return true; // No key needed
+			case 'claude-code':
+				return true; // Uses OAuth2 through CLI
 			case 'mistral':
 				apiKeyToCheck = mcpEnv.MISTRAL_API_KEY;
 				placeholderValue = 'YOUR_MISTRAL_API_KEY_HERE';
