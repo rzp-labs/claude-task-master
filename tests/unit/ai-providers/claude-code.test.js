@@ -277,9 +277,7 @@ describe('ClaudeCodeProvider', () => {
 
 			await expect(
 				provider.generateText({ messages: [{ role: 'user', content: 'test' }] })
-			).rejects.toThrow(
-				'Claude Code authentication failed'
-			);
+			).rejects.toThrow('Claude Code authentication failed');
 		});
 
 		it('should handle aborted requests', async () => {
@@ -363,7 +361,9 @@ describe('ClaudeCodeProvider', () => {
 			});
 
 			const params = {
-				messages: [{ role: 'user', content: 'List files in current directory' }],
+				messages: [
+					{ role: 'user', content: 'List files in current directory' }
+				],
 				tools: [
 					{
 						name: 'list_files',
@@ -393,7 +393,7 @@ describe('ClaudeCodeProvider', () => {
 	describe('getCapabilities', () => {
 		it('should return provider capabilities', () => {
 			const capabilities = provider.getCapabilities();
-			
+
 			expect(capabilities).toEqual({
 				streaming: true,
 				tools: true,
@@ -410,7 +410,7 @@ describe('ClaudeCodeProvider', () => {
 					'claude-3-sonnet-20240229',
 					'claude-3-haiku-20240307'
 				]),
-				defaultModel: 'claude-opus-4-20250514'
+				defaultModel: 'claude-code'
 			});
 		});
 	});
@@ -431,7 +431,7 @@ describe('ClaudeCodeProvider', () => {
 				// Verify abort controller was passed
 				expect(args.abortController).toBeDefined();
 				expect(args.abortController.signal).toBe(abortController.signal);
-				
+
 				for (const msg of mockMessages) {
 					yield msg;
 				}
