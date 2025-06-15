@@ -4,6 +4,42 @@
 
 ### Minor Changes
 
+- [#777](https://github.com/eyaltoledano/claude-task-master/pull/777) [`b8ca318`](https://github.com/eyaltoledano/claude-task-master/commit/b8ca318) Thanks [@neno-is-ooo](https://github.com/neno-is-ooo)! - Add Claude Code Provider Support
+
+  Integrated `@anthropic-ai/claude-code` SDK to enable flat-fee subscription users to use Task Master without API keys:
+
+  **Key Features:**
+  - **No API key required** - uses OAuth2 authentication through Claude desktop app
+  - **Free usage** - Shows "Free" cost for all operations when using claude-code provider
+  - **Model support** - Supports both Opus 4 and Sonnet 4 models
+  - **Full feature parity** - Streaming, tools, object generation all work identically to API providers
+
+  **Provider/Model Format:**
+  
+  New syntax to distinguish between providers offering the same model:
+  - Format: `provider/model-id` (e.g., `claude-code/claude-opus-4-20250514`)
+  - Choose between flat-fee (claude-code) and pay-per-token (anthropic) for the same models
+  - Supported in all commands: `--set-main`, `--set-research`, `--set-fallback`
+
+  ```bash
+  # Use Claude Code (free with subscription)
+  task-master models --set-main claude-code/claude-opus-4-20250514
+
+  # Use Anthropic API (pay per token)
+  task-master models --set-main anthropic/claude-opus-4-20250514
+  ```
+
+  **Technical Implementation:**
+  - Configuration Manager updated to handle providers without API keys
+  - AI Services enhanced with OAuth2 authentication flow support
+  - UI shows "Free" for claude-code operations while maintaining accurate costs for other providers
+  - Provider prefix correctly overrides model lookup preventing confusion
+
+  **Requirements:**
+  - `@anthropic-ai/claude-code` SDK (v1.0.24+)
+  - Claude desktop app installed and authenticated
+  - Node.js 18+ for SDK compatibility
+
 - [#779](https://github.com/eyaltoledano/claude-task-master/pull/779) [`c0b3f43`](https://github.com/eyaltoledano/claude-task-master/commit/c0b3f432a60891550b00acb113dc877bd432995f) Thanks [@eyaltoledano](https://github.com/eyaltoledano)! - Add comprehensive AI-powered research command with intelligent context gathering and interactive follow-ups.
 
   The new `research` command provides AI-powered research capabilities that automatically gather relevant project context to answer your questions. The command intelligently selects context from multiple sources and supports interactive follow-up questions in CLI mode.

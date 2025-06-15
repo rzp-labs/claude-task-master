@@ -126,3 +126,5 @@
 | openrouter | mistralai/mistral-small-3.1-24b-instruct       | —         | 0.1        | 0.3         |
 | openrouter | mistralai/mistral-nemo                         | —         | 0.03       | 0.07        |
 | openrouter | thudm/glm-4-32b:free                           | —         | 0          | 0           |
+| claude-code | claude-opus-4-20250514                         | 0.725     | 0          | 0           |
+| claude-code | claude-sonnet-4-20250514                       | 0.727     | 0          | 0           |
