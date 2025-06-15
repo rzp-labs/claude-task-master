@@ -69,7 +69,10 @@ describe('ClaudeCodeProvider', () => {
 				},
 				{
 					type: 'result',
-					result: 'Completed'
+					result: {
+						input_tokens: 10,
+						output_tokens: 20
+					}
 				}
 			];
 
@@ -259,13 +262,11 @@ describe('ClaudeCodeProvider', () => {
 			provider.loadSDK = jest
 				.fn()
 				.mockRejectedValue(
-					new Error(
-						'Claude Code SDK not installed. Please install it with: npm install @anthropic-ai/claude-code'
-					)
+					new Error('Cannot find module @anthropic-ai/claude-code')
 				);
 
 			await expect(provider.generateText({ messages: [] })).rejects.toThrow(
-				'Claude Code SDK not installed. Please install it with: npm install @anthropic-ai/claude-code'
+				'Cannot find module @anthropic-ai/claude-code'
 			);
 		});
 
@@ -277,8 +278,234 @@ describe('ClaudeCodeProvider', () => {
 			await expect(
 				provider.generateText({ messages: [{ role: 'user', content: 'test' }] })
 			).rejects.toThrow(
-				'Claude Code authentication failed. Please ensure you are logged in by running: claude auth login'
+				'Claude Code authentication failed'
 			);
+		});
+
+		it('should handle aborted requests', async () => {
+			mockQuery.mockImplementation(() => {
+				throw new Error('Request aborted');
+			});
+
+			await expect(
+				provider.generateText({ messages: [{ role: 'user', content: 'test' }] })
+			).rejects.toThrow('Request was aborted');
+		});
+	});
+
+	describe('extractUsageFromMessages', () => {
+		it('should extract usage from result message', () => {
+			const messages = [
+				{
+					type: 'result',
+					result: {
+						input_tokens: 100,
+						output_tokens: 50
+					},
+					total_cost_usd: 0.001
+				}
+			];
+
+			const usage = provider.extractUsageFromMessages(messages);
+			expect(usage).toEqual({
+				promptTokens: 100,
+				completionTokens: 50,
+				totalTokens: 150,
+				costUSD: 0.001
+			});
+		});
+
+		it('should return null if no result message', () => {
+			const messages = [
+				{
+					type: 'assistant',
+					message: { content: [{ type: 'text', text: 'Hello' }] }
+				}
+			];
+
+			const usage = provider.extractUsageFromMessages(messages);
+			expect(usage).toBeNull();
+		});
+	});
+
+	describe('generateTextWithTools', () => {
+		it('should generate text with tool support', async () => {
+			const mockMessages = [
+				{
+					type: 'assistant',
+					message: {
+						content: [{ type: 'text', text: 'I will list the files for you.' }],
+						tool_calls: [
+							{
+								id: 'call_123',
+								type: 'function',
+								function: {
+									name: 'list_files',
+									arguments: '{}'
+								}
+							}
+						]
+					}
+				},
+				{
+					type: 'result',
+					result: {
+						input_tokens: 100,
+						output_tokens: 50
+					}
+				}
+			];
+
+			mockQuery.mockImplementation(async function* () {
+				for (const msg of mockMessages) {
+					yield msg;
+				}
+			});
+
+			const params = {
+				messages: [{ role: 'user', content: 'List files in current directory' }],
+				tools: [
+					{
+						name: 'list_files',
+						description: 'List files in a directory'
+					}
+				],
+				model: 'claude-opus-4-20250514'
+			};
+
+			const result = await provider.generateTextWithTools(params);
+
+			expect(mockQuery).toHaveBeenCalledWith({
+				prompt: 'List files in current directory',
+				options: expect.objectContaining({
+					allowedTools: ['list_files'],
+					model: 'claude-opus-4-20250514'
+				})
+			});
+
+			expect(result.text).toBe('I will list the files for you.');
+			expect(result.toolCalls).toHaveLength(1);
+			expect(result.toolCalls[0].function.name).toBe('list_files');
+			expect(result.usage).toBeDefined();
+		});
+	});
+
+	describe('getCapabilities', () => {
+		it('should return provider capabilities', () => {
+			const capabilities = provider.getCapabilities();
+			
+			expect(capabilities).toEqual({
+				streaming: true,
+				tools: true,
+				functionCalling: false,
+				vision: true,
+				maxContextTokens: 200000,
+				costPerMillionTokens: {
+					input: 0,
+					output: 0
+				},
+				supportedModels: expect.arrayContaining([
+					'claude-opus-4-20250514',
+					'claude-3-opus-20240229',
+					'claude-3-sonnet-20240229',
+					'claude-3-haiku-20240307'
+				]),
+				defaultModel: 'claude-opus-4-20250514'
+			});
+		});
+	});
+
+	describe('AbortController support', () => {
+		it('should pass abort signal to SDK', async () => {
+			const abortController = new AbortController();
+			const mockMessages = [
+				{
+					type: 'assistant',
+					message: {
+						content: [{ type: 'text', text: 'Test response' }]
+					}
+				}
+			];
+
+			mockQuery.mockImplementation(async function* (args) {
+				// Verify abort controller was passed
+				expect(args.abortController).toBeDefined();
+				expect(args.abortController.signal).toBe(abortController.signal);
+				
+				for (const msg of mockMessages) {
+					yield msg;
+				}
+			});
+
+			const params = {
+				messages: [{ role: 'user', content: 'Test' }],
+				abortSignal: abortController.signal
+			};
+
+			await provider.generateText(params);
+		});
+	});
+
+	describe('model parameter support', () => {
+		it('should use specified model', async () => {
+			const mockMessages = [
+				{
+					type: 'assistant',
+					message: {
+						content: [{ type: 'text', text: 'Model test' }]
+					}
+				}
+			];
+
+			mockQuery.mockImplementation(async function* () {
+				for (const msg of mockMessages) {
+					yield msg;
+				}
+			});
+
+			const params = {
+				messages: [{ role: 'user', content: 'Test' }],
+				model: 'claude-3-opus-20240229'
+			};
+
+			await provider.generateText(params);
+
+			expect(mockQuery).toHaveBeenCalledWith({
+				prompt: 'Test',
+				options: expect.objectContaining({
+					model: 'claude-3-opus-20240229'
+				})
+			});
+		});
+
+		it('should use default model if not specified', async () => {
+			const mockMessages = [
+				{
+					type: 'assistant',
+					message: {
+						content: [{ type: 'text', text: 'Default model test' }]
+					}
+				}
+			];
+
+			mockQuery.mockImplementation(async function* () {
+				for (const msg of mockMessages) {
+					yield msg;
+				}
+			});
+
+			const params = {
+				messages: [{ role: 'user', content: 'Test' }]
+			};
+
+			await provider.generateText(params);
+
+			expect(mockQuery).toHaveBeenCalledWith({
+				prompt: 'Test',
+				options: expect.objectContaining({
+					model: 'claude-opus-4-20250514'
+				})
+			});
 		});
 	});
 });

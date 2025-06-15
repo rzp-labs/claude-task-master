@@ -30,11 +30,22 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 	async loadSDK() {
 		if (!this._sdkModule) {
 			try {
-				this._sdkModule = await import('@anthropic-ai/claude-code');
+				// Import from the SDK module path
+				this._sdkModule = await import('@anthropic-ai/claude-code/sdk.mjs');
 			} catch (error) {
-				throw new Error(
-					'Claude Code SDK not installed. Please install it with: npm install @anthropic-ai/claude-code'
-				);
+				const errorMessage = error.message || error.toString();
+				
+				// Provide detailed installation guidance
+				if (errorMessage.includes('Cannot find module') || errorMessage.includes('MODULE_NOT_FOUND')) {
+					throw new Error(
+						'Claude Code SDK not installed. Please install it with:\n' +
+						'npm install @anthropic-ai/claude-code\n\n' +
+						'Note: This SDK requires Node.js 18+ and uses the same authentication as Claude desktop app.'
+					);
+				}
+				
+				// Re-throw other errors with context
+				throw new Error(`Failed to load Claude Code SDK: ${errorMessage}`);
 			}
 		}
 		return this._sdkModule;
@@ -53,8 +64,9 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 	 * Check if Claude Code is properly authenticated
 	 */
 	async checkAuthentication() {
-		// Claude Code SDK uses system authentication
-		// The SDK will handle auth errors when we try to use it
+		// Claude Code SDK uses transparent authentication (same as Claude desktop app)
+		// No API keys needed - authentication is handled by the SDK internally
+		// The SDK will provide apiKeySource: "none" but still work correctly
 		return true;
 	}
 
@@ -87,7 +99,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 	extractTextFromMessage(message) {
 		const textParts = [];
 
-		// Handle SDKMessage format
+		// Handle SDKMessage format based on actual SDK behavior
 		if (message.type === 'assistant' && message.message) {
 			// message.message is the Anthropic Message object
 			const content = message.message.content;
@@ -101,10 +113,35 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 				textParts.push(content);
 			}
 		} else if (message.type === 'result') {
-			// Handle result message type
+			// Result messages contain cost and usage information
+			// We don't extract text from these
+		} else if (message.type === 'system') {
+			// System messages contain initialization info
+			// We don't extract text from these
 		}
 
 		return textParts.join('\n');
+	}
+	
+	/**
+	 * Extract usage information from SDK messages
+	 */
+	extractUsageFromMessages(messages) {
+		// Look for result message which contains actual usage data
+		for (const message of messages) {
+			if (message.type === 'result' && message.result) {
+				const result = message.result;
+				return {
+					promptTokens: result.input_tokens || 0,
+					completionTokens: result.output_tokens || 0,
+					totalTokens: (result.input_tokens || 0) + (result.output_tokens || 0),
+					costUSD: message.total_cost_usd || 0
+				};
+			}
+		}
+		
+		// Fallback to estimation if no result message
+		return null;
 	}
 
 	/**
@@ -116,9 +153,10 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 		const {
 			messages,
 			temperature,
-			model,
+			model = 'claude-opus-4-20250514', // Default to Claude Opus 4
 			maxTokens,
-			systemPrompt: additionalSystemPrompt
+			systemPrompt: additionalSystemPrompt,
+			abortSignal // Support for AbortController
 		} = params;
 		const { query } = await this.loadSDK();
 
@@ -128,13 +166,18 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			: systemPrompt;
 
 		const results = [];
-		let tokenCount = 0;
+		const allMessages = [];
 
 		try {
+			// Create AbortController if signal provided
+			const abortController = abortSignal ? { signal: abortSignal } : undefined;
+			
 			for await (const message of query({
 				prompt,
+				abortController,
 				options: {
 					maxTurns: 1, // Single turn for text generation
+					model, // Use the specified model
 					systemPrompt:
 						finalSystemPrompt ||
 						'You are a helpful AI assistant for Task Master, a task management system for software projects.',
@@ -142,27 +185,29 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 					allowedTools: [], // No tools for pure text generation
 					permissionMode: 'default'
 					// Note: temperature and maxTokens not directly supported by SDK
-					// but may influence the underlying model
 				}
 			})) {
+				allMessages.push(message);
 				const text = this.extractTextFromMessage(message);
 				if (text) {
 					results.push(text);
-					tokenCount += text.split(/\s+/).length;
 				}
 			}
 
 			const fullText = results.join('\n');
+			
+			// Try to get actual usage from SDK, fallback to estimation
+			const usage = this.extractUsageFromMessages(allMessages) || {
+				promptTokens: Math.floor(prompt.split(/\s+/).length * 1.3),
+				completionTokens: Math.floor(fullText.split(/\s+/).length * 1.3),
+				totalTokens: Math.floor(
+					(prompt.split(/\s+/).length + fullText.split(/\s+/).length) * 1.3
+				)
+			};
 
 			return {
 				text: fullText,
-				usage: {
-					promptTokens: Math.floor(prompt.split(/\s+/).length * 1.3),
-					completionTokens: Math.floor(tokenCount * 1.3),
-					totalTokens: Math.floor(
-						(prompt.split(/\s+/).length + tokenCount) * 1.3
-					)
-				}
+				usage
 			};
 		} catch (error) {
 			throw this.handleError(error);
@@ -179,8 +224,9 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			messages,
 			schema,
 			temperature,
-			model,
-			systemPrompt: additionalSystemPrompt
+			model = 'claude-opus-4-20250514',
+			systemPrompt: additionalSystemPrompt,
+			abortSignal
 		} = params;
 		const { query } = await this.loadSDK();
 
@@ -195,22 +241,25 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			: jsonSystemPrompt;
 
 		const results = [];
+		const allMessages = [];
 
 		try {
-			// Add AbortController for better control
-			const abortController = new AbortController();
+			// Create AbortController if signal provided
+			const abortController = abortSignal ? { signal: abortSignal } : undefined;
 
 			for await (const message of query({
 				prompt: enhancedPrompt,
 				abortController,
 				options: {
 					maxTurns: 1,
+					model,
 					systemPrompt: finalSystemPrompt,
 					cwd: process.cwd(),
 					allowedTools: [], // No tools for JSON generation
 					permissionMode: 'default'
 				}
 			})) {
+				allMessages.push(message);
 				const text = this.extractTextFromMessage(message);
 				if (text) {
 					results.push(text);
@@ -228,18 +277,19 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			cleanedJson = cleanedJson.replace(/^```\s*/i, '').replace(/\s*```$/, '');
 
 			const parsed = JSON.parse(cleanedJson);
+			
+			// Try to get actual usage from SDK, fallback to estimation
+			const usage = this.extractUsageFromMessages(allMessages) || {
+				promptTokens: Math.floor(enhancedPrompt.split(/\s+/).length * 1.3),
+				completionTokens: Math.floor(jsonText.split(/\s+/).length * 1.3),
+				totalTokens: Math.floor(
+					(enhancedPrompt.split(/\s+/).length + jsonText.split(/\s+/).length) * 1.3
+				)
+			};
 
 			return {
 				object: parsed,
-				usage: {
-					promptTokens: Math.floor(enhancedPrompt.split(/\s+/).length * 1.3),
-					completionTokens: Math.floor(jsonText.split(/\s+/).length * 1.3),
-					totalTokens: Math.floor(
-						(enhancedPrompt.split(/\s+/).length +
-							jsonText.split(/\s+/).length) *
-							1.3
-					)
-				}
+				usage
 			};
 		} catch (error) {
 			if (error instanceof SyntaxError) {
@@ -261,8 +311,9 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			messages,
 			onChunk,
 			temperature,
-			model,
-			systemPrompt: additionalSystemPrompt
+			model = 'claude-opus-4-20250514',
+			systemPrompt: additionalSystemPrompt,
+			abortSignal
 		} = params;
 		const { query } = await this.loadSDK();
 
@@ -272,12 +323,18 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			: systemPrompt;
 
 		const chunks = [];
+		const allMessages = [];
 
 		try {
+			// Create AbortController if signal provided
+			const abortController = abortSignal ? { signal: abortSignal } : undefined;
+			
 			for await (const message of query({
 				prompt,
+				abortController,
 				options: {
 					maxTurns: 1,
+					model,
 					systemPrompt:
 						finalSystemPrompt ||
 						'You are a helpful AI assistant for Task Master.',
@@ -286,6 +343,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 					permissionMode: 'default'
 				}
 			})) {
+				allMessages.push(message);
 				const text = this.extractTextFromMessage(message);
 				if (text) {
 					chunks.push(text);
@@ -296,16 +354,19 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			}
 
 			const fullText = chunks.join('');
+			
+			// Try to get actual usage from SDK, fallback to estimation
+			const usage = this.extractUsageFromMessages(allMessages) || {
+				promptTokens: Math.floor(prompt.split(/\s+/).length * 1.3),
+				completionTokens: Math.floor(fullText.split(/\s+/).length * 1.3),
+				totalTokens: Math.floor(
+					(prompt.split(/\s+/).length + fullText.split(/\s+/).length) * 1.3
+				)
+			};
 
 			return {
 				text: fullText,
-				usage: {
-					promptTokens: Math.floor(prompt.split(/\s+/).length * 1.3),
-					completionTokens: Math.floor(fullText.split(/\s+/).length * 1.3),
-					totalTokens: Math.floor(
-						(prompt.split(/\s+/).length + fullText.split(/\s+/).length) * 1.3
-					)
-				}
+				usage
 			};
 		} catch (error) {
 			throw this.handleError(error);
@@ -318,28 +379,41 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 	handleError(error) {
 		const errorMessage = error.message || error.toString();
 
-		// Authentication errors
+		// Authentication errors - SDK uses transparent auth but may fail if not set up
 		if (
 			errorMessage.includes('credentials') ||
-			errorMessage.includes('unauthorized')
+			errorMessage.includes('unauthorized') ||
+			errorMessage.includes('authentication')
 		) {
 			return new Error(
-				'Claude Code authentication failed. Please ensure you are logged in by running: claude auth login'
+				'Claude Code authentication failed. The SDK uses the same authentication as Claude desktop app. ' +
+				'Please ensure Claude desktop app is installed and authenticated.'
 			);
 		}
 
 		// SDK not installed
-		if (errorMessage.includes('Cannot find module')) {
+		if (errorMessage.includes('Cannot find module') || errorMessage.includes('MODULE_NOT_FOUND')) {
 			return new Error(
-				'Claude Code SDK not found. Please install it with: npm install @anthropic-ai/claude-code'
+				'Claude Code SDK not found. Please install it with:\n' +
+				'npm install @anthropic-ai/claude-code\n\n' +
+				'Note: This SDK is published by Anthropic and requires Node.js 18+'
 			);
 		}
 
-		// Claude CLI not installed
-		if (errorMessage.includes('claude: command not found')) {
+		// Claude CLI/Desktop not installed
+		if (
+			errorMessage.includes('claude: command not found') ||
+			errorMessage.includes('Claude desktop app')
+		) {
 			return new Error(
-				'Claude Code CLI not installed. Please install it from: https://claude.ai/code'
+				'Claude desktop app not found. The SDK requires Claude desktop app for authentication. ' +
+				'Please install it from: https://claude.ai/download'
 			);
+		}
+		
+		// Aborted requests
+		if (errorMessage.includes('aborted') || errorMessage.includes('AbortError')) {
+			return new Error('Request was aborted');
 		}
 
 		// Generic SDK errors
@@ -358,14 +432,99 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 		return {
 			streaming: true,
 			tools: true,
-			functionCalling: false, // Not directly, but could be implemented
+			functionCalling: false, // Not directly, but could be implemented via tools
 			vision: true, // Claude Code supports images
 			maxContextTokens: 200000, // Claude's context window
 			costPerMillionTokens: {
-				input: 0, // Free with subscription
+				input: 0, // Free with Claude desktop app
 				output: 0
-			}
+			},
+			supportedModels: [
+				'claude-opus-4-20250514', // Claude Opus 4
+				'claude-3-opus-20240229',
+				'claude-3-sonnet-20240229',
+				'claude-3-haiku-20240307'
+			],
+			defaultModel: 'claude-opus-4-20250514'
 		};
+	}
+	
+	/**
+	 * Generate text with tool support
+	 */
+	async generateTextWithTools(params) {
+		await this.checkAuthentication();
+
+		const {
+			messages,
+			tools = [],
+			model = 'claude-opus-4-20250514',
+			systemPrompt: additionalSystemPrompt,
+			abortSignal
+		} = params;
+		const { query } = await this.loadSDK();
+
+		const { prompt, systemPrompt } = this.convertMessagesToPrompt(messages);
+		const finalSystemPrompt = additionalSystemPrompt
+			? `${systemPrompt || ''}\n\n${additionalSystemPrompt}`.trim()
+			: systemPrompt;
+
+		const results = [];
+		const allMessages = [];
+		const toolCalls = [];
+
+		try {
+			// Create AbortController if signal provided
+			const abortController = abortSignal ? { signal: abortSignal } : undefined;
+			
+			// Convert tools to Claude Code format if needed
+			const allowedTools = tools.map(tool => tool.name || tool.function?.name).filter(Boolean);
+			
+			for await (const message of query({
+				prompt,
+				abortController,
+				options: {
+					maxTurns: 1,
+					model,
+					systemPrompt: finalSystemPrompt || 'You are a helpful AI assistant.',
+					cwd: process.cwd(),
+					allowedTools,
+					permissionMode: 'default'
+				}
+			})) {
+				allMessages.push(message);
+				
+				// Extract text content
+				const text = this.extractTextFromMessage(message);
+				if (text) {
+					results.push(text);
+				}
+				
+				// Check for tool calls in the message
+				if (message.type === 'assistant' && message.message?.tool_calls) {
+					toolCalls.push(...message.message.tool_calls);
+				}
+			}
+
+			const fullText = results.join('\n');
+			
+			// Try to get actual usage from SDK
+			const usage = this.extractUsageFromMessages(allMessages) || {
+				promptTokens: Math.floor(prompt.split(/\s+/).length * 1.3),
+				completionTokens: Math.floor(fullText.split(/\s+/).length * 1.3),
+				totalTokens: Math.floor(
+					(prompt.split(/\s+/).length + fullText.split(/\s+/).length) * 1.3
+				)
+			};
+
+			return {
+				text: fullText,
+				toolCalls,
+				usage
+			};
+		} catch (error) {
+			throw this.handleError(error);
+		}
 	}
 }
 
