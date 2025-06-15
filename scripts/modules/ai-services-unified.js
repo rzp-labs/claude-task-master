@@ -597,7 +597,7 @@ async function _unifiedServiceRunner(serviceType, params) {
 				try {
 					// Use the actual model used if provider returns it (e.g., mapped claude-code model)
 					const actualModelId = providerResponse.modelUsed || modelId;
-					
+
 					telemetryData = await logAiUsage({
 						userId,
 						commandName,

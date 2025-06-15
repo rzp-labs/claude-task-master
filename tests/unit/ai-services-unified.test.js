@@ -80,7 +80,13 @@ jest.unstable_mockModule('../../scripts/modules/config-manager.js', () => ({
 	// Validation
 	validateProvider: mockValidateProvider,
 	validateProviderModelCombination: mockValidateProviderModelCombination,
-	VALID_PROVIDERS: ['anthropic', 'perplexity', 'openai', 'google', 'claude-code'],
+	VALID_PROVIDERS: [
+		'anthropic',
+		'perplexity',
+		'openai',
+		'google',
+		'claude-code'
+	],
 	MODEL_MAP: mockModelMap,
 	getAvailableModels: mockGetAvailableModels,
 

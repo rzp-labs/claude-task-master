@@ -480,7 +480,10 @@ function getParametersForRole(role, explicitRoot = null) {
  */
 function isApiKeySet(providerName, session = null, projectRoot = null) {
 	// Check for providers that don't need API keys first
-	if (providerName?.toLowerCase() === 'ollama' || providerName?.toLowerCase() === 'claude-code') {
+	if (
+		providerName?.toLowerCase() === 'ollama' ||
+		providerName?.toLowerCase() === 'claude-code'
+	) {
 		return true; // Indicate key status is effectively "OK"
 	}
 
@@ -618,7 +621,7 @@ function getAvailableModels() {
 				const sweScore = modelObj.swe_score;
 				const cost = modelObj.cost_per_1m_tokens;
 				const allowedRoles = modelObj.allowed_roles || ['main', 'fallback'];
-				
+
 				// Use name from JSON if available, otherwise generate it
 				let name = modelObj.name;
 				if (!name) {

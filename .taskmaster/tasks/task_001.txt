@@ -1,0 +1,28 @@
+# Task ID: 1
+# Title: Create a simple hello world function in TypeScript
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement a basic TypeScript function that returns a 'Hello, World!' greeting message.
+# Details:
+Create a TypeScript function named `helloWorld` that:
+- Takes no parameters
+- Returns the string 'Hello, World!'
+- Should be properly typed with TypeScript syntax
+- Export the function for use in other modules
+
+Example implementation:
+```typescript
+export function helloWorld(): string {
+  return 'Hello, World!';
+}
+```
+
+File location: Create the function in a new file at `src/hello.ts` or add to an existing TypeScript file if appropriate.
+
+# Test Strategy:
+1. Verify the function is properly exported and can be imported in another module
+2. Check that calling `helloWorld()` returns exactly 'Hello, World!'
+3. Ensure TypeScript compilation succeeds without errors
+4. Confirm the return type is properly inferred or explicitly typed as string
+5. If a test framework is available, write a unit test that asserts the function returns the expected string

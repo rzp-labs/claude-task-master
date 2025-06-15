@@ -210,7 +210,7 @@ async function getModelConfiguration(options = {}) {
 		const fallbackModelData = fallbackModelId
 			? availableModels.find(
 					(m) => m.id === fallbackModelId && m.provider === fallbackProvider
-			  )
+				)
 			: null;
 
 		// Return structured configuration data
@@ -426,7 +426,7 @@ async function setModel(role, modelId, options = {}) {
 		const currentConfig = getConfig(projectRoot);
 		let determinedProvider = null; // Initialize provider
 		let warningMessage = null;
-		
+
 		// Check if modelId includes provider prefix (e.g., "claude-code/claude-opus-4-20250514")
 		let actualModelId = modelId;
 		if (modelId.includes('/')) {
@@ -434,7 +434,10 @@ async function setModel(role, modelId, options = {}) {
 			if (parts.length === 2) {
 				determinedProvider = parts[0];
 				actualModelId = parts[1];
-				report('info', `Provider '${determinedProvider}' specified in model ID.`);
+				report(
+					'info',
+					`Provider '${determinedProvider}' specified in model ID.`
+				);
 			}
 		}
 
@@ -567,7 +570,10 @@ async function setModel(role, modelId, options = {}) {
 
 		// Map claude-code generic model to specific model ID
 		let mappedModelId = actualModelId;
-		if (determinedProvider === 'claude-code' && actualModelId === 'claude-code') {
+		if (
+			determinedProvider === 'claude-code' &&
+			actualModelId === 'claude-code'
+		) {
 			// Use the default mapping from the provider
 			mappedModelId = 'claude-opus-4-20250514'; // Default claude-code model
 		}

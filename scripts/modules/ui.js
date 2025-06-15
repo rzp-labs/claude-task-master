@@ -2059,7 +2059,7 @@ const formatCost = (costObj, provider) => {
 	if (provider === 'claude-code') {
 		return chalk.green('Free');
 	}
-	
+
 	if (!costObj) return 'N/A';
 	if (costObj.input === 0 && costObj.output === 0) {
 		return chalk.green('Free');
