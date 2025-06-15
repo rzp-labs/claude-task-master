@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# Install git (needed for some features)
+RUN apk add --no-cache git
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set up test directory
+WORKDIR /app/test-claude-code
+
+# Default command
+CMD ["/app/bin/task-master.js", "--help"]

@@ -2054,8 +2054,12 @@ const formatSweScoreWithTertileStars = (score, allModels) => {
 	return `${formattedPercentage} ${stars}`;
 };
 
-const formatCost = (costObj) => {
-	// ... (Implementation from previous version or refine) ...
+const formatCost = (costObj, provider) => {
+	// Claude-code is always free (uses OAuth2)
+	if (provider === 'claude-code') {
+		return chalk.green('Free');
+	}
+	
 	if (!costObj) return 'N/A';
 	if (costObj.input === 0 && costObj.output === 0) {
 		return chalk.green('Free');
@@ -2096,7 +2100,7 @@ function displayModelConfiguration(configData, allAvailableModels = []) {
 		active.main.provider,
 		active.main.modelId,
 		formatSweScoreWithTertileStars(active.main.sweScore, allAvailableModels),
-		formatCost(active.main.cost)
+		formatCost(active.main.cost, active.main.provider)
 		// getCombinedStatus(active.main.keyStatus) // Removed
 	]);
 	activeTable.push([
@@ -2107,7 +2111,7 @@ function displayModelConfiguration(configData, allAvailableModels = []) {
 			active.research.sweScore,
 			allAvailableModels
 		),
-		formatCost(active.research.cost)
+		formatCost(active.research.cost, active.research.provider)
 		// getCombinedStatus(active.research.keyStatus) // Removed
 	]);
 	if (active.fallback && active.fallback.provider && active.fallback.modelId) {
@@ -2119,7 +2123,7 @@ function displayModelConfiguration(configData, allAvailableModels = []) {
 				active.fallback.sweScore,
 				allAvailableModels
 			),
-			formatCost(active.fallback.cost)
+			formatCost(active.fallback.cost, active.fallback.provider)
 			// getCombinedStatus(active.fallback.keyStatus) // Removed
 		]);
 	} else {
@@ -2161,7 +2165,7 @@ function displayAvailableModels(availableModels) {
 			model.provider,
 			model.modelId,
 			formatSweScoreWithTertileStars(model.sweScore, availableModels), // Pass itself for comparison
-			formatCost(model.cost)
+			formatCost(model.cost, model.provider)
 		]);
 	});
 	console.log(availableTable.toString());

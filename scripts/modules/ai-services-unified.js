@@ -595,11 +595,14 @@ async function _unifiedServiceRunner(serviceType, params) {
 
 			if (userId && providerResponse && providerResponse.usage) {
 				try {
+					// Use the actual model used if provider returns it (e.g., mapped claude-code model)
+					const actualModelId = providerResponse.modelUsed || modelId;
+					
 					telemetryData = await logAiUsage({
 						userId,
 						commandName,
 						providerName,
-						modelId,
+						modelId: actualModelId,
 						inputTokens: providerResponse.usage.inputTokens,
 						outputTokens: providerResponse.usage.outputTokens,
 						outputType
@@ -609,9 +612,10 @@ async function _unifiedServiceRunner(serviceType, params) {
 					// No need to log again here, telemetryData will remain null
 				}
 			} else if (userId && providerResponse && !providerResponse.usage) {
+				const actualModelId = providerResponse.modelUsed || modelId;
 				log(
 					'warn',
-					`Cannot log telemetry for ${commandName} (${providerName}/${modelId}): AI result missing 'usage' data. (May be expected for streams)`
+					`Cannot log telemetry for ${commandName} (${providerName}/${actualModelId}): AI result missing 'usage' data. (May be expected for streams)`
 				);
 			}
 

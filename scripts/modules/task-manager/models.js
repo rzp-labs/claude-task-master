@@ -534,11 +534,18 @@ async function setModel(role, modelId, options = {}) {
 			};
 		}
 
+		// Map claude-code generic model to specific model ID
+		let mappedModelId = modelId;
+		if (determinedProvider === 'claude-code' && modelId === 'claude-code') {
+			// Use the default mapping from the provider
+			mappedModelId = 'claude-opus-4-20250514'; // Default claude-code model
+		}
+
 		// Update configuration
 		currentConfig.models[role] = {
 			...currentConfig.models[role], // Keep existing params like maxTokens
 			provider: determinedProvider,
-			modelId: modelId
+			modelId: mappedModelId
 		};
 
 		// Write updated configuration
@@ -553,7 +560,7 @@ async function setModel(role, modelId, options = {}) {
 			};
 		}
 
-		const successMessage = `Successfully set ${role} model to ${modelId} (Provider: ${determinedProvider})`;
+		const successMessage = `Successfully set ${role} model to ${mappedModelId}${mappedModelId !== modelId ? ` (mapped from ${modelId})` : ''} (Provider: ${determinedProvider})`;
 		report('info', successMessage);
 
 		return {
@@ -561,7 +568,8 @@ async function setModel(role, modelId, options = {}) {
 			data: {
 				role,
 				provider: determinedProvider,
-				modelId,
+				modelId: mappedModelId,
+				originalModelId: modelId !== mappedModelId ? modelId : undefined,
 				message: successMessage,
 				warning: warningMessage // Include warning in the response data
 			}

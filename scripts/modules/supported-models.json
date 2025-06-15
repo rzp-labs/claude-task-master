@@ -426,7 +426,24 @@
 	],
 	"claude-code": [
 		{
+			"id": "claude-opus-4-20250514",
+			"name": "Claude Opus 4 (via Claude Code)",
+			"swe_score": 0.725,
+			"cost_per_1m_tokens": { "input": 0, "output": 0 },
+			"allowed_roles": ["main", "fallback", "research"],
+			"max_tokens": 32000
+		},
+		{
+			"id": "claude-sonnet-4-20250514",
+			"name": "Claude Sonnet 4 (via Claude Code)",
+			"swe_score": 0.727,
+			"cost_per_1m_tokens": { "input": 0, "output": 0 },
+			"allowed_roles": ["main", "fallback", "research"],
+			"max_tokens": 64000
+		},
+		{
 			"id": "claude-code",
+			"name": "Claude Code (Default Model)",
 			"swe_score": 0.727,
 			"cost_per_1m_tokens": { "input": 0, "output": 0 },
 			"allowed_roles": ["main", "fallback", "research"],

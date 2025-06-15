@@ -22,6 +22,17 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 		this.supportsStreaming = true;
 		this.supportsTools = true;
 		this._sdkModule = null;
+		
+		// Model mapping for short names to full IDs
+		this.modelMapping = {
+			'claude-code': 'claude-opus-4-20250514', // Default
+			'claude-opus-4-20250514': 'claude-opus-4-20250514',
+			'claude-sonnet-4-20250514': 'claude-sonnet-4-20250514',
+			// Legacy mappings for backward compatibility
+			'claude-3-opus-20240229': 'claude-3-opus-20240229',
+			'claude-3-sonnet-20240229': 'claude-3-sonnet-20240229',
+			'claude-3-haiku-20240307': 'claude-3-haiku-20240307'
+		};
 	}
 
 	/**
@@ -145,6 +156,13 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 	}
 
 	/**
+	 * Map model name to full model ID
+	 */
+	mapModelName(modelName) {
+		return this.modelMapping[modelName] || modelName;
+	}
+
+	/**
 	 * Generate text using Claude Code SDK
 	 */
 	async generateText(params) {
@@ -153,12 +171,15 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 		const {
 			messages,
 			temperature,
-			model = 'claude-opus-4-20250514', // Default to Claude Opus 4
+			model,
 			maxTokens,
 			systemPrompt: additionalSystemPrompt,
 			abortSignal // Support for AbortController
 		} = params;
 		const { query } = await this.loadSDK();
+		
+		// Map the model name to full ID
+		const mappedModel = this.mapModelName(model || 'claude-code');
 
 		const { prompt, systemPrompt } = this.convertMessagesToPrompt(messages);
 		const finalSystemPrompt = additionalSystemPrompt
@@ -177,7 +198,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 				abortController,
 				options: {
 					maxTurns: 1, // Single turn for text generation
-					model, // Use the specified model
+					model: mappedModel, // Use the mapped model ID
 					systemPrompt:
 						finalSystemPrompt ||
 						'You are a helpful AI assistant for Task Master, a task management system for software projects.',
@@ -207,7 +228,8 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 
 			return {
 				text: fullText,
-				usage
+				usage,
+				modelUsed: mappedModel // Return the actual model used
 			};
 		} catch (error) {
 			throw this.handleError(error);
@@ -224,11 +246,14 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			messages,
 			schema,
 			temperature,
-			model = 'claude-opus-4-20250514',
+			model,
 			systemPrompt: additionalSystemPrompt,
 			abortSignal
 		} = params;
 		const { query } = await this.loadSDK();
+		
+		// Map the model name to full ID
+		const mappedModel = this.mapModelName(model || 'claude-code');
 
 		const { prompt, systemPrompt } = this.convertMessagesToPrompt(messages);
 
@@ -252,7 +277,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 				abortController,
 				options: {
 					maxTurns: 1,
-					model,
+					model: mappedModel, // Use the mapped model ID
 					systemPrompt: finalSystemPrompt,
 					cwd: process.cwd(),
 					allowedTools: [], // No tools for JSON generation
@@ -289,7 +314,8 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 
 			return {
 				object: parsed,
-				usage
+				usage,
+				modelUsed: mappedModel // Return the actual model used
 			};
 		} catch (error) {
 			if (error instanceof SyntaxError) {
@@ -311,11 +337,14 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			messages,
 			onChunk,
 			temperature,
-			model = 'claude-opus-4-20250514',
+			model,
 			systemPrompt: additionalSystemPrompt,
 			abortSignal
 		} = params;
 		const { query } = await this.loadSDK();
+		
+		// Map the model name to full ID
+		const mappedModel = this.mapModelName(model || 'claude-code');
 
 		const { prompt, systemPrompt } = this.convertMessagesToPrompt(messages);
 		const finalSystemPrompt = additionalSystemPrompt
@@ -334,7 +363,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 				abortController,
 				options: {
 					maxTurns: 1,
-					model,
+					model: mappedModel, // Use the mapped model ID
 					systemPrompt:
 						finalSystemPrompt ||
 						'You are a helpful AI assistant for Task Master.',
@@ -366,7 +395,8 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 
 			return {
 				text: fullText,
-				usage
+				usage,
+				modelUsed: mappedModel // Return the actual model used
 			};
 		} catch (error) {
 			throw this.handleError(error);
@@ -441,11 +471,13 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			},
 			supportedModels: [
 				'claude-opus-4-20250514', // Claude Opus 4
+				'claude-sonnet-4-20250514', // Claude Sonnet 4
+				'claude-code', // Default (maps to Opus 4)
 				'claude-3-opus-20240229',
 				'claude-3-sonnet-20240229',
 				'claude-3-haiku-20240307'
 			],
-			defaultModel: 'claude-opus-4-20250514'
+			defaultModel: 'claude-code'
 		};
 	}
 	
@@ -458,11 +490,14 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 		const {
 			messages,
 			tools = [],
-			model = 'claude-opus-4-20250514',
+			model,
 			systemPrompt: additionalSystemPrompt,
 			abortSignal
 		} = params;
 		const { query } = await this.loadSDK();
+		
+		// Map the model name to full ID
+		const mappedModel = this.mapModelName(model || 'claude-code');
 
 		const { prompt, systemPrompt } = this.convertMessagesToPrompt(messages);
 		const finalSystemPrompt = additionalSystemPrompt
@@ -485,7 +520,7 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 				abortController,
 				options: {
 					maxTurns: 1,
-					model,
+					model: mappedModel, // Use the mapped model ID
 					systemPrompt: finalSystemPrompt || 'You are a helpful AI assistant.',
 					cwd: process.cwd(),
 					allowedTools,
@@ -520,7 +555,8 @@ export class ClaudeCodeProvider extends BaseAIProvider {
 			return {
 				text: fullText,
 				toolCalls,
-				usage
+				usage,
+				modelUsed: mappedModel // Return the actual model used
 			};
 		} catch (error) {
 			throw this.handleError(error);
