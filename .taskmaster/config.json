@@ -1,8 +1,8 @@
 {
 	"models": {
 		"main": {
-			"provider": "anthropic",
-			"modelId": "claude-sonnet-4-20250514",
+			"provider": "claude-code",
+			"modelId": "claude-opus-4-20250514",
 			"maxTokens": 50000,
 			"temperature": 0.2
 		},
@@ -28,6 +28,7 @@
 		"projectName": "Taskmaster",
 		"ollamaBaseURL": "http://localhost:11434/api",
 		"bedrockBaseURL": "https://bedrock.us-east-1.amazonaws.com",
-		"azureBaseURL": "https://your-endpoint.azure.com/"
+		"azureBaseURL": "https://your-endpoint.azure.com/",
+		"defaultTag": "master"
 	}
 }

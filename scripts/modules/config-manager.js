@@ -479,8 +479,11 @@ function getParametersForRole(role, explicitRoot = null) {
  * @returns {boolean} True if the API key is set, false otherwise.
  */
 function isApiKeySet(providerName, session = null, projectRoot = null) {
-	// Define the expected environment variable name for each provider
-	if (providerName?.toLowerCase() === 'ollama') {
+	// Check for providers that don't need API keys first
+	if (
+		providerName?.toLowerCase() === 'ollama' ||
+		providerName?.toLowerCase() === 'claude-code'
+	) {
 		return true; // Indicate key status is effectively "OK"
 	}
 
@@ -577,6 +580,8 @@ function getMcpApiKeyStatus(providerName, projectRoot = null) {
 				break;
 			case 'ollama':
 				return true; // No key needed
+			case 'claude-code':
+				return true; // Uses OAuth2 through CLI
 			case 'mistral':
 				apiKeyToCheck = mcpEnv.MISTRAL_API_KEY;
 				placeholderValue = 'YOUR_MISTRAL_API_KEY_HERE';
@@ -616,19 +621,24 @@ function getAvailableModels() {
 				const sweScore = modelObj.swe_score;
 				const cost = modelObj.cost_per_1m_tokens;
 				const allowedRoles = modelObj.allowed_roles || ['main', 'fallback'];
-				const nameParts = modelId
-					.split('-')
-					.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
-				// Handle specific known names better if needed
-				let name = nameParts.join(' ');
-				if (modelId === 'claude-3.5-sonnet-20240620')
-					name = 'Claude 3.5 Sonnet';
-				if (modelId === 'claude-3-7-sonnet-20250219')
-					name = 'Claude 3.7 Sonnet';
-				if (modelId === 'gpt-4o') name = 'GPT-4o';
-				if (modelId === 'gpt-4-turbo') name = 'GPT-4 Turbo';
-				if (modelId === 'sonar-pro') name = 'Perplexity Sonar Pro';
-				if (modelId === 'sonar-mini') name = 'Perplexity Sonar Mini';
+
+				// Use name from JSON if available, otherwise generate it
+				let name = modelObj.name;
+				if (!name) {
+					const nameParts = modelId
+						.split('-')
+						.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
+					// Handle specific known names better if needed
+					name = nameParts.join(' ');
+					if (modelId === 'claude-3.5-sonnet-20240620')
+						name = 'Claude 3.5 Sonnet';
+					if (modelId === 'claude-3-7-sonnet-20250219')
+						name = 'Claude 3.7 Sonnet';
+					if (modelId === 'gpt-4o') name = 'GPT-4o';
+					if (modelId === 'gpt-4-turbo') name = 'GPT-4 Turbo';
+					if (modelId === 'sonar-pro') name = 'Perplexity Sonar Pro';
+					if (modelId === 'sonar-mini') name = 'Perplexity Sonar Mini';
+				}
 
 				available.push({
 					id: modelId,

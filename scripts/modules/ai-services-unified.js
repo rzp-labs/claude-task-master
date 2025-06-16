@@ -26,7 +26,12 @@ import {
 	getVertexProjectId,
 	getVertexLocation
 } from './config-manager.js';
-import { log, findProjectRoot, resolveEnvVariable } from './utils.js';
+import {
+	log,
+	findProjectRoot,
+	resolveEnvVariable,
+	getCurrentTag
+} from './utils.js';
 
 // Import provider classes
 import {
@@ -39,7 +44,8 @@ import {
 	OllamaAIProvider,
 	BedrockAIProvider,
 	AzureProvider,
-	VertexAIProvider
+	VertexAIProvider,
+	ClaudeCodeProvider
 } from '../../src/ai-providers/index.js';
 
 // Create provider instances
@@ -53,7 +59,8 @@ const PROVIDERS = {
 	ollama: new OllamaAIProvider(),
 	bedrock: new BedrockAIProvider(),
 	azure: new AzureProvider(),
-	vertex: new VertexAIProvider()
+	vertex: new VertexAIProvider(),
+	'claude-code': new ClaudeCodeProvider()
 };
 
 // Helper function to get cost for a specific model
@@ -84,6 +91,65 @@ function _getCostForModel(providerName, modelId) {
 		outputCost: modelData.cost_per_1m_tokens.output || 0,
 		currency: currency
 	};
+}
+
+// Helper function to get tag information for responses
+function _getTagInfo(projectRoot) {
+	try {
+		if (!projectRoot) {
+			return { currentTag: 'master', availableTags: ['master'] };
+		}
+
+		const currentTag = getCurrentTag(projectRoot);
+
+		// Read available tags from tasks.json
+		let availableTags = ['master']; // Default fallback
+		try {
+			const path = require('path');
+			const fs = require('fs');
+			const tasksPath = path.join(
+				projectRoot,
+				'.taskmaster',
+				'tasks',
+				'tasks.json'
+			);
+
+			if (fs.existsSync(tasksPath)) {
+				const tasksData = JSON.parse(fs.readFileSync(tasksPath, 'utf8'));
+				if (tasksData && typeof tasksData === 'object') {
+					// Check if it's tagged format (has tag-like keys with tasks arrays)
+					const potentialTags = Object.keys(tasksData).filter(
+						(key) =>
+							tasksData[key] &&
+							typeof tasksData[key] === 'object' &&
+							Array.isArray(tasksData[key].tasks)
+					);
+
+					if (potentialTags.length > 0) {
+						availableTags = potentialTags;
+					}
+				}
+			}
+		} catch (readError) {
+			// Silently fall back to default if we can't read tasks file
+			if (getDebugFlag()) {
+				log(
+					'debug',
+					`Could not read tasks file for available tags: ${readError.message}`
+				);
+			}
+		}
+
+		return {
+			currentTag: currentTag || 'master',
+			availableTags: availableTags
+		};
+	} catch (error) {
+		if (getDebugFlag()) {
+			log('debug', `Error getting tag information: ${error.message}`);
+		}
+		return { currentTag: 'master', availableTags: ['master'] };
+	}
 }
 
 // --- Configuration for Retries ---
@@ -172,14 +238,20 @@ function _resolveApiKey(providerName, session, projectRoot = null) {
 		xai: 'XAI_API_KEY',
 		ollama: 'OLLAMA_API_KEY',
 		bedrock: 'AWS_ACCESS_KEY_ID',
-		vertex: 'GOOGLE_API_KEY'
+		vertex: 'GOOGLE_API_KEY',
+		'claude-code': null // No API key needed
 	};
 
 	const envVarName = keyMap[providerName];
-	if (!envVarName) {
+	if (envVarName === undefined && providerName !== 'claude-code') {
 		throw new Error(
 			`Unknown provider '${providerName}' for API key resolution.`
 		);
+	}
+
+	// Special handling for providers that don't need API keys
+	if (providerName === 'claude-code') {
+		return null; // Claude Code uses OAuth2 through CLI
 	}
 
 	const apiKey = resolveEnvVariable(envVarName, session, projectRoot);
@@ -246,7 +318,7 @@ async function _attemptProviderCallWithRetries(
 
 			if (isRetryableError(error) && retries < MAX_RETRIES) {
 				retries++;
-				const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, retries - 1);
+				const delay = INITIAL_RETRY_DELAY_MS * 2 ** (retries - 1);
 				log(
 					'info',
 					`Something went wrong on the provider side. Retrying in ${delay / 1000}s...`
@@ -327,14 +399,14 @@ async function _unifiedServiceRunner(serviceType, params) {
 		'AI service call failed for all configured roles.';
 
 	for (const currentRole of sequence) {
-		let providerName,
-			modelId,
-			apiKey,
-			roleParams,
-			provider,
-			baseURL,
-			providerResponse,
-			telemetryData = null;
+		let providerName;
+		let modelId;
+		let apiKey;
+		let roleParams;
+		let provider;
+		let baseURL;
+		let providerResponse;
+		let telemetryData = null;
 
 		try {
 			log('info', `New AI service call with role: ${currentRole}`);
@@ -385,7 +457,10 @@ async function _unifiedServiceRunner(serviceType, params) {
 			}
 
 			// Check API key if needed
-			if (providerName?.toLowerCase() !== 'ollama') {
+			if (
+				providerName?.toLowerCase() !== 'ollama' &&
+				providerName?.toLowerCase() !== 'claude-code'
+			) {
 				if (!isApiKeySet(providerName, session, effectiveProjectRoot)) {
 					log(
 						'warn',
@@ -520,11 +595,14 @@ async function _unifiedServiceRunner(serviceType, params) {
 
 			if (userId && providerResponse && providerResponse.usage) {
 				try {
+					// Use the actual model used if provider returns it (e.g., mapped claude-code model)
+					const actualModelId = providerResponse.modelUsed || modelId;
+
 					telemetryData = await logAiUsage({
 						userId,
 						commandName,
 						providerName,
-						modelId,
+						modelId: actualModelId,
 						inputTokens: providerResponse.usage.inputTokens,
 						outputTokens: providerResponse.usage.outputTokens,
 						outputType
@@ -534,9 +612,10 @@ async function _unifiedServiceRunner(serviceType, params) {
 					// No need to log again here, telemetryData will remain null
 				}
 			} else if (userId && providerResponse && !providerResponse.usage) {
+				const actualModelId = providerResponse.modelUsed || modelId;
 				log(
 					'warn',
-					`Cannot log telemetry for ${commandName} (${providerName}/${modelId}): AI result missing 'usage' data. (May be expected for streams)`
+					`Cannot log telemetry for ${commandName} (${providerName}/${actualModelId}): AI result missing 'usage' data. (May be expected for streams)`
 				);
 			}
 
@@ -555,9 +634,13 @@ async function _unifiedServiceRunner(serviceType, params) {
 				finalMainResult = providerResponse;
 			}
 
+			// Get tag information for the response
+			const tagInfo = _getTagInfo(effectiveProjectRoot);
+
 			return {
 				mainResult: finalMainResult,
-				telemetryData: telemetryData
+				telemetryData: telemetryData,
+				tagInfo: tagInfo
 			};
 		} catch (error) {
 			const cleanMessage = _extractErrorMessage(error);
