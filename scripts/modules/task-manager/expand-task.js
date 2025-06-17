@@ -17,7 +17,11 @@ import generateTaskFiles from './generate-task-files.js';
 import { COMPLEXITY_REPORT_FILE } from '../../../src/constants/paths.js';
 import { ContextGatherer } from '../utils/contextGatherer.js';
 import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
-import { flattenTasksWithSubtasks, findProjectRoot } from '../utils.js';
+import {
+	flattenTasksWithSubtasks,
+	findProjectRoot,
+	getCurrentTag
+} from '../utils.js';
 
 // --- Zod Schemas (Keep from previous step) ---
 const subtaskSchema = z
@@ -496,7 +500,13 @@ async function expandTask(
 		let complexityReasoningContext = '';
 		let systemPrompt; // Declare systemPrompt here
 
-		const complexityReportPath = path.join(projectRoot, COMPLEXITY_REPORT_FILE);
+		// Tag-aware complexity report path
+		const currentTag = getCurrentTag(projectRoot) || 'master';
+		const complexityReportFile =
+			currentTag !== 'master'
+				? COMPLEXITY_REPORT_FILE.replace('.json', `_${currentTag}.json`)
+				: COMPLEXITY_REPORT_FILE;
+		const complexityReportPath = path.join(projectRoot, complexityReportFile);
 		let taskAnalysis = null;
 
 		try {
