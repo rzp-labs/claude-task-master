@@ -498,8 +498,12 @@ async function setModel(role, modelId, options = {}) {
 					// Claude Code provider - check if model exists in our list
 					determinedProvider = 'claude-code';
 					// Re-find modelData specifically for claude-code provider
-					const claudeCodeModels = availableModels.filter(m => m.provider === 'claude-code');
-					const claudeCodeModelData = claudeCodeModels.find(m => m.id === modelId);
+					const claudeCodeModels = availableModels.filter(
+						(m) => m.provider === 'claude-code'
+					);
+					const claudeCodeModelData = claudeCodeModels.find(
+						(m) => m.id === modelId
+					);
 					if (claudeCodeModelData) {
 						// Update modelData to the found claude-code model
 						modelData = claudeCodeModelData;
@@ -554,7 +558,7 @@ async function setModel(role, modelId, options = {}) {
 			provider: determinedProvider,
 			modelId: modelId
 		};
-		
+
 		// If model data is available, update maxTokens from supported-models.json
 		if (modelData && modelData.max_tokens) {
 			currentConfig.models[role].maxTokens = modelData.max_tokens;

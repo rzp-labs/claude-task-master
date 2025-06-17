@@ -483,7 +483,7 @@ function isApiKeySet(providerName, session = null, projectRoot = null) {
 	if (providerName?.toLowerCase() === 'ollama') {
 		return true; // Indicate key status is effectively "OK"
 	}
-	
+
 	// Claude Code doesn't require an API key
 	if (providerName?.toLowerCase() === 'claude-code') {
 		return true; // No API key needed
