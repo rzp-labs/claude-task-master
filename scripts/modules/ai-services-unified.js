@@ -227,6 +227,11 @@ function _extractErrorMessage(error) {
  * @throws {Error} If a required API key is missing.
  */
 function _resolveApiKey(providerName, session, projectRoot = null) {
+	// Claude Code doesn't require an API key
+	if (providerName === 'claude-code') {
+		return 'claude-code-no-key-required';
+	}
+
 	const keyMap = {
 		openai: 'OPENAI_API_KEY',
 		anthropic: 'ANTHROPIC_API_KEY',
@@ -239,7 +244,7 @@ function _resolveApiKey(providerName, session, projectRoot = null) {
 		ollama: 'OLLAMA_API_KEY',
 		bedrock: 'AWS_ACCESS_KEY_ID',
 		vertex: 'GOOGLE_API_KEY',
-		'claude-code': null // No API key needed
+		'claude-code': 'CLAUDE_CODE_API_KEY' // Not actually used, but included for consistency
 	};
 
 	const envVarName = keyMap[providerName];

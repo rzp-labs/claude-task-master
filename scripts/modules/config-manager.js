@@ -487,6 +487,11 @@ function isApiKeySet(providerName, session = null, projectRoot = null) {
 		return true; // Indicate key status is effectively "OK"
 	}
 
+	// Claude Code doesn't require an API key
+	if (providerName?.toLowerCase() === 'claude-code') {
+		return true; // No API key needed
+	}
+
 	const keyMap = {
 		openai: 'OPENAI_API_KEY',
 		anthropic: 'ANTHROPIC_API_KEY',
@@ -496,7 +501,8 @@ function isApiKeySet(providerName, session = null, projectRoot = null) {
 		azure: 'AZURE_OPENAI_API_KEY',
 		openrouter: 'OPENROUTER_API_KEY',
 		xai: 'XAI_API_KEY',
-		vertex: 'GOOGLE_API_KEY' // Vertex uses the same key as Google
+		vertex: 'GOOGLE_API_KEY', // Vertex uses the same key as Google
+		'claude-code': 'CLAUDE_CODE_API_KEY' // Not actually used, but included for consistency
 		// Add other providers as needed
 	};
 
@@ -581,7 +587,7 @@ function getMcpApiKeyStatus(providerName, projectRoot = null) {
 			case 'ollama':
 				return true; // No key needed
 			case 'claude-code':
-				return true; // Uses OAuth2 through CLI
+				return true; // No key needed
 			case 'mistral':
 				apiKeyToCheck = mcpEnv.MISTRAL_API_KEY;
 				placeholderValue = 'YOUR_MISTRAL_API_KEY_HERE';
@@ -646,7 +652,8 @@ function getAvailableModels() {
 					provider: provider,
 					swe_score: sweScore,
 					cost_per_1m_tokens: cost,
-					allowed_roles: allowedRoles
+					allowed_roles: allowedRoles,
+					max_tokens: modelObj.max_tokens
 				});
 			});
 		} else {

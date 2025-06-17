@@ -426,14 +426,14 @@
 	],
 	"claude-code": [
 		{
-			"id": "claude-opus-4-20250514",
+			"id": "opus",
 			"swe_score": 0.725,
 			"cost_per_1m_tokens": { "input": 0, "output": 0 },
 			"allowed_roles": ["main", "fallback", "research"],
 			"max_tokens": 32000
 		},
 		{
-			"id": "claude-sonnet-4-20250514",
+			"id": "sonnet",
 			"swe_score": 0.727,
 			"cost_per_1m_tokens": { "input": 0, "output": 0 },
 			"allowed_roles": ["main", "fallback", "research"],
