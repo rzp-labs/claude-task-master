@@ -1,0 +1,350 @@
+<context>
+# Overview
+Git Worktree Support for Claude Task Master enables AI code agents to work in isolated environments without branch conflicts. Starting with single-agent support (MVP), this feature provides a foundation for future multi-agent workflows. The MVP philosophy is "nail it before we scale it" - focusing on reliable core functionality before adding complexity. It's designed for teams using AI agents for development tasks and provides isolated working directories using Git's native worktree feature.
+
+# Core Features (MVP)
+
+## Basic Worktree Management
+- **What it does**: Creates and manages a Git worktree for a single agent working on a task
+- **Why it's important**: Provides an isolated working directory to prevent branch conflicts
+- **How it works**: Wraps Git's worktree commands with Task Master integration
+
+## Task-Worktree Association
+- **What it does**: Links worktrees to specific Task Master tasks
+- **Why it's important**: Maintains context between task management and code workspaces
+- **How it works**: Stores mapping in `.taskmaster/worktree-registry.json` following Task Master patterns
+
+## Manual Sync Commands
+- **What it does**: Provides commands to manually sync worktree with main branch
+- **Why it's important**: Gives users control over when to integrate changes
+- **How it works**: Simple wrappers around git pull/rebase with clear status reporting
+
+## Event Integration (Minimal)
+- **What it does**: Emits events when worktrees are created/removed using Task Master's existing event system
+- **Why it's important**: Allows future automation without building it prematurely
+- **How it works**: Hooks into Task Master's established event patterns
+
+# User Experience
+
+## User Personas
+- **AI Developer**: Uses multiple Claude/AI agents to parallelize development tasks
+- **Team Lead**: Monitors agent progress and resolves conflicts when needed
+- **DevOps Engineer**: Manages the infrastructure for multi-agent development
+
+## Key User Flows
+1. **Task Assignment**: User assigns task to agent → System creates worktree → Agent begins work in isolation
+2. **Task Completion**: Agent finishes → Pre-commit checks pass → Merges to main → Worktree cleaned up
+3. **Conflict Resolution**: Rebase conflict detected → Auto-resolution attempted → Manual intervention if needed
+
+## UI/UX Considerations
+- Clear visual indication of which agent is in which worktree
+- Status dashboard showing active agents and their branches
+- Conflict notifications with actionable resolution steps
+- Progress tracking for long-running agent tasks
+</context>
+
+<PRD>
+# Technical Architecture
+
+## System Components
+
+**Error Handling Note**: All components must use Task Master's existing error patterns (standard `throw new Error()` with descriptive messages, logger utilities for warnings/info). Custom error classes or handlers require explicit user approval.
+
+### Worktree Manager Module (`scripts/modules/utils/worktree-manager.js`)
+- Creates/removes Git worktrees for tasks
+- Maintains worktree registry in `.taskmaster/worktree-registry.json`
+- Provides status and list operations
+- Integrates with Task Master's task system
+
+### Enhanced Git Utils (`scripts/modules/utils/git-utils.js`)
+- Detects if current directory is a worktree
+- Provides worktree-aware Git operations
+- Returns clear status for worktree operations
+- Uses Task Master's existing error handling
+
+## Data Models
+
+### Worktree Registry Entry
+```javascript
+{
+  worktreeId: "task-42",
+  taskId: 42,
+  branch: "task-42-implement-auth",
+  path: "./worktrees/task-42",
+  createdAt: "2024-01-15T10:00:00Z"
+}
+```
+
+**Note**: Worktree state is kept separate from Task Master's state.json to maintain clean separation of concerns. The worktree registry lives at `.taskmaster/worktree-registry.json`.
+
+## APIs and Integrations
+
+### CLI Commands
+- `task-master worktree create --task <id>` - Create worktree for a task
+- `task-master worktree list` - List active worktrees
+- `task-master worktree remove` - Remove current worktree
+- `task-master worktree status` - Show worktree status
+- `task-master worktree sync` - Manual sync with main branch
+
+### MCP Tool Extensions
+- `create_worktree` - Create worktree for a task
+- `remove_worktree` - Remove worktree
+- `list_worktrees` - List all worktrees
+- `sync_worktree` - Sync with main branch
+
+### Event Hooks (Uses Existing System)
+- Emits standard Task Master events when worktree operations occur
+- No new event system needed
+- Future automation can listen to these events
+
+## Infrastructure Requirements
+- Git 2.5+ (worktree support)
+- Sufficient disk space for working copies
+- Existing Task Master installation
+
+## Setup Requirements
+- Add `worktrees/` to `.gitignore` to prevent accidental commits
+- Ensure write permissions in project root for worktree creation
+- Consider filesystem limits (some systems limit path length to 255 chars)
+
+## AI Agent Feature Enforcement
+
+### Configuration Management
+- Binary enable/disable setting in `.taskmaster/config.json`
+- Configuration locking mechanism to prevent AI tampering
+- Environment variable override for CI/CD environments
+
+### Multi-Layer Enforcement Strategy
+
+#### Runtime Enforcement (Primary Defense)
+- Every worktree-related function validates configuration at execution
+- Immediate failure with educational error messages
+- Cannot be bypassed without modifying core code
+
+```javascript
+// Example implementation (using existing error handling)
+async function createWorktree(branch, path) {
+  const config = await loadConfig();
+  if (!config.features?.worktrees) {
+    // Use Task Master's existing error utilities rather than custom errors
+    throw new Error('WORKTREES_DISABLED: Intentionally disabled. DO NOT attempt to enable.');
+  }
+  // ... rest of implementation
+}
+```
+
+#### Tool Registration (Secondary Defense)
+- MCP tools for worktrees only register when feature is enabled
+- CLI commands dynamically available based on configuration
+- AI agents cannot call non-existent tools
+
+#### Configuration Protection
+- Config locking prevents automated changes to critical settings
+- Locked settings require manual intervention to modify
+- Audit logging tracks all configuration access attempts
+
+```json
+{
+  "features": {
+    "worktrees": false,
+    "_locked": ["features.worktrees"]
+  }
+}
+```
+
+#### Clear Error Messaging
+- Errors explicitly state feature is intentionally disabled
+- Include reason for disablement (e.g., Git version)
+- Provide alternative workflow instructions
+- Prevent AI interpretation as bugs to fix
+
+```
+Error: FEATURE_DISABLED_BY_ADMIN
+Worktrees are intentionally disabled in this environment.
+Reason: Git version incompatibility
+Action: Use standard single-branch workflow
+DO NOT ATTEMPT TO ENABLE OR WORK AROUND THIS SETTING
+```
+
+# Development Roadmap
+
+## Phase 1: MVP - Single Agent Worktree Support
+
+### Core Worktree Operations
+- Implement basic worktree create/remove functions
+- Add worktree detection to git-utils
+- Simple worktree registry (JSON file)
+- Manual cleanup command (no automation)
+- Create worktrees in `./worktrees/task-{id}/` structure
+- Auto-update .gitignore if needed
+
+### Minimal Agent Integration
+- Support single agent/worktree at a time
+- Use existing error handling channels from Task Master
+- Pass Git errors through using established patterns
+- Basic status and list commands
+
+### Essential Safety Only
+- Git version check (require 2.5+) using existing error utilities
+- Binary enable/disable in config.json
+- Runtime enforcement (fail if disabled)
+- Let Git handle most error cases
+
+## Phase 2: Multi-Agent Support
+
+### Enable Multiple Concurrent Worktrees
+- Support 2-3 worktrees simultaneously
+- Prevent multiple worktrees for same task
+- Clear naming to identify which agent uses which worktree
+- Registry tracks all active worktrees
+
+### Basic Coordination
+- Detect conflicts when agents try to work on same task
+- Manual sync commands for each worktree
+- Clear status reporting across worktrees
+
+### Integration Improvements
+- Hook into Task Master's task assignment flow
+- Emit events for future automation
+- Improve error messages based on MVP learnings
+
+## Phase 3: Automation Based on Usage
+
+### Selective Automation
+- Add automation only for proven pain points
+- Start with semi-automated workflows (user confirms actions)
+- Focus on most common operations first
+
+### Conflict Handling
+- Better conflict detection and reporting
+- Helper commands for common conflict patterns
+- Documentation of resolution strategies
+
+### Scale to Real Needs
+- Increase concurrent worktree limit if needed
+- Performance optimizations if bottlenecks emerge
+- Enhanced status reporting
+
+## Phase 4: Advanced Features (Only If Needed)
+
+### Possible Enhancements
+- Auto-sync on specific Task Master events
+- Worktree templates for common setups
+- Integration with CI/CD workflows
+- Advanced conflict resolution helpers
+
+### Key Principle
+- Every Phase 4 feature must solve a real problem experienced in production
+- No speculative features
+- User feedback drives priority
+
+# Logical Dependency Chain
+
+## Foundation (Must Build First)
+1. **Basic Worktree Operations** - Everything depends on ability to create/manage worktrees
+2. **Git Utils Enhancement** - Required for worktree-aware operations
+3. **Agent Identity System** - Needed before multi-agent support
+
+## Core Functionality (Build Second)
+1. **Task-Worktree Association** - Links tasks to specific worktrees
+2. **Basic Event System** - Enables agent communication
+3. **Simple Conflict Detection** - Identifies when manual intervention needed
+
+## User-Facing Features (Build Third)
+1. **CLI Commands** - Allows users to interact with worktree system
+2. **Status Dashboard** - Provides visibility into agent activities
+3. **Basic Auto-Resolution** - Reduces manual intervention needs
+
+## Advanced Capabilities (Build Last)
+1. **Worktree Pooling** - Performance optimization
+2. **ML-Based Conflict Resolution** - Intelligent automation
+3. **Cross-Repository Support** - Extended use cases
+
+# Risks and Mitigations
+
+## Technical Challenges
+
+### Disk Space Consumption
+- **Risk**: Each worktree is a full copy of working files
+- **Mitigation**: Manual cleanup commands, clear documentation about disk usage, let user manage their environment
+
+### Git Version Compatibility
+- **Risk**: Worktree features require Git 2.5+
+- **Mitigation**: Add version detection and fail with clear error message. No fallback mode - Git 2.5 (2015) is reasonable minimum requirement
+
+### Race Conditions
+- **Risk**: Multiple agents attempting simultaneous operations
+- **Mitigation**: Implement proper locking mechanisms and atomic operations
+
+### AI Agent Feature Bypass
+- **Risk**: AI agents attempting to enable disabled features or work around restrictions
+- **Mitigation**: Multi-layer enforcement with runtime checks, tool registration control, and config locking
+
+## MVP Scoping
+
+### Feature Creep
+- **Risk**: Adding too many features before core functionality stable
+- **Mitigation**: Strict phase boundaries, feature flags for experimental features
+
+### Integration Complexity
+- **Risk**: Difficult to integrate with existing task system
+- **Mitigation**: Start with minimal integration points, expand gradually
+
+## Resource Constraints
+
+### Development Time
+- **Risk**: Complex system requiring significant development effort
+- **Mitigation**: Modular architecture allowing incremental development
+
+### Testing Complexity
+- **Risk**: Multi-agent scenarios difficult to test
+- **Mitigation**: Comprehensive test harness, simulation framework
+
+# Appendix
+
+## Research Findings
+
+### Git Worktree Limitations
+- One branch per worktree restriction
+- Submodule handling complexities
+- Worktree pruning requirements
+
+### Performance Benchmarks
+- Worktree creation: ~2-5 seconds
+- Rebase operation: ~1-10 seconds (depends on changes)
+- Event propagation: <100ms local, <1s distributed
+
+## Technical Specifications
+
+### File Structure
+```
+<project-root>/
+├── .git/
+├── .gitignore              (add: worktrees/)
+├── .taskmaster/
+│   ├── config.json         (existing)
+│   ├── state.json         (existing - not used for worktrees)
+│   ├── worktree-registry.json (new)
+│   └── tasks/
+├── src/                    (existing code)
+└── worktrees/              (worktree storage)
+    ├── task-42/
+    ├── task-45/
+    └── task-48/
+```
+
+### Worktree Location & Naming
+- **Location**: `./worktrees/` relative to project root
+- **Naming**: `task-{taskId}` only
+- **Simple**: No title serialization, no special character handling
+
+### Example Paths
+- Task 42 → `./worktrees/task-42/`
+- Task 45 → `./worktrees/task-45/`
+- Task 128 → `./worktrees/task-128/`
+
+### Integration Notes
+- Worktrees integrate with Task Master's existing event system
+- No new event types needed for MVP
+- Registry follows Task Master's JSON storage patterns
+</PRD>

@@ -1,0 +1,22 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Review and align test cases with simplified task enhancement approach",
+        "description": "Review all test cases for the task enhancement feature to ensure alignment with the revised, simplified approach that has limited configuration options and defaults. Document test cases that need revision or removal to match the new streamlined implementation.",
+        "details": "## Test Review Objectives\n\n1. **Identify Over-Engineered Test Cases**\n   - Look for tests that verify complex configuration scenarios that no longer exist\n   - Find tests checking for edge cases in removed features\n   - Locate tests for error patterns that have been simplified\n\n2. **Compare with Expand Task Implementation**\n   - Review how expand-task.test.js handles similar functionality\n   - Ensure enhancement tests follow similar patterns for:\n     - Mock setup and AI provider interactions\n     - Success/failure scenarios\n     - Progress reporting and user feedback\n\n3. **Test Categories to Review**\n   - Configuration validation tests (ensure they match new limited options)\n   - Error handling tests (avoid creating new error patterns)\n   - Integration tests (should be minimal and focused)\n   - Mode behavior tests (if modes have been simplified)\n   - Timeout tests (verify against new 15s minimum)\n\n4. **Documentation Requirements**\n   - Create a list of tests to be removed\n   - Create a list of tests needing modification\n   - Note any missing tests for core functionality\n   - Ensure test names and descriptions match actual behavior\n\n5. **Key Files to Review**\n   - tests/unit/scripts/modules/task-manager/enhance-task-details*.test.js\n   - tests/integration/task-enhancement-workflow.test.js\n   - Compare with: tests/unit/scripts/modules/task-manager/expand-task.test.js\n\n6. **Simplification Guidelines**\n   - Remove tests for features that no longer exist\n   - Consolidate redundant test scenarios\n   - Ensure error handling follows existing patterns (no new error types)\n   - Verify mocks are minimal and match actual usage",
+        "testStrategy": "1. Run all enhancement-related tests and categorize failures by type\n2. Cross-reference test assertions with actual implementation in enhance-task-details.js\n3. Compare test complexity with expand-task.test.js as a baseline\n4. Create a markdown document listing:\n   - Tests to remove (with rationale)\n   - Tests to modify (with specific changes needed)\n   - Tests that are properly aligned (can stay as-is)\n5. Verify that remaining tests cover:\n   - Basic enhancement trigger on status change\n   - Timeout handling (15s minimum)\n   - Success and failure paths\n   - Integration with AI providers\n6. Ensure no tests are creating new patterns for error handling or configuration that don't exist in other parts of the codebase",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-16T16:49:20.997Z",
+      "description": "Default tasks context",
+      "updated": "2025-06-16T16:49:53.854Z"
+    }
+  }
+}

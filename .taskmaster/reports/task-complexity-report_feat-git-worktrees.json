@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-17T06:54:35.982Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Create Worktree Manager Module",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the implementation of the worktree manager module into: core Git worktree command wrappers, path management utilities, Git version checking, error handling implementation, worktree status checking, and cleanup utilities. Focus on creating a robust foundation that other components will depend on.",
+			"reasoning": "This is a foundational module requiring multiple Git operations, version checking, path management, and comprehensive error handling. The complexity comes from being a dependency for many other tasks and needing robust error handling for various Git scenarios."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement Worktree Registry",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Implement the registry system with: JSON schema definition and validation, atomic file operations for concurrent access safety, CRUD operations for registry entries, registry initialization and migration logic, and registry cleanup/maintenance utilities.",
+			"reasoning": "Registry implementation requires careful handling of concurrent access, atomic operations, and data integrity. The complexity lies in ensuring reliability and preventing corruption while maintaining compatibility with Task Master's existing storage patterns."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Enhance Git Utils for Worktree Detection",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Enhance git-utils.js with: worktree detection functions, worktree information retrieval, worktree-aware Git operations adaptation, and integration with existing Git utility functions. Ensure backward compatibility with non-worktree environments.",
+			"reasoning": "This task involves extending existing functionality rather than creating from scratch. The main complexity is ensuring the enhancements don't break existing functionality and properly handle edge cases like submodules and nested repositories."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Implement Feature Toggle System",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create the feature toggle system with: configuration schema updates for worktree settings, locking mechanism implementation, runtime enforcement checks, environment variable override handling, and clear error messaging system for disabled features.",
+			"reasoning": "The feature toggle system requires careful implementation to prevent tampering while allowing legitimate configuration. The locking mechanism and runtime enforcement add complexity, along with the need for clear user communication."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Create CLI Commands for Worktree Management",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Implement CLI commands including: worktree create command with task association, list command with formatting, remove command with safety checks, status command for current worktree info, sync command for updates, command registration logic, and .gitignore auto-update functionality.",
+			"reasoning": "Multiple commands need implementation with proper integration into the existing CLI structure. Each command requires argument parsing, validation, formatted output, and error handling, making this a substantial task."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Implement MCP Tool Extensions",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Create MCP tools for: create_worktree with task validation, remove_worktree with cleanup, list_worktrees with filtering, sync_worktree for updates, tool registration based on feature flag, and integration with task-master-core.js. Follow FastMCP patterns throughout.",
+			"reasoning": "MCP tool implementation requires understanding of the FastMCP framework and proper integration with the existing tool structure. Each tool needs proper validation, feature flag checking, and educational error messages."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Add Task-Worktree Association Logic",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Implement association logic including: worktree creation with task linking, duplicate prevention mechanisms, branch name generation and sanitization, task status update triggers, automatic cleanup on task completion, bidirectional lookup implementation, and state synchronization between tasks and worktrees.",
+			"reasoning": "This task involves complex state management and synchronization between tasks and worktrees. The bidirectional relationship, automatic cleanup, and status updates create multiple integration points that need careful coordination."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Integrate Event System Hooks",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Add event integration for: worktree lifecycle events (create/remove/sync), event payload structure definition, and integration with existing event emission patterns. Keep implementation minimal and focused on essential notifications.",
+			"reasoning": "This is a relatively straightforward integration task that leverages existing event system infrastructure. The low complexity reflects the minimal approach specified in the requirements."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Create Comprehensive Documentation",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create documentation covering: setup and requirements guide, CLI command reference with examples, MCP tool usage documentation, troubleshooting guide for common issues, and README.md updates. Focus on practical examples and clear explanations.",
+			"reasoning": "Documentation requires covering multiple aspects of the feature but is straightforward to implement. The complexity comes from ensuring completeness and clarity across different user scenarios."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implement Comprehensive Test Suite",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Create tests for: worktree manager unit tests, registry operation tests, Git utils enhancement tests, feature toggle enforcement tests, CLI command integration tests, MCP tool tests, edge case and error path testing, and performance tests with multiple worktrees.",
+			"reasoning": "Comprehensive testing requires covering all components with both unit and integration tests. The high complexity reflects the need to test numerous edge cases, error conditions, and integration points while achieving good coverage."
+		}
+	]
+}

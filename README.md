@@ -12,6 +12,20 @@
 
 A task management system for AI-driven development with Claude, designed to work seamlessly with Cursor AI.
 
+## Development Philosophy
+
+Our guiding principle is "nail it before we scale it." This philosophy applies to all development, not just MVPs:
+
+- **Start simple**: Focus on core functionality working reliably before adding complexity
+- **Learn from usage**: Add features only when proven necessary through real-world use
+- **Trust existing tools**: Let established systems (like Git) handle errors naturally rather than adding defensive layers
+- **User owns their environment**: Users are responsible for disk space, permissions, and system requirements
+- **Clear over clever**: Prefer clear error messages over pre-emptive checks and complex abstractions
+- **Iterate based on evidence**: Every new feature should solve a proven problem, not a theoretical one
+- **Reuse error handling**: ALWAYS use existing error handling channels. Custom error handlers require explicit user approval with detailed justification
+
+This approach ensures we build what users actually need, not what we imagine they might want.
+
 ## Documentation
 
 For more detailed information, check out the documentation in the `docs` directory:

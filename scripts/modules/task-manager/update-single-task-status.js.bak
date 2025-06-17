@@ -1,0 +1,296 @@
+import chalk from 'chalk';
+
+import { log } from '../utils.js';
+import { isValidTaskStatus, TASK_STATUS_OPTIONS } from '../../../src/constants/task-status.js';
+import { 
+	enhanceTaskDetails, 
+	getEnhancementConfig, 
+	taskNeedsEnhancement 
+} from './enhance-task-details.js';
+import { canTaskBeEnhanced, isTaskEnhanced } from './enhancement-utils.js';
+import { getErrorSummary, isErrorType, TimeoutError, ValidationError } from './enhancement-errors.js';
+
+/**
+ * Update the status of a single task
+ * @param {string} tasksPath - Path to the tasks.json file
+ * @param {string} taskIdInput - Task ID to update
+ * @param {string} newStatus - New status
+ * @param {Object} data - Tasks data
+ * @param {boolean} showUi - Whether to show UI elements
+ */
+async function updateSingleTaskStatus(
+	tasksPath,
+	taskIdInput,
+	newStatus,
+	data,
+	showUi = true
+) {
+	if (!isValidTaskStatus(newStatus)) {
+		throw new Error(
+			`Error: Invalid status value: ${newStatus}. Use one of: ${TASK_STATUS_OPTIONS.join(', ')}`
+		);
+	}
+
+	// Check if it's a subtask (e.g., "1.2")
+	if (taskIdInput.includes('.')) {
+		const [parentId, subtaskId] = taskIdInput
+			.split('.')
+			.map((id) => parseInt(id, 10));
+
+		// Find the parent task
+		const parentTask = data.tasks.find((t) => t.id === parentId);
+		if (!parentTask) {
+			throw new Error(`Parent task ${parentId} not found`);
+		}
+
+		// Find the subtask
+		if (!parentTask.subtasks) {
+			throw new Error(`Parent task ${parentId} has no subtasks`);
+		}
+
+		const subtask = parentTask.subtasks.find((st) => st.id === subtaskId);
+		if (!subtask) {
+			throw new Error(
+				`Subtask ${subtaskId} not found in parent task ${parentId}`
+			);
+		}
+
+		// Update the subtask status
+		const oldStatus = subtask.status || 'pending';
+		subtask.status = newStatus;
+
+		log(
+			'info',
+			`Updated subtask ${parentId}.${subtaskId} status from '${oldStatus}' to '${newStatus}'`
+		);
+
+		// Check if subtask enhancement should be triggered
+		if (newStatus === 'in-progress') {
+			await handleTaskEnhancementTrigger(subtask, tasksPath, showUi);
+		}
+
+		// Check if all subtasks are done (if setting to 'done')
+		if (
+			newStatus.toLowerCase() === 'done' ||
+			newStatus.toLowerCase() === 'completed'
+		) {
+			const allSubtasksDone = parentTask.subtasks.every(
+				(st) => st.status === 'done' || st.status === 'completed'
+			);
+
+			// Suggest updating parent task if all subtasks are done
+			if (
+				allSubtasksDone &&
+				parentTask.status !== 'done' &&
+				parentTask.status !== 'completed'
+			) {
+				// Only show suggestion in CLI mode
+				if (showUi) {
+					console.log(
+						chalk.yellow(
+							`All subtasks of parent task ${parentId} are now marked as done.`
+						)
+					);
+					console.log(
+						chalk.yellow(
+							`Consider updating the parent task status with: task-master set-status --id=${parentId} --status=done`
+						)
+					);
+				}
+			}
+		}
+	} else {
+		// Handle regular task
+		const taskId = parseInt(taskIdInput, 10);
+		const task = data.tasks.find((t) => t.id === taskId);
+
+		if (!task) {
+			throw new Error(`Task ${taskId} not found`);
+		}
+
+		// Store old status for potential rollback
+		const oldStatus = task.status || 'pending';
+
+		// Check if task enhancement should be triggered BEFORE updating status
+		if (newStatus === 'in-progress') {
+			try {
+				await handleTaskEnhancementTrigger(task, tasksPath, showUi);
+			} catch (error) {
+				// If enhancement fails in required mode, don't update status
+				throw error;
+			}
+		}
+
+		// Update the task status after successful enhancement (or if not needed)
+		task.status = newStatus;
+
+		log(
+			'info',
+			`Updated task ${taskId} status from '${oldStatus}' to '${newStatus}'`
+		)
+
+		// If marking as done, also mark all subtasks as done
+		if (
+			(newStatus.toLowerCase() === 'done' ||
+				newStatus.toLowerCase() === 'completed') &&
+			task.subtasks &&
+			task.subtasks.length > 0
+		) {
+			const pendingSubtasks = task.subtasks.filter(
+				(st) => st.status !== 'done' && st.status !== 'completed'
+			);
+
+			if (pendingSubtasks.length > 0) {
+				log(
+					'info',
+					`Also marking ${pendingSubtasks.length} subtasks as '${newStatus}'`
+				);
+
+				pendingSubtasks.forEach((subtask) => {
+					subtask.status = newStatus;
+				});
+			}
+		}
+	}
+}
+
+/**
+ * Handle task enhancement trigger when status changes to 'in-progress'
+ * @param {Object} task - The task or subtask to potentially enhance
+ * @param {string} tasksPath - Path to the tasks.json file
+ * @param {boolean} showUi - Whether to show UI elements
+ */
+async function handleTaskEnhancementTrigger(task, tasksPath, showUi = true) {
+	// With simplified configuration, automatic enhancement on status change is disabled
+	// Enhancement must be triggered manually through explicit commands
+	if (showUi) {
+		log('debug', 'Automatic task enhancement on status change is no longer supported');
+	}
+	return;
+		
+		// Check if task is already enhanced
+		if (isTaskEnhanced(task)) {
+			if (showUi) {
+				log('info', `Task #${task.id} has already been enhanced - skipping`);
+			}
+			return;
+		}
+		
+		// Check if task can be enhanced
+		const enhancementCheck = canTaskBeEnhanced(task, {
+			enabled: true,
+			force: false,
+			statusRequired: false
+		});
+		
+		if (!enhancementCheck.canEnhance) {
+			if (showUi) {
+				log('info', `Task #${task.id} cannot be enhanced: ${enhancementCheck.reason}`);
+			}
+			return;
+		}
+		
+		// Show enhancement trigger message
+		if (showUi) {
+			console.log(chalk.cyan(`🔍 Triggering task enhancement for task #${task.id}...`));
+		}
+		
+		// Trigger enhancement
+		const enhancementResult = await enhanceTaskDetails(task, {
+			force: false,
+			context: { projectRoot }
+		});
+		
+		// Handle enhancement result
+		if (enhancementResult.success) {
+			// Update the task object with enhanced data
+			Object.assign(task, enhancementResult.task);
+			
+			if (showUi) {
+				console.log(chalk.green(`✅ Successfully enhanced task #${task.id}`));
+			}
+		} else {
+			// Handle enhancement failure with enhanced error reporting
+			const errorSummary = enhancementResult.errorSummary || getErrorSummary(new Error(enhancementResult.error));
+			
+			if (enhancementConfig.required) {
+				// In required mode, throw error to block status update
+				const error = new Error(`Task enhancement is required but failed: ${errorSummary.message}`);
+				error.errorSummary = errorSummary;
+				throw error;
+			} else {
+				// In optional mode, provide graceful degradation with helpful messaging
+				if (showUi) {
+					console.log(chalk.yellow(`⚠️  Enhancement failed but continuing in optional mode`));
+					console.log(chalk.yellow(`   Reason: ${errorSummary.message}`));
+					
+					// Show helpful troubleshooting tips for common issues
+					if (enhancementResult.isTimeout) {
+						console.log(chalk.cyan(`   💡 Tip: Try increasing the timeout in .taskmaster/config.json`));
+					} else if (enhancementResult.errorType === 'ValidationError') {
+						console.log(chalk.cyan(`   💡 Tip: Check your task data and configuration settings`));
+					} else if (enhancementResult.errorType === 'NetworkError') {
+						console.log(chalk.cyan(`   💡 Tip: Check your internet connection and try again`));
+					} else if (enhancementResult.recoverable) {
+						console.log(chalk.cyan(`   💡 Tip: This error is usually temporary - try the operation again`));
+					}
+				}
+				
+				// Log detailed error for debugging
+				log('warn', `Enhancement failed in optional mode: ${enhancementResult.error}`);
+				if (enhancementResult.errorCode) {
+					log('debug', `Error code: ${enhancementResult.errorCode}, Type: ${enhancementResult.errorType}`);
+				}
+			}
+		}
+		
+	} catch (error) {
+		// Re-extract config to check mode
+		const projectRoot = tasksPath.replace('/.taskmaster/tasks/tasks.json', '');
+		const enhancementConfig = getEnhancementConfig(projectRoot);
+		
+		// Get enhanced error summary
+		const errorSummary = error.errorSummary || getErrorSummary(error);
+		
+		if (enhancementConfig.required) {
+			// In required mode, show detailed error information and block
+			if (showUi) {
+				console.log(chalk.red(`❌ Task enhancement failed and is required - blocking status update`));
+				console.log(chalk.red(`   Error: ${errorSummary.message}`));
+				
+				// Show troubleshooting steps
+				if (errorSummary.troubleshooting && errorSummary.troubleshooting.length > 0) {
+					console.log(chalk.cyan(`   Troubleshooting steps:`));
+					errorSummary.troubleshooting.slice(0, 3).forEach((step, i) => {
+						console.log(chalk.cyan(`   ${i + 1}. ${step}`));
+					});
+				}
+			}
+			
+			// Propagate the error to block status update
+			throw error;
+		} else {
+			// In optional mode, provide graceful degradation
+			if (showUi) {
+				console.log(chalk.yellow(`⚠️  Enhancement error but continuing in optional mode`));
+				console.log(chalk.yellow(`   Error: ${errorSummary.message}`));
+				
+				// Show most relevant troubleshooting tip
+				if (isErrorType(error, TimeoutError)) {
+					console.log(chalk.cyan(`   💡 Tip: Consider increasing timeout or using a lower detail level`));
+				} else if (isErrorType(error, ValidationError)) {
+					console.log(chalk.cyan(`   💡 Tip: Check your configuration and task data`));
+				} else if (errorSummary.recoverable) {
+					console.log(chalk.cyan(`   💡 Tip: This error is usually temporary - try again later`));
+				}
+			}
+			
+			// Log detailed error for debugging
+			log('error', `Enhancement error in optional mode: ${error.message}`);
+			log('debug', `Error type: ${error.constructor.name}, Code: ${error.code || 'N/A'}`);
+		}
+	}
+}
+
+export default updateSingleTaskStatus;
+export { handleTaskEnhancementTrigger };
