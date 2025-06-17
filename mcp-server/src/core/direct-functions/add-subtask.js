@@ -34,6 +34,7 @@ export async function addSubtaskDirect(args, log) {
 		details,
 		status,
 		dependencies: dependenciesStr,
+		testStrategy,
 		skipGenerate
 	} = args;
 	try {
@@ -127,7 +128,8 @@ export async function addSubtaskDirect(args, log) {
 				description: description || '',
 				details: details || '',
 				status: status || 'pending',
-				dependencies: dependencies
+				dependencies: dependencies,
+				testStrategy: testStrategy || ''
 			};
 
 			const result = await addSubtask(
