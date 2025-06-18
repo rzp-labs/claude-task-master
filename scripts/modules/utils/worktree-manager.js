@@ -9,10 +9,23 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
+import {
+	WORKTREE_PREFIX,
+	WORKTREES_DIR
+} from '../../../src/constants/paths.js';
 import { isWorktreesEnabled } from '../config-manager.js';
 import { addToRegistry, removeFromRegistry } from './worktree-registry.js';
 
 const execAsync = promisify(exec);
+
+/**
+ * Generate worktree title from task ID
+ * @param {string} taskId - The task ID
+ * @returns {string} The worktree title
+ */
+function getWorktreeTitle(taskId) {
+	return `${WORKTREE_PREFIX}${taskId}`;
+}
 
 /**
  * Create a new Git worktree for a task
@@ -44,8 +57,9 @@ async function createWorktree(
 	}
 
 	const { mcpLog } = options;
-	const worktreePath = path.join(projectRoot, 'worktrees', `task-${taskId}`);
-	const branchName = `task-${taskId}`;
+	const worktreeTitle = getWorktreeTitle(taskId);
+	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+	const branchName = worktreeTitle;
 
 	// Logger helper
 	const report = (level, ...args) => {
@@ -56,7 +70,7 @@ async function createWorktree(
 
 	try {
 		// Create worktrees directory if it doesn't exist
-		const worktreesDir = path.join(projectRoot, 'worktrees');
+		const worktreesDir = path.join(projectRoot, WORKTREES_DIR);
 		if (!fs.existsSync(worktreesDir)) {
 			fs.mkdirSync(worktreesDir, { recursive: true });
 			report('info', `Created worktrees directory: ${worktreesDir}`);
@@ -67,23 +81,45 @@ async function createWorktree(
 			`Creating worktree for task ${taskId} on branch ${branchName}`
 		);
 
-		// Create worktree with new branch
-		const { stdout, stderr } = await execAsync(
-			`git worktree add -b ${branchName} ${worktreePath} ${baseBranch}`,
-			{ cwd: projectRoot }
-		);
+		// Check if branch already exists
+		let branchExists = false;
+		try {
+			await execAsync(
+				`git show-ref --verify --quiet refs/heads/${branchName}`,
+				{ cwd: projectRoot }
+			);
+			branchExists = true;
+		} catch (error) {
+			// Branch doesn't exist, which is fine
+			branchExists = false;
+		}
+
+		// Create worktree - use different command based on branch existence
+		let createCommand;
+		if (branchExists) {
+			// Branch exists, create worktree from existing branch
+			createCommand = `git worktree add ${worktreePath} ${branchName}`;
+			report('info', `Using existing branch ${branchName}`);
+		} else {
+			// Branch doesn't exist, create new branch and worktree
+			createCommand = `git worktree add -b ${branchName} ${worktreePath} ${baseBranch}`;
+			report('info', `Creating new branch ${branchName} from ${baseBranch}`);
+		}
+
+		const result = await execAsync(createCommand, { cwd: projectRoot });
+		const stdout = result.stdout;
 
 		report('info', `Successfully created worktree at ${worktreePath}`);
 
 		// Add to registry after successful Git operation
 		try {
 			addToRegistry(projectRoot, {
-				worktreeId: `task-${taskId}`,
+				worktreeId: worktreeTitle,
 				taskId,
 				branch: branchName,
 				path: worktreePath
 			});
-			report('info', `Added worktree to registry: task-${taskId}`);
+			report('info', `Added worktree to registry: ${worktreeTitle}`);
 		} catch (registryError) {
 			// Log registry error but don't fail the operation
 			report(
@@ -105,26 +141,30 @@ async function createWorktree(
 			'error',
 			`Failed to create worktree for task ${taskId}: ${error.message}`
 		);
-		throw new Error(
-			`Failed to create worktree for task ${taskId}: ${error.message}`
-		);
+		// Extract just the Git error output, skip Node.js "Command failed" wrapper
+		const gitError = error.stderr || error.stdout || error.message;
+		const cleanError = gitError.replace(/^Command failed:.*?\n/, '');
+		throw new Error(`Error creating worktree: ${cleanError}`);
 	}
 }
 
 /**
- * Remove a Git worktree for a task
+ * Remove a Git worktree for a task (handles messy cases with force options)
  * @param {string} projectRoot - Project root directory (required)
- * @param {string} taskId - Task ID of the worktree to remove
+ * @param {string} worktreeTitle - Worktree title (e.g., 'task-6')
  * @param {Object} [options] - Options for the operation
  * @param {Function} [options.mcpLog] - MCP logger object (optional)
+ * @param {boolean} [options.force] - Force removal even with uncommitted changes
+ * @param {Function} [options.confirm] - Confirmation callback for destructive operations
+ * @param {boolean} [options.deleteBranch] - Also delete the branch after removing worktree
  * @returns {Promise<Object>} Worktree removal result
  */
-async function removeWorktree(projectRoot, taskId, options = {}) {
+async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 	if (!projectRoot) {
 		throw new Error('projectRoot is required for removeWorktree');
 	}
-	if (!taskId) {
-		throw new Error('taskId is required for removeWorktree');
+	if (!worktreeTitle) {
+		throw new Error('worktreeTitle is required for removeWorktree');
 	}
 
 	// Check if worktrees feature is enabled
@@ -134,8 +174,9 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 		);
 	}
 
-	const { mcpLog } = options;
-	const worktreePath = path.join(projectRoot, 'worktrees', `task-${taskId}`);
+	const { mcpLog, force = false, confirm, removeBranch = false } = options;
+	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+	const branchName = worktreeTitle;
 
 	// Logger helper
 	const report = (level, ...args) => {
@@ -144,21 +185,65 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 		}
 	};
 
+	// GIVEN the worktree does not exist
+	if (!fs.existsSync(worktreePath)) {
+		throw new Error(`${worktreeTitle} does not exist`);
+	}
+
 	try {
-		report('info', `Removing worktree for task ${taskId} at ${worktreePath}`);
+		report('info', `Removing ${worktreeTitle} at ${worktreePath}`);
 
-		// Remove the worktree
-		const { stdout, stderr } = await execAsync(
-			`git worktree remove ${worktreePath}`,
-			{ cwd: projectRoot }
-		);
+		// First try normal removal
+		let removeCommand = `git worktree remove ${worktreePath}`;
 
-		report('info', `Successfully removed worktree for task ${taskId}`);
+		try {
+			const { stdout } = await execAsync(removeCommand, { cwd: projectRoot });
+			// GIVEN the worktree exists AND the worktree has no uncommitted changes
+			report('info', `✅ ${worktreeTitle} removed successfully`);
+		} catch (initialError) {
+			// Check if error is due to uncommitted changes
+			if (
+				initialError.message.includes('contains modified or untracked files')
+			) {
+				if (!force) {
+					// GIVEN the worktree exists AND the worktree has uncommitted changes WHEN removeWorktree is called without the --force flag
+					throw new Error(
+						`${worktreeTitle} has uncommitted changes. Please commit or stash changes before removing or try again with --force`
+					);
+				}
+
+				// GIVEN the worktree exists AND the worktree has uncommitted changes WHEN removeWorktree is called with the --force flag
+				if (confirm && typeof confirm === 'function') {
+					const shouldProceed = await confirm(
+						`${worktreeTitle} contains uncommitted changes that will be PERMANENTLY LOST. Continue? (y/N)`
+					);
+					if (!shouldProceed) {
+						return {
+							success: false,
+							worktreeTitle,
+							worktreePath,
+							branchName,
+							cancelled: true
+						};
+					}
+				}
+
+				// Use force flag for removal
+				removeCommand = `git worktree remove --force ${worktreePath}`;
+				report('info', `Force removing worktree with uncommitted changes`);
+
+				const { stdout } = await execAsync(removeCommand, { cwd: projectRoot });
+				report('info', `✅ ${worktreeTitle} removed successfully`);
+			} else {
+				// Re-throw other types of errors
+				throw initialError;
+			}
+		}
 
 		// Remove from registry after successful Git operation
 		try {
-			removeFromRegistry(projectRoot, `task-${taskId}`);
-			report('info', `Removed worktree from registry: task-${taskId}`);
+			removeFromRegistry(projectRoot, worktreeTitle);
+			report('info', `Removed ${worktreeTitle} from registry`);
 		} catch (registryError) {
 			// Log registry error but don't fail the operation
 			report(
@@ -167,20 +252,165 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 			);
 		}
 
+		// Delete branch if requested
+		if (removeBranch) {
+			try {
+				await execAsync(`git branch -d ${branchName}`, { cwd: projectRoot });
+				report('info', `Removed branch ${branchName}`);
+			} catch (branchError) {
+				// Log branch removal error but don't fail the operation
+				report(
+					'warn',
+					`Failed to remove branch ${branchName}: ${branchError.message}`
+				);
+			}
+		}
+
 		return {
 			success: true,
-			taskId,
+			worktreeTitle,
 			worktreePath,
-			output: stdout
+			branchName,
+			branchDeleted: removeBranch
+		};
+	} catch (error) {
+		report('error', `Failed to remove ${worktreeTitle}: ${error.message}`);
+		throw error;
+	}
+}
+
+/**
+ * Remove a Git worktree and its branch (clean state only, optimized for happy path)
+ * @param {string} projectRoot - Project root directory (required)
+ * @param {string} worktreeTitle - Worktree title (e.g., 'task-6')
+ * @param {Object} [options] - Options for the operation
+ * @param {Function} [options.mcpLog] - MCP logger object (optional)
+ * @param {boolean} [options.force] - Force flag (not supported, will throw error)
+ * @returns {Promise<Object>} Worktree and branch removal result
+ */
+async function removeWorktreeAndBranch(
+	projectRoot,
+	worktreeTitle,
+	options = {}
+) {
+	if (!projectRoot) {
+		throw new Error('projectRoot is required for removeWorktreeAndBranch');
+	}
+	if (!worktreeTitle) {
+		throw new Error('worktreeTitle is required for removeWorktreeAndBranch');
+	}
+
+	// Check if worktrees feature is enabled
+	if (!isWorktreesEnabled(projectRoot)) {
+		throw new Error(
+			'Worktrees are disabled. Enable in config with features.worktrees: true'
+		);
+	}
+
+	const { mcpLog, force } = options;
+	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+	const branchName = worktreeTitle;
+
+	// Logger helper
+	const report = (level, ...args) => {
+		if (mcpLog && typeof mcpLog[level] === 'function') {
+			mcpLog[level](...args);
+		}
+	};
+
+	// GIVEN the worktree exists WHEN removeWorktreeAndBranch is called with the --force flag
+	if (force) {
+		throw new Error('--force not supported for removeWorktreeAndBranch');
+	}
+
+	// Check if worktree exists
+	if (!fs.existsSync(worktreePath)) {
+		throw new Error(`${worktreeTitle} does not exist`);
+	}
+
+	try {
+		report('info', `Removing ${worktreeTitle} and branch ${branchName}`);
+
+		// Check for uncommitted changes first (fail fast)
+		try {
+			const { stdout: statusOutput } = await execAsync(
+				`git status --porcelain`,
+				{ cwd: worktreePath }
+			);
+			if (statusOutput.trim().length > 0) {
+				// GIVEN the worktree exists AND the worktree has uncommitted changes
+				throw new Error(
+					`${worktreeTitle} has uncommitted changes. Please commit or stash changes before removing`
+				);
+			}
+		} catch (statusError) {
+			if (statusError.message.includes('uncommitted changes')) {
+				throw statusError;
+			}
+			// Git status failed for other reasons, continue
+		}
+
+		// Check for unmerged branch changes
+		try {
+			const { stdout: mergeBase } = await execAsync(
+				`git merge-base ${branchName} main`,
+				{ cwd: projectRoot }
+			);
+			const { stdout: branchCommit } = await execAsync(
+				`git rev-parse ${branchName}`,
+				{ cwd: projectRoot }
+			);
+
+			if (mergeBase.trim() !== branchCommit.trim()) {
+				// GIVEN the worktree exists AND the branch has unmerged changes
+				throw new Error(
+					`Branch ${branchName} has unmerged changes. Please merge, rebase, or stash changes then try again`
+				);
+			}
+		} catch (mergeError) {
+			if (mergeError.message.includes('unmerged changes')) {
+				throw mergeError;
+			}
+			// Branch checking failed for other reasons (e.g., branch doesn't exist), continue
+		}
+
+		// GIVEN the worktree exists AND the worktree has no uncommitted changes AND branch has no unmerged changes
+		// Remove worktree (should be clean at this point)
+		await execAsync(`git worktree remove ${worktreePath}`, {
+			cwd: projectRoot
+		});
+
+		// Remove from registry
+		try {
+			removeFromRegistry(projectRoot, worktreeTitle);
+			report('info', `Removed ${worktreeTitle} from registry`);
+		} catch (registryError) {
+			// Log registry error but don't fail the operation
+			report(
+				'warn',
+				`Failed to remove worktree from registry: ${registryError.message}`
+			);
+		}
+
+		// Delete branch
+		await execAsync(`git branch -d ${branchName}`, { cwd: projectRoot });
+
+		// THEN remove the worktree AND remove the branch AND confirm removal
+		report('info', `✅ Worktree and branch ${branchName} removed successfully`);
+
+		return {
+			success: true,
+			worktreeTitle,
+			worktreePath,
+			branchName,
+			branchDeleted: true
 		};
 	} catch (error) {
 		report(
 			'error',
-			`Failed to remove worktree for task ${taskId}: ${error.message}`
+			`Failed to remove ${worktreeTitle} and branch: ${error.message}`
 		);
-		throw new Error(
-			`Failed to remove worktree for task ${taskId}: ${error.message}`
-		);
+		throw error;
 	}
 }
 
@@ -278,4 +508,10 @@ async function listWorktrees(projectRoot, options = {}) {
 }
 
 // Export functions
-export { createWorktree, removeWorktree, listWorktrees };
+export {
+	getWorktreeTitle,
+	createWorktree,
+	removeWorktree,
+	removeWorktreeAndBranch,
+	listWorktrees
+};

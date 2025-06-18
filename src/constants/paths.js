@@ -40,6 +40,10 @@ export const GITIGNORE_FILE = '.gitignore';
 export const TASK_FILE_PREFIX = 'task_';
 export const TASK_FILE_EXTENSION = '.txt';
 
+// Worktree naming pattern
+export const WORKTREE_PREFIX = 'task-';
+export const WORKTREES_DIR = 'worktrees';
+
 /**
  * Project markers used to identify a task-master project root
  * These files/directories indicate that a directory is a Task Master project

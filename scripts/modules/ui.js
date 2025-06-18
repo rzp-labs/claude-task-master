@@ -744,6 +744,32 @@ function displayHelp() {
 					desc: 'Fix invalid dependencies automatically'
 				}
 			]
+		},
+		{
+			title: 'Git Worktree Management',
+			color: 'cyan',
+			commands: [
+				{
+					name: 'worktree-create',
+					args: '--task=<id> [--base-branch=<branch>]',
+					desc: 'Create a Git worktree for a task'
+				},
+				{
+					name: 'worktree-list',
+					args: '',
+					desc: 'List all Git worktrees'
+				},
+				{
+					name: 'worktree-remove',
+					args: '<worktree> [--force] [--remove-branch]',
+					desc: 'Remove a Git worktree'
+				},
+				{
+					name: 'worktree-status',
+					args: '',
+					desc: 'Show current worktree status'
+				}
+			]
 		}
 	];
 

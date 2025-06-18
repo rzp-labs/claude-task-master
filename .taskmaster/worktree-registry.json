@@ -5,12 +5,33 @@
       "taskId": "6",
       "branch": "task-6",
       "path": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-6",
-      "createdAt": "2025-06-18T02:55:09.035Z"
+      "createdAt": "2025-06-18T03:49:43.967Z"
+    },
+    "task-8": {
+      "worktreeId": "task-8",
+      "taskId": "8",
+      "branch": "task-8",
+      "path": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-8",
+      "createdAt": "2025-06-18T04:04:19.045Z"
+    },
+    "task-abc": {
+      "worktreeId": "task-abc",
+      "taskId": "abc",
+      "branch": "task-abc",
+      "path": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-abc",
+      "createdAt": "2025-06-18T07:08:12.023Z"
+    },
+    "task-101": {
+      "worktreeId": "task-101",
+      "taskId": "101",
+      "branch": "task-101",
+      "path": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-101",
+      "createdAt": "2025-06-18T07:42:33.821Z"
     }
   },
   "metadata": {
     "created": "2025-06-18T02:55:09.032Z",
-    "updated": "2025-06-18T02:55:09.035Z",
+    "updated": "2025-06-18T07:42:33.822Z",
     "version": "1.0"
   }
 }

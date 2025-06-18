@@ -79,6 +79,14 @@ import {
 } from '../../src/constants/paths.js';
 
 import {
+	getWorktreeTitle,
+	createWorktree,
+	removeWorktree,
+	removeWorktreeAndBranch,
+	listWorktrees
+} from './utils/worktree-manager.js';
+
+import {
 	confirmTaskOverwrite,
 	displayAiUsageSummary,
 	displayApiKeyStatus,
@@ -4113,6 +4121,208 @@ Examples:
 		.on('error', function (err) {
 			console.error(chalk.red(`Error: ${err.message}`));
 			process.exit(1);
+		});
+
+
+
+
+	// worktree create command
+	programInstance
+		.command('worktree-create')
+		.description('Create a Git worktree for a task')
+		.requiredOption('--task <taskId>', 'Task ID to create worktree for')
+		.option('--base-branch <branch>', 'Base branch to create from', 'main')
+		.action(async (options) => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				const { task: taskId, baseBranch } = options;
+
+				// Create worktree
+				const createOptions = {
+					mcpLog: {
+						info: (msg) => console.log(chalk.green(msg)),
+						warn: (msg) => console.log(chalk.yellow(msg)),
+						error: (msg) => console.log(chalk.red(msg))
+					}
+				};
+
+				const result = await createWorktree(projectRoot, taskId, baseBranch, createOptions);
+				
+				console.log(chalk.green(`✅ Worktree created successfully!`));
+				console.log(chalk.white(`Path: ${chalk.cyan(result.worktreePath)}`));
+				console.log(chalk.white(`Branch: ${chalk.cyan(result.branchName)}`));
+
+			} catch (error) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				process.exit(1);
+			}
+		});
+
+	// worktree list command
+	programInstance
+		.command('worktree-list')
+		.description('List all Git worktrees')
+		.action(async () => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				const listOptions = {
+					mcpLog: {
+						info: (msg) => console.log(chalk.blue(msg)),
+						warn: (msg) => console.log(chalk.yellow(msg)),
+						error: (msg) => console.log(chalk.red(msg))
+					}
+				};
+
+				const worktrees = await listWorktrees(projectRoot, listOptions);
+				
+				if (worktrees.length === 0) {
+					console.log(chalk.gray('No worktrees found.'));
+					return;
+				}
+
+				console.log(chalk.white.bold('\nWorktrees:'));
+				console.log('');
+				
+				worktrees.forEach((worktree) => {
+					const isMain = worktree.bare || worktree.path === projectRoot;
+					const pathDisplay = isMain ? 
+						chalk.yellow('(main repository)') : 
+						chalk.gray(worktree.path);
+					
+					const branchDisplay = worktree.branch ? 
+						chalk.cyan(worktree.branch) : 
+						chalk.gray('(no branch)');
+					
+					const taskDisplay = worktree.isTaskMasterWorktree ? 
+						chalk.green(`[Task ${worktree.taskId}]`) : 
+						'';
+					
+					console.log(`  ${branchDisplay} ${pathDisplay} ${taskDisplay}`);
+				});
+				console.log('');
+
+			} catch (error) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				process.exit(1);
+			}
+		});
+
+	// worktree remove command
+	programInstance
+		.command('worktree-remove <worktreeTitle>')
+		.description('Remove a Git worktree')
+		.option('-f, --force', 'Force removal with uncommitted changes')
+		.option('--remove-branch', 'Also remove the branch')
+		.action(async (worktreeTitle, options) => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				// Create confirmation callback
+				const confirmCallback = async (message) => {
+					const answer = await inquirer.prompt([
+						{
+							type: 'confirm',
+							name: 'proceed',
+							message: message,
+							default: false
+						}
+					]);
+					return answer.proceed;
+				};
+
+				// Call removeWorktree with appropriate options
+				const removeOptions = {
+					force: options.force || false,
+					removeBranch: options.removeBranch || false,
+					confirm: confirmCallback,
+					mcpLog: {
+						info: (msg) => console.log(msg),
+						warn: (msg) => console.log(chalk.yellow(msg)),
+						error: (msg) => console.log(chalk.red(msg))
+					}
+				};
+
+				await removeWorktree(projectRoot, worktreeTitle, removeOptions);
+			} catch (error) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				process.exit(1);
+			}
+		});
+
+	// worktree status command
+	programInstance
+		.command('worktree-status')
+		.description('Show current worktree status and information')
+		.action(async () => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				// Check if we're in a worktree
+				const { isWorktree, getWorktreeInfo } = await import(
+					'./utils/git-utils.js'
+				);
+				const inWorktree = await isWorktree(projectRoot);
+
+				if (!inWorktree) {
+					console.log(chalk.blue('Status: Not in a worktree'));
+					console.log(chalk.gray('You are in the main repository'));
+					return;
+				}
+
+				// Get worktree information
+				const worktreeInfo = await getWorktreeInfo(projectRoot);
+				if (!worktreeInfo) {
+					console.log(
+						chalk.yellow('Warning: Could not retrieve worktree information')
+					);
+					return;
+				}
+
+				// Display worktree status
+				console.log(chalk.green('✓ In a worktree'));
+				console.log(chalk.white(`Branch: ${chalk.cyan(worktreeInfo.branch)}`));
+				console.log(
+					chalk.white(`Path: ${chalk.gray(worktreeInfo.currentPath)}`)
+				);
+				console.log(
+					chalk.white(
+						`Main Repository: ${chalk.gray(worktreeInfo.mainWorktreePath)}`
+					)
+				);
+
+				// Check if this is a Task Master worktree
+				const branchName = worktreeInfo.branch;
+				const taskIdMatch = branchName
+					? branchName.match(/^task-(\d+)$/)
+					: null;
+				if (taskIdMatch) {
+					const taskId = taskIdMatch[1];
+					console.log(chalk.white(`Task ID: ${chalk.yellow(taskId)}`));
+				} else {
+					console.log(chalk.gray('Not a Task Master worktree'));
+				}
+			} catch (error) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				process.exit(1);
+			}
 		});
 
 	return programInstance;
