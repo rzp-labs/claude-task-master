@@ -1,1134 +1,734 @@
 {
-  "master": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Research Git Worktree Basic Requirements",
-        "description": "Research Git worktree commands and understand basic usage patterns. Focus on practical implementation needs for MVP.",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Test basic Git worktree commands",
-            "description": "Manually test git worktree add, remove, list, and prune to understand their behavior",
-            "dependencies": [],
-            "details": "Create a test repository and run through basic worktree operations:\n- git worktree add ./test-worktree\n- git worktree list\n- git worktree remove ./test-worktree\n- Document command outputs and any errors encountered\n<info added on 2025-06-18T00:48:39.268Z>\nBased on the successful testing results, here's the information that should be appended to subtask 1.2:\n\n**Testing Results - Git Version 2.39.5:**\n\nAll basic Git worktree operations tested successfully:\n\n✅ **git worktree list** - Shows all worktrees with paths, commit hashes, and branch names\n✅ **git worktree add ../test-worktree feature-test** - Creates new worktree, automatically checks out specified branch  \n✅ **git worktree remove ../test-worktree** - Removes worktree cleanly\n✅ **git worktree prune** - Cleans up any stale worktree references\n\n**Key Findings:**\n- Worktree creation is instantaneous and creates physical directory\n- Each worktree shows current commit hash and branch in list output\n- Remove operation is clean with no residual files\n- All commands work smoothly with Git 2.39.5\n\n**Version Requirement:** Git 2.39.5 confirmed working - this meets the minimum requirement for Git worktree functionality (Git 2.5+ where worktree was introduced).\n</info added on 2025-06-18T00:48:39.268Z>",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Verify Git version requirements",
-            "description": "Check that Git 2.5+ is available and test worktree features",
-            "dependencies": [],
-            "details": "Run git --version and verify it's 2.5 or higher. Test that worktree commands are available. Document the exact version being used for development.\n<info added on 2025-06-18T00:49:22.365Z>\n**Git Version Verification Results:**\n\nGit version 2.39.5 (Apple Git-154) confirmed compatible with Task Master worktree requirements. All core worktree commands (add, list, remove, prune) are available and functional. Version significantly exceeds the minimum Git 2.5.0 requirement, providing robust worktree support for the development environment.\n\n**Status:** ✅ VERIFICATION COMPLETE - Ready for worktree implementation.\n</info added on 2025-06-18T00:49:22.365Z>",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Document worktree limitations",
-            "description": "Note key limitations like one branch per worktree and submodule handling",
-            "dependencies": [
-              1
-            ],
-            "details": "Create a simple notes file documenting:\n- One branch per worktree restriction\n- How worktrees handle submodules\n- Any platform-specific issues encountered\n- Keep it practical, not theoretical\n<info added on 2025-06-18T00:50:24.484Z>\nBased on the completed research, here's the documentation for the subtask:\n\n**Research Completed - Key Git Worktree Limitations Documented**\n\n✅ **One Branch Per Worktree Restriction (CRITICAL)**\n- Confirmed: `fatal: 'main' is already checked out at '/path/to/worktree'`\n- Each branch can only be active in one worktree at a time\n- Task Master must implement branch usage tracking to prevent conflicts\n\n✅ **Branch Checkout Conflicts**\n- Multiple worktrees cannot use the same branch simultaneously\n- Solution: Auto-generate unique branch names using `task-{id}` pattern\n- New branches must be created for each worktree instance\n\n✅ **Directory Management Requirements**\n- Worktrees create physical directories requiring cleanup\n- Failed worktree creation leaves no residual files (clean failure)\n- Path conflicts occur if target directory already exists\n\n✅ **Platform Testing Results**\n- Tested on macOS with Git 2.39.5 - standard behavior confirmed\n- No submodule complications identified for MVP scope\n- Git error messages are consistent and catchable for proper error handling\n\n**Implementation Requirements Identified:**\n1. Registry system to track active branch usage\n2. Automated branch naming strategy implementation\n3. Robust directory cleanup for remove operations\n4. Error handling for Git's specific error message patterns\n\nResearch complete - ready for implementation phase.\n</info added on 2025-06-18T00:50:24.484Z>",
-            "status": "done"
-          }
-        ],
-        "tags": [
-          "research",
-          "git",
-          "worktree"
-        ],
-        "details": "Focus on understanding the basics needed for implementation. No performance testing or complex scenarios - just what we need to build the MVP.",
-        "acceptanceCriteria": [
-          "Basic understanding of git worktree commands",
-          "Confirmed Git 2.5+ requirement",
-          "Simple documentation of key limitations"
-        ],
-        "testStrategy": "Manual testing with a sample repository"
-      },
-      {
-        "id": 2,
-        "title": "Create Worktree Manager Module Core",
-        "description": "Implement the core Worktree Manager module at scripts/modules/utils/worktree-manager.js with basic create/remove functionality using Task Master's existing error patterns.",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create basic worktree wrapper functions",
-            "description": "Implement createWorktree and removeWorktree functions that wrap git commands",
-            "dependencies": [],
-            "details": "Create worktree-manager.js with two functions:\n- createWorktree(taskId, branch) - runs git worktree add\n- removeWorktree(worktreeId) - runs git worktree remove\n- Use standard throw new Error() for any failures\n- Path should be ./worktrees/task-{id}/\n<info added on 2025-06-18T01:04:27.185Z>\nImplementation completed successfully with createWorktree() and removeWorktree() functions following project patterns. Functions use execAsync from git-utils.js, include proper error handling with throw new Error(), and implement the specified ./worktrees/task-{id}/ directory structure with task-{id} branch naming. Ready to proceed with listWorktrees function implementation.\n</info added on 2025-06-18T01:04:27.185Z>",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Add listWorktrees function",
-            "description": "Implement function to list current worktrees",
-            "dependencies": [
-              1
-            ],
-            "details": "Add listWorktrees() function that:\n- Runs git worktree list --porcelain\n- Parses the output into a simple array\n- Returns structured data with path and branch info\n<info added on 2025-06-18T01:05:25.397Z>\n**✅ COMPLETED - listWorktrees() Implementation**\n\nAdded `listWorktrees(projectRoot)` function to `scripts/modules/utils/worktree-manager.js`:\n\n- **Core functionality**: Executes `git worktree list --porcelain` and parses machine-readable output\n- **Structured parsing**: Converts raw output into objects with `path`, `head`, `branch` properties\n- **Task Master integration**: Auto-detects `task-{id}` pattern worktrees and adds `taskId` + `isTaskMasterWorktree` flags\n- **Branch cleanup**: Handles bare repos and cleans `refs/heads/` prefixes from branch names\n- **Error handling**: Uses existing error patterns with clear messages\n\nFunction returns array of structured worktree objects ready for Task Master consumption. Implementation complete and ready for logger integration in subtask 2.3.\n</info added on 2025-06-18T01:05:25.397Z>",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Integrate with Task Master's logger",
-            "description": "Use existing logger utilities for info and warning messages",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Import Task Master's logger and use it for:\n- Info messages when worktrees are created/removed\n- Warning messages for non-critical issues\n- Let Git errors bubble up with throw new Error()\n<info added on 2025-06-18T01:07:36.740Z>\nSuccessfully integrated Task Master's logger pattern into all worktree functions. All three core functions (createWorktree, removeWorktree, listWorktrees) now support optional logging via mcpLog parameter while maintaining backward compatibility and clean error handling with throw new Error().\n</info added on 2025-06-18T01:07:36.740Z>",
-            "status": "done"
-          },
-          {
-            "id": 4,
-            "title": "Create functional verification script",
-            "description": "Create atomic test script to verify worktree-manager functionality and prevent regressions",
-            "details": "Create scripts/test-worktree-manager.js that:\n- Tests module import and function availability\n- Verifies listWorktrees with real Git operations\n- Tests createWorktree with filesystem verification (not just return values)\n- Tests removeWorktree with filesystem verification\n- Tests error handling for invalid inputs\n- Cleans up artifacts on success, preserves them on failure for debugging\n- Provides clear error messages and investigation instructions\n<info added on 2025-06-18T01:26:48.845Z>\nTest script implementation completed and verified working. Provides comprehensive verification of worktree-manager module including module import testing, real Git operations verification, filesystem change confirmation, error handling validation, and proper artifact cleanup. Script ready for ongoing regression testing during future development.\n</info added on 2025-06-18T01:26:48.845Z>",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 2
-          }
-        ],
-        "tags": [
-          "implementation",
-          "worktree",
-          "core"
-        ],
-        "details": "Keep it simple - just wrap Git commands and use existing patterns. No custom error classes or complex abstractions.",
-        "acceptanceCriteria": [
-          "Module exports createWorktree, removeWorktree, and listWorktrees",
-          "Uses standard error handling (throw new Error)",
-          "Creates worktrees in ./worktrees/task-{id}/ structure",
-          "Uses existing logger utilities"
-        ],
-        "testStrategy": "Basic unit tests with mocked git commands"
-      },
-      {
-        "id": 3,
-        "title": "Implement Simple Worktree Registry",
-        "description": "Create a simple JSON file to track active worktrees at .taskmaster/worktree-registry.json",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [
-          2
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create basic registry read/write functions",
-            "description": "Implement simple functions to read and write the registry JSON file",
-            "dependencies": [],
-            "details": "Create registry functions:\n- readRegistry() - read JSON file, return empty object if missing\n- writeRegistry(data) - write JSON file with pretty formatting\n- Use fs.readFileSync/writeFileSync for simplicity",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Add registry entry management",
-            "description": "Implement functions to add and remove registry entries",
-            "dependencies": [
-              1
-            ],
-            "details": "Add functions:\n- addToRegistry(entry) - add worktree info to registry\n- removeFromRegistry(worktreeId) - remove entry\n- findByTaskId(taskId) - find worktree for a task\n- Entry format: {worktreeId, taskId, branch, path, createdAt}",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Integrate registry with worktree operations",
-            "description": "Update worktree create/remove to use registry",
-            "dependencies": [
-              2
-            ],
-            "details": "Modify worktree-manager.js:\n- createWorktree should add to registry after success\n- removeWorktree should remove from registry\n- Handle registry errors gracefully (log but don't fail operation)",
-            "status": "done"
-          },
-          {
-            "id": 4,
-            "title": "Create comprehensive atomic test suite",
-            "description": "Build atomic test scripts for regression testing of registry functionality",
-            "details": "Created test scripts with atomic behavior:\n- scripts/test-worktree-registry.js - Basic registry read/write operations\n- scripts/test-registry-entry-management.js - Entry CRUD operations with filesystem verification\n- scripts/verify-registry-filesystem.js - Filesystem persistence verification\n- All tests clean up artifacts on success, preserve on failure for debugging\n- Real filesystem verification instead of relying on return values",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 3
-          }
-        ],
-        "tags": [
-          "implementation",
-          "registry",
-          "data"
-        ],
-        "details": "Simple JSON file storage - no schema validation or complex operations. Follow Task Master's existing JSON patterns.",
-        "acceptanceCriteria": [
-          "Registry stored in .taskmaster/worktree-registry.json",
-          "Basic add/remove/find operations",
-          "Simple JSON read/write (no locking needed for MVP)",
-          "Registry errors don't break worktree operations"
-        ],
-        "testStrategy": "Test with mock filesystem operations"
-      },
-      {
-        "id": 4,
-        "title": "Add Worktree Detection to Git Utils",
-        "description": "Extend scripts/modules/utils/git-utils.js with basic worktree detection",
-        "status": "pending",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add isWorktree function",
-            "description": "Implement function to detect if current directory is a worktree",
-            "dependencies": [],
-            "details": "Add isWorktree() function that:\n- Checks if .git is a file (not directory)\n- Returns true if in worktree, false otherwise\n- Simple and reliable detection",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Add getWorktreeInfo function",
-            "description": "Get basic info about current worktree",
-            "dependencies": [
-              1
-            ],
-            "details": "Add getWorktreeInfo() that returns:\n- Current branch name\n- Path to main worktree\n- Return null if not in a worktree",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Add Git version check",
-            "description": "Simple check for Git 2.5+ requirement",
-            "dependencies": [],
-            "details": "Add validateGitVersion() that:\n- Runs git --version\n- Checks if version is 2.5 or higher\n- Throws clear error if version too old",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "git",
-          "utils"
-        ],
-        "details": "Basic detection functions - keep it simple and let Git handle edge cases.",
-        "acceptanceCriteria": [
-          "Accurate worktree detection",
-          "Git version check with clear error",
-          "Basic worktree info extraction",
-          "Integration with existing git-utils"
-        ],
-        "testStrategy": "Test with mock git command outputs"
-      },
-      {
-        "id": 5,
-        "title": "Implement Feature Toggle",
-        "description": "Add simple worktree feature toggle to config.json with runtime checks",
-        "status": "pending",
-        "priority": "high",
-        "dependencies": [
-          2,
-          3
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree config option",
-            "description": "Add features.worktrees boolean to config schema",
-            "dependencies": [],
-            "details": "Update config to include:\n- features.worktrees: false (default)\n- Add to config schema definition\n- Document in config template",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Add feature check to worktree functions",
-            "description": "Check config before any worktree operation",
-            "dependencies": [
-              1
-            ],
-            "details": "In every worktree function:\n- Load config and check features.worktrees\n- If false, throw new Error('Worktrees are disabled')\n- Clear error message that it's intentionally disabled",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Implement config locking",
-            "description": "Simple mechanism to prevent config tampering",
-            "dependencies": [
-              1
-            ],
-            "details": "Add _locked array to config:\n- List of config keys that can't be changed\n- Check on config write if key is locked\n- Throw error if attempting to modify locked key",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "config",
-          "security"
-        ],
-        "details": "Simple binary toggle - either enabled or disabled. Runtime checks prevent bypassing.",
-        "acceptanceCriteria": [
-          "Config includes features.worktrees (default false)",
-          "Runtime checks in all worktree functions",
-          "Config locking prevents tampering",
-          "Clear error messages when disabled"
-        ],
-        "testStrategy": "Test with various config states"
-      },
-      {
-        "id": 6,
-        "title": "Create CLI Commands",
-        "description": "Add worktree commands to Task Master CLI",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          3,
-          4,
-          5
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree create command",
-            "description": "Implement 'tm worktree create --task <id>' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Accepts task ID parameter\n- Calls createWorktree from worktree-manager\n- Shows success message with worktree path\n- Handles errors gracefully",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Add worktree list command",
-            "description": "Implement 'tm worktree list' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Calls listWorktrees\n- Formats output as simple table\n- Shows path, branch, and associated task",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Add worktree remove command",
-            "description": "Implement 'tm worktree remove' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Accepts worktree path or uses current directory\n- Calls removeWorktree\n- Confirms before removal\n- Shows success message",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Add basic worktree status command",
-            "description": "Implement 'tm worktree status' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Shows if in a worktree\n- Displays current branch and task info\n- Simple output, no complex checks",
-            "status": "pending"
-          },
-          {
-            "id": 5,
-            "title": "Update .gitignore automatically",
-            "description": "Add worktrees/ to .gitignore when first worktree created",
-            "dependencies": [
-              1
-            ],
-            "details": "When creating first worktree:\n- Check if worktrees/ is in .gitignore\n- If not, append it\n- Simple implementation, no complex logic",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "cli",
-          "commands"
-        ],
-        "details": "Basic CLI commands - no sync or complex operations in MVP. Manual operations only.",
-        "acceptanceCriteria": [
-          "Four basic CLI commands work",
-          "Feature flag checked on each command",
-          "Clear output and error messages",
-          "Auto-update .gitignore"
-        ],
-        "testStrategy": "CLI integration tests with mocked functions"
-      },
-      {
-        "id": 7,
-        "title": "Create MCP Tools",
-        "description": "Add MCP tools for worktree operations",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          3,
-          4,
-          5
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create create_worktree MCP tool",
-            "description": "Implement MCP tool for creating worktrees",
-            "dependencies": [],
-            "details": "Create mcp-server/src/tools/worktree/create-worktree.js:\n- Validate task ID exists\n- Check feature flag\n- Call worktree-manager createWorktree\n- Return success with worktree path",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Create remove_worktree MCP tool",
-            "description": "Implement MCP tool for removing worktrees",
-            "dependencies": [],
-            "details": "Create remove-worktree.js:\n- Accept worktree path parameter\n- Call worktree-manager removeWorktree\n- Return success confirmation",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Create list_worktrees MCP tool",
-            "description": "Implement MCP tool for listing worktrees",
-            "dependencies": [],
-            "details": "Create list-worktrees.js:\n- Call worktree-manager listWorktrees\n- Return structured list of worktrees\n- Include task associations",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Conditionally register worktree tools",
-            "description": "Only register tools when feature is enabled",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "details": "Update tool registration:\n- Check config for features.worktrees\n- Only register tools if enabled\n- Tools invisible when feature disabled",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "mcp",
-          "tools"
-        ],
-        "details": "Basic MCP tools matching CLI functionality. No sync tool in MVP.",
-        "acceptanceCriteria": [
-          "Three MCP tools implemented",
-          "Dynamic registration based on config",
-          "Structured responses",
-          "Proper error handling"
-        ],
-        "testStrategy": "MCP tool tests with mocked core functions"
-      },
-      {
-        "id": 8,
-        "title": "Add Basic Event Emission",
-        "description": "Emit events when worktrees are created/removed using existing event system",
-        "status": "pending",
-        "priority": "low",
-        "dependencies": [
-          6,
-          7
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add event emission to create/remove",
-            "description": "Emit events in worktree operations",
-            "dependencies": [],
-            "details": "In worktree-manager.js:\n- Emit 'worktree.created' after successful create\n- Emit 'worktree.removed' after successful remove\n- Include basic data (taskId, path, branch)",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Test event emission",
-            "description": "Verify events are emitted correctly",
-            "dependencies": [
-              1
-            ],
-            "details": "Add simple test:\n- Listen for events\n- Create/remove worktree\n- Verify events fired with correct data",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "events",
-          "integration"
-        ],
-        "details": "Minimal event integration - just emit, no listeners or automation in MVP.",
-        "acceptanceCriteria": [
-          "Events emitted on create/remove",
-          "Basic event data included",
-          "Uses existing event patterns"
-        ],
-        "testStrategy": "Simple event emission tests"
-      },
-      {
-        "id": 9,
-        "title": "Create Basic Tests",
-        "description": "Write essential tests for worktree functionality",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          6,
-          7,
-          8
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Write worktree-manager tests",
-            "description": "Test core worktree functions",
-            "dependencies": [],
-            "details": "Test:\n- createWorktree with valid/invalid inputs\n- removeWorktree success/failure\n- listWorktrees output parsing\n- Mock git commands",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Write registry tests",
-            "description": "Test registry operations",
-            "dependencies": [],
-            "details": "Test:\n- Registry read/write\n- Add/remove entries\n- Find by task ID\n- Mock filesystem",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Write CLI command tests",
-            "description": "Test CLI commands work correctly",
-            "dependencies": [],
-            "details": "Test:\n- Command parsing\n- Success scenarios\n- Error handling\n- Feature flag enforcement",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "testing",
-          "quality",
-          "validation"
-        ],
-        "details": "Focus on core functionality tests. No need for exhaustive coverage in MVP.",
-        "acceptanceCriteria": [
-          "Core functions have tests",
-          "CLI commands tested",
-          "Mocked dependencies",
-          "Tests pass reliably"
-        ],
-        "testStrategy": "Jest with mocked git commands and filesystem"
-      },
-      {
-        "id": 10,
-        "title": "Write Basic Documentation",
-        "description": "Document worktree feature for users",
-        "status": "pending",
-        "priority": "low",
-        "dependencies": [
-          9
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree section to README",
-            "description": "Document basic worktree usage",
-            "dependencies": [],
-            "details": "Add section covering:\n- What worktrees are (brief)\n- How to enable the feature\n- Basic command examples\n- Git 2.5+ requirement",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Document CLI commands",
-            "description": "Add command reference for worktree commands",
-            "dependencies": [],
-            "details": "Document:\n- tm worktree create --task <id>\n- tm worktree list\n- tm worktree remove\n- tm worktree status\n- Include examples",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Document MCP tools",
-            "description": "Add MCP tool documentation",
-            "dependencies": [],
-            "details": "Document:\n- create_worktree tool\n- remove_worktree tool\n- list_worktrees tool\n- How to enable in MCP config",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "documentation",
-          "user-guide",
-          "examples"
-        ],
-        "details": "Keep documentation simple and practical. Focus on how to use, not theory.",
-        "acceptanceCriteria": [
-          "README includes worktree section",
-          "Commands documented with examples",
-          "MCP tools documented",
-          "Setup instructions clear"
-        ],
-        "testStrategy": "Documentation review"
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-17T21:13:25.947Z",
-      "updated": "2025-06-18T01:36:30.907Z",
-      "description": "Simplified tasks for git worktree MVP - following 'nail it before we scale it' philosophy"
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Research Git Worktree Basic Requirements",
+      "description": "Research Git worktree commands and understand basic usage patterns. Focus on practical implementation needs for MVP.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Test basic Git worktree commands",
+          "description": "Manually test git worktree add, remove, list, and prune to understand their behavior",
+          "dependencies": [],
+          "details": "Create a test repository and run through basic worktree operations:\n- git worktree add ./test-worktree\n- git worktree list\n- git worktree remove ./test-worktree\n- Document command outputs and any errors encountered\n<info added on 2025-06-18T00:48:39.268Z>\nBased on the successful testing results, here's the information that should be appended to subtask 1.2:\n\n**Testing Results - Git Version 2.39.5:**\n\nAll basic Git worktree operations tested successfully:\n\n✅ **git worktree list** - Shows all worktrees with paths, commit hashes, and branch names\n✅ **git worktree add ../test-worktree feature-test** - Creates new worktree, automatically checks out specified branch  \n✅ **git worktree remove ../test-worktree** - Removes worktree cleanly\n✅ **git worktree prune** - Cleans up any stale worktree references\n\n**Key Findings:**\n- Worktree creation is instantaneous and creates physical directory\n- Each worktree shows current commit hash and branch in list output\n- Remove operation is clean with no residual files\n- All commands work smoothly with Git 2.39.5\n\n**Version Requirement:** Git 2.39.5 confirmed working - this meets the minimum requirement for Git worktree functionality (Git 2.5+ where worktree was introduced).\n</info added on 2025-06-18T00:48:39.268Z>",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Verify Git version requirements",
+          "description": "Check that Git 2.5+ is available and test worktree features",
+          "dependencies": [],
+          "details": "Run git --version and verify it's 2.5 or higher. Test that worktree commands are available. Document the exact version being used for development.\n<info added on 2025-06-18T00:49:22.365Z>\n**Git Version Verification Results:**\n\nGit version 2.39.5 (Apple Git-154) confirmed compatible with Task Master worktree requirements. All core worktree commands (add, list, remove, prune) are available and functional. Version significantly exceeds the minimum Git 2.5.0 requirement, providing robust worktree support for the development environment.\n\n**Status:** ✅ VERIFICATION COMPLETE - Ready for worktree implementation.\n</info added on 2025-06-18T00:49:22.365Z>",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Document worktree limitations",
+          "description": "Note key limitations like one branch per worktree and submodule handling",
+          "dependencies": [
+            1
+          ],
+          "details": "Create a simple notes file documenting:\n- One branch per worktree restriction\n- How worktrees handle submodules\n- Any platform-specific issues encountered\n- Keep it practical, not theoretical\n<info added on 2025-06-18T00:50:24.484Z>\nBased on the completed research, here's the documentation for the subtask:\n\n**Research Completed - Key Git Worktree Limitations Documented**\n\n✅ **One Branch Per Worktree Restriction (CRITICAL)**\n- Confirmed: `fatal: 'main' is already checked out at '/path/to/worktree'`\n- Each branch can only be active in one worktree at a time\n- Task Master must implement branch usage tracking to prevent conflicts\n\n✅ **Branch Checkout Conflicts**\n- Multiple worktrees cannot use the same branch simultaneously\n- Solution: Auto-generate unique branch names using `task-{id}` pattern\n- New branches must be created for each worktree instance\n\n✅ **Directory Management Requirements**\n- Worktrees create physical directories requiring cleanup\n- Failed worktree creation leaves no residual files (clean failure)\n- Path conflicts occur if target directory already exists\n\n✅ **Platform Testing Results**\n- Tested on macOS with Git 2.39.5 - standard behavior confirmed\n- No submodule complications identified for MVP scope\n- Git error messages are consistent and catchable for proper error handling\n\n**Implementation Requirements Identified:**\n1. Registry system to track active branch usage\n2. Automated branch naming strategy implementation\n3. Robust directory cleanup for remove operations\n4. Error handling for Git's specific error message patterns\n\nResearch complete - ready for implementation phase.\n</info added on 2025-06-18T00:50:24.484Z>",
+          "status": "done"
+        }
+      ],
+      "tags": [
+        "research",
+        "git",
+        "worktree"
+      ],
+      "details": "Focus on understanding the basics needed for implementation. No performance testing or complex scenarios - just what we need to build the MVP.",
+      "acceptanceCriteria": [
+        "Basic understanding of git worktree commands",
+        "Confirmed Git 2.5+ requirement",
+        "Simple documentation of key limitations"
+      ],
+      "testStrategy": "Manual testing with a sample repository"
+    },
+    {
+      "id": 2,
+      "title": "Create Worktree Manager Module Core",
+      "description": "Implement the core Worktree Manager module at scripts/modules/utils/worktree-manager.js with basic create/remove functionality using Task Master's existing error patterns.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create basic worktree wrapper functions",
+          "description": "Implement createWorktree and removeWorktree functions that wrap git commands",
+          "dependencies": [],
+          "details": "Create worktree-manager.js with two functions:\n- createWorktree(taskId, branch) - runs git worktree add\n- removeWorktree(worktreeId) - runs git worktree remove\n- Use standard throw new Error() for any failures\n- Path should be ./worktrees/task-{id}/\n<info added on 2025-06-18T01:04:27.185Z>\nImplementation completed successfully with createWorktree() and removeWorktree() functions following project patterns. Functions use execAsync from git-utils.js, include proper error handling with throw new Error(), and implement the specified ./worktrees/task-{id}/ directory structure with task-{id} branch naming. Ready to proceed with listWorktrees function implementation.\n</info added on 2025-06-18T01:04:27.185Z>",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Add listWorktrees function",
+          "description": "Implement function to list current worktrees",
+          "dependencies": [
+            1
+          ],
+          "details": "Add listWorktrees() function that:\n- Runs git worktree list --porcelain\n- Parses the output into a simple array\n- Returns structured data with path and branch info\n<info added on 2025-06-18T01:05:25.397Z>\n**✅ COMPLETED - listWorktrees() Implementation**\n\nAdded `listWorktrees(projectRoot)` function to `scripts/modules/utils/worktree-manager.js`:\n\n- **Core functionality**: Executes `git worktree list --porcelain` and parses machine-readable output\n- **Structured parsing**: Converts raw output into objects with `path`, `head`, `branch` properties\n- **Task Master integration**: Auto-detects `task-{id}` pattern worktrees and adds `taskId` + `isTaskMasterWorktree` flags\n- **Branch cleanup**: Handles bare repos and cleans `refs/heads/` prefixes from branch names\n- **Error handling**: Uses existing error patterns with clear messages\n\nFunction returns array of structured worktree objects ready for Task Master consumption. Implementation complete and ready for logger integration in subtask 2.3.\n</info added on 2025-06-18T01:05:25.397Z>",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Integrate with Task Master's logger",
+          "description": "Use existing logger utilities for info and warning messages",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Import Task Master's logger and use it for:\n- Info messages when worktrees are created/removed\n- Warning messages for non-critical issues\n- Let Git errors bubble up with throw new Error()\n<info added on 2025-06-18T01:07:36.740Z>\nSuccessfully integrated Task Master's logger pattern into all worktree functions. All three core functions (createWorktree, removeWorktree, listWorktrees) now support optional logging via mcpLog parameter while maintaining backward compatibility and clean error handling with throw new Error().\n</info added on 2025-06-18T01:07:36.740Z>",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Create functional verification script",
+          "description": "Create atomic test script to verify worktree-manager functionality and prevent regressions",
+          "details": "Create scripts/test-worktree-manager.js that:\n- Tests module import and function availability\n- Verifies listWorktrees with real Git operations\n- Tests createWorktree with filesystem verification (not just return values)\n- Tests removeWorktree with filesystem verification\n- Tests error handling for invalid inputs\n- Cleans up artifacts on success, preserves them on failure for debugging\n- Provides clear error messages and investigation instructions\n<info added on 2025-06-18T01:26:48.845Z>\nTest script implementation completed and verified working. Provides comprehensive verification of worktree-manager module including module import testing, real Git operations verification, filesystem change confirmation, error handling validation, and proper artifact cleanup. Script ready for ongoing regression testing during future development.\n</info added on 2025-06-18T01:26:48.845Z>",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 2
+        }
+      ],
+      "tags": [
+        "implementation",
+        "worktree",
+        "core"
+      ],
+      "details": "Keep it simple - just wrap Git commands and use existing patterns. No custom error classes or complex abstractions.",
+      "acceptanceCriteria": [
+        "Module exports createWorktree, removeWorktree, and listWorktrees",
+        "Uses standard error handling (throw new Error)",
+        "Creates worktrees in ./worktrees/task-{id}/ structure",
+        "Uses existing logger utilities"
+      ],
+      "testStrategy": "Basic unit tests with mocked git commands"
+    },
+    {
+      "id": 3,
+      "title": "Implement Simple Worktree Registry",
+      "description": "Create a simple JSON file to track active worktrees at .taskmaster/worktree-registry.json",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        2
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create basic registry read/write functions",
+          "description": "Implement simple functions to read and write the registry JSON file",
+          "dependencies": [],
+          "details": "Create registry functions:\n- readRegistry() - read JSON file, return empty object if missing\n- writeRegistry(data) - write JSON file with pretty formatting\n- Use fs.readFileSync/writeFileSync for simplicity",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Add registry entry management",
+          "description": "Implement functions to add and remove registry entries",
+          "dependencies": [
+            1
+          ],
+          "details": "Add functions:\n- addToRegistry(entry) - add worktree info to registry\n- removeFromRegistry(worktreeId) - remove entry\n- findByTaskId(taskId) - find worktree for a task\n- Entry format: {worktreeId, taskId, branch, path, createdAt}",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Integrate registry with worktree operations",
+          "description": "Update worktree create/remove to use registry",
+          "dependencies": [
+            2
+          ],
+          "details": "Modify worktree-manager.js:\n- createWorktree should add to registry after success\n- removeWorktree should remove from registry\n- Handle registry errors gracefully (log but don't fail operation)",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Create comprehensive atomic test suite",
+          "description": "Build atomic test scripts for regression testing of registry functionality",
+          "details": "Created test scripts with atomic behavior:\n- scripts/test-worktree-registry.js - Basic registry read/write operations\n- scripts/test-registry-entry-management.js - Entry CRUD operations with filesystem verification\n- scripts/verify-registry-filesystem.js - Filesystem persistence verification\n- All tests clean up artifacts on success, preserve on failure for debugging\n- Real filesystem verification instead of relying on return values\n<info added on 2025-06-18T01:42:50.444Z>\nI need to update the dependencies for this subtask to include the three registry implementation subtasks. Let me do this using the Task Master tools.\nDependencies updated for subtask 3.4: Tests now depend on subtasks 3.1 (core registry implementation), 3.2 (entry management system), and 3.3 (registry integration) to ensure all functionality is available before testing begins.\n</info added on 2025-06-18T01:42:50.444Z>",
+          "status": "done",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "parentTaskId": 3
+        }
+      ],
+      "tags": [
+        "implementation",
+        "registry",
+        "data"
+      ],
+      "details": "Simple JSON file storage - no schema validation or complex operations. Follow Task Master's existing JSON patterns.",
+      "acceptanceCriteria": [
+        "Registry stored in .taskmaster/worktree-registry.json",
+        "Basic add/remove/find operations",
+        "Simple JSON read/write (no locking needed for MVP)",
+        "Registry errors don't break worktree operations"
+      ],
+      "testStrategy": "Test with mock filesystem operations"
+    },
+    {
+      "id": 4,
+      "title": "Add Worktree Detection to Git Utils",
+      "description": "Extend scripts/modules/utils/git-utils.js with basic worktree detection",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add isWorktree function",
+          "description": "Implement function to detect if current directory is a worktree",
+          "dependencies": [],
+          "details": "Add isWorktree() function that:\n- Checks if .git is a file (not directory)\n- Returns true if in worktree, false otherwise\n- Simple and reliable detection",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Add getWorktreeInfo function",
+          "description": "Get basic info about current worktree",
+          "dependencies": [
+            1
+          ],
+          "details": "Add getWorktreeInfo() that returns:\n- Current branch name\n- Path to main worktree\n- Return null if not in a worktree",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Add Git version check",
+          "description": "Simple check for Git 2.5+ requirement",
+          "dependencies": [],
+          "details": "Add validateGitVersion() that:\n- Runs git --version\n- Checks if version is 2.5 or higher\n- Throws clear error if version too old",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Create task-specific verification script",
+          "description": "Build atomic test script specifically for git-utils worktree detection functions",
+          "details": "Create scripts/test-git-utils-worktree.js that:\n- Tests isWorktree() on main repo and worktree scenarios\n- Tests getWorktreeInfo() extraction accuracy  \n- Tests validateGitVersion() with current Git version\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success\n- Focused only on Task 4 functions, not integration",
+          "status": "pending",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "parentTaskId": 4
+        },
+        {
+          "id": 5,
+          "title": "Update end-to-end test script",
+          "description": "Enhance existing e2e test to include more Task 4 specific scenarios",
+          "details": "Update scripts/test-worktree-e2e.js to add:\n- Additional Task 4 function edge case testing\n- Test validateGitVersion error scenarios (if possible to mock)\n- Test getWorktreeInfo with various worktree configurations\n- Verify isWorktree works with different .git file contents\n- Ensure comprehensive integration coverage\n- Maintain atomic cleanup behavior",
+          "status": "pending",
+          "dependencies": [
+            4
+          ],
+          "parentTaskId": 4
+        }
+      ],
+      "tags": [
+        "implementation",
+        "git",
+        "utils"
+      ],
+      "details": "Basic detection functions - keep it simple and let Git handle edge cases.",
+      "acceptanceCriteria": [
+        "Accurate worktree detection",
+        "Git version check with clear error",
+        "Basic worktree info extraction",
+        "Integration with existing git-utils"
+      ],
+      "testStrategy": "Test with mock git command outputs"
+    },
+    {
+      "id": 5,
+      "title": "Implement Feature Toggle",
+      "description": "Add simple worktree feature toggle to config.json with runtime checks",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add worktree config option",
+          "description": "Add features.worktrees boolean to config schema",
+          "dependencies": [],
+          "details": "Update config to include:\n- features.worktrees: false (default)\n- Add to config schema definition\n- Document in config template",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Add feature check to worktree functions",
+          "description": "Check config before any worktree operation",
+          "dependencies": [
+            1
+          ],
+          "details": "In every worktree function:\n- Load config and check features.worktrees\n- If false, throw new Error('Worktrees are disabled')\n- Clear error message that it's intentionally disabled",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Implement config locking",
+          "description": "Simple mechanism to prevent config tampering",
+          "dependencies": [
+            1
+          ],
+          "details": "Add _locked array to config:\n- List of config keys that can't be changed\n- Check on config write if key is locked\n- Throw error if attempting to modify locked key",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Manually prove functionality",
+          "description": "Manual testing of feature toggle functionality before automation",
+          "details": "Manually test the feature toggle system:\n- Test config reading/writing for features.worktrees\n- Test runtime checks in worktree functions when disabled\n- Test config locking mechanism preventing unauthorized changes\n- Verify clear error messages when features are disabled\n- Document manual test results and edge cases discovered",
+          "status": "pending",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "parentTaskId": 5
+        },
+        {
+          "id": 5,
+          "title": "Create atomic task-specific script",
+          "description": "Build atomic test script for feature toggle functionality",
+          "details": "Create scripts/test-feature-toggle.js that:\n- Tests config schema updates for features.worktrees\n- Tests runtime checks in worktree functions \n- Tests config locking preventing unauthorized changes\n- Tests error messages when features disabled\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success\n- Focus specifically on Task 5 feature toggle functionality",
+          "status": "pending",
+          "dependencies": [
+            4
+          ],
+          "parentTaskId": 5
+        },
+        {
+          "id": 6,
+          "title": "Update e2e test script",
+          "description": "Enhance e2e test to include feature toggle scenarios",
+          "details": "Update scripts/test-worktree-e2e.js to add:\n- Test feature toggle enabled/disabled states\n- Test runtime enforcement in integrated workflows\n- Test config locking during e2e operations\n- Verify feature toggle doesn't break existing integration\n- Test graceful degradation when features disabled\n- Maintain atomic cleanup behavior",
+          "status": "pending",
+          "dependencies": [
+            5
+          ],
+          "parentTaskId": 5
+        }
+      ],
+      "tags": [
+        "implementation",
+        "config",
+        "security"
+      ],
+      "details": "Simple binary toggle - either enabled or disabled. Runtime checks prevent bypassing.",
+      "acceptanceCriteria": [
+        "Config includes features.worktrees (default false)",
+        "Runtime checks in all worktree functions",
+        "Config locking prevents tampering",
+        "Clear error messages when disabled"
+      ],
+      "testStrategy": "Test with various config states"
+    },
+    {
+      "id": 6,
+      "title": "Create CLI Commands",
+      "description": "Add worktree commands to Task Master CLI",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add worktree create command",
+          "description": "Implement 'tm worktree create --task <id>' command",
+          "dependencies": [],
+          "details": "Add command that:\n- Accepts task ID parameter\n- Calls createWorktree from worktree-manager\n- Shows success message with worktree path\n- Handles errors gracefully",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Add worktree list command",
+          "description": "Implement 'tm worktree list' command",
+          "dependencies": [],
+          "details": "Add command that:\n- Calls listWorktrees\n- Formats output as simple table\n- Shows path, branch, and associated task",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Add worktree remove command",
+          "description": "Implement 'tm worktree remove' command",
+          "dependencies": [],
+          "details": "Add command that:\n- Accepts worktree path or uses current directory\n- Calls removeWorktree\n- Confirms before removal\n- Shows success message",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Add basic worktree status command",
+          "description": "Implement 'tm worktree status' command",
+          "dependencies": [],
+          "details": "Add command that:\n- Shows if in a worktree\n- Displays current branch and task info\n- Simple output, no complex checks",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Update .gitignore automatically",
+          "description": "Add worktrees/ to .gitignore when first worktree created",
+          "dependencies": [
+            1
+          ],
+          "details": "When creating first worktree:\n- Check if worktrees/ is in .gitignore\n- If not, append it\n- Simple implementation, no complex logic",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Manually prove functionality",
+          "description": "Manual testing of CLI commands before automation",
+          "details": "Manually test CLI command functionality:\n- Test 'tm worktree create --task <id>' command\n- Test 'tm worktree list' command output formatting\n- Test 'tm worktree remove' command with confirmation\n- Test 'tm worktree status' command in different contexts\n- Test .gitignore automatic updates\n- Verify feature flag enforcement on each command\n- Document manual test results and edge cases",
+          "status": "pending",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "parentTaskId": 6
+        },
+        {
+          "id": 7,
+          "title": "Create atomic task-specific script",
+          "description": "Build atomic test script for CLI command functionality",
+          "details": "Create scripts/test-cli-commands.js that:\n- Tests CLI command parsing and execution\n- Tests output formatting for list command\n- Tests confirmation prompts for remove command\n- Tests status command in various directory contexts\n- Tests .gitignore automatic updates\n- Tests feature flag enforcement on all commands\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success",
+          "status": "pending",
+          "dependencies": [
+            6
+          ],
+          "parentTaskId": 6
+        },
+        {
+          "id": 8,
+          "title": "Update e2e test script",
+          "description": "Enhance e2e test to include CLI command scenarios",
+          "details": "Update scripts/test-worktree-e2e.js to add:\n- Test CLI command integration with core functions\n- Test command output formatting and user experience\n- Test CLI error handling and user-friendly messages\n- Test CLI commands work with feature toggles\n- Test .gitignore updates during e2e workflows\n- Verify CLI doesn't break existing integration\n- Maintain atomic cleanup behavior",
+          "status": "pending",
+          "dependencies": [
+            7
+          ],
+          "parentTaskId": 6
+        }
+      ],
+      "tags": [
+        "implementation",
+        "cli",
+        "commands"
+      ],
+      "details": "Basic CLI commands - no sync or complex operations in MVP. Manual operations only.",
+      "acceptanceCriteria": [
+        "Four basic CLI commands work",
+        "Feature flag checked on each command",
+        "Clear output and error messages",
+        "Auto-update .gitignore"
+      ],
+      "testStrategy": "CLI integration tests with mocked functions"
+    },
+    {
+      "id": 7,
+      "title": "Create MCP Tools",
+      "description": "Add MCP tools for worktree operations",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create create_worktree MCP tool",
+          "description": "Implement MCP tool for creating worktrees",
+          "dependencies": [],
+          "details": "Create mcp-server/src/tools/worktree/create-worktree.js:\n- Validate task ID exists\n- Check feature flag\n- Call worktree-manager createWorktree\n- Return success with worktree path",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Create remove_worktree MCP tool",
+          "description": "Implement MCP tool for removing worktrees",
+          "dependencies": [],
+          "details": "Create remove-worktree.js:\n- Accept worktree path parameter\n- Call worktree-manager removeWorktree\n- Return success confirmation",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Create list_worktrees MCP tool",
+          "description": "Implement MCP tool for listing worktrees",
+          "dependencies": [],
+          "details": "Create list-worktrees.js:\n- Call worktree-manager listWorktrees\n- Return structured list of worktrees\n- Include task associations",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Conditionally register worktree tools",
+          "description": "Only register tools when feature is enabled",
+          "dependencies": [
+            1,
+            2,
+            3
+          ],
+          "details": "Update tool registration:\n- Check config for features.worktrees\n- Only register tools if enabled\n- Tools invisible when feature disabled",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Manually prove functionality",
+          "description": "Manual testing of MCP tools before automation",
+          "details": "Manually test MCP tool functionality:\n- Test create_worktree MCP tool with task validation\n- Test remove_worktree MCP tool with path parameters\n- Test list_worktrees MCP tool structured responses\n- Test conditional tool registration based on feature flags\n- Test MCP tool error handling and responses\n- Test integration with existing MCP server infrastructure\n- Document manual test results and edge cases",
+          "status": "pending",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "parentTaskId": 7
+        },
+        {
+          "id": 6,
+          "title": "Create atomic task-specific script",
+          "description": "Build atomic test script for MCP tool functionality",
+          "details": "Create scripts/test-mcp-tools.js that:\n- Tests MCP tool registration and availability\n- Tests create_worktree tool with various parameters\n- Tests remove_worktree tool error handling\n- Tests list_worktrees tool structured output\n- Tests conditional registration based on feature flags\n- Tests MCP tool integration with core functions\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success",
+          "status": "pending",
+          "dependencies": [
+            5
+          ],
+          "parentTaskId": 7
+        },
+        {
+          "id": 7,
+          "title": "Update e2e test script",
+          "description": "Enhance e2e test to include MCP tool scenarios",
+          "details": "Update scripts/test-worktree-e2e.js to add:\n- Test MCP tool integration with core worktree functions\n- Test MCP tool registration and dynamic availability\n- Test MCP tool responses match expected formats\n- Test MCP tools work with feature toggles\n- Test MCP tool error handling in integrated workflows\n- Verify MCP tools don't break existing integration\n- Maintain atomic cleanup behavior",
+          "status": "pending",
+          "dependencies": [
+            6
+          ],
+          "parentTaskId": 7
+        }
+      ],
+      "tags": [
+        "implementation",
+        "mcp",
+        "tools"
+      ],
+      "details": "Basic MCP tools matching CLI functionality. No sync tool in MVP.",
+      "acceptanceCriteria": [
+        "Three MCP tools implemented",
+        "Dynamic registration based on config",
+        "Structured responses",
+        "Proper error handling"
+      ],
+      "testStrategy": "MCP tool tests with mocked core functions"
+    },
+    {
+      "id": 8,
+      "title": "Add Basic Event Emission",
+      "description": "Emit events when worktrees are created/removed using existing event system",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [
+        6,
+        7
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add event emission to create/remove",
+          "description": "Emit events in worktree operations",
+          "dependencies": [],
+          "details": "In worktree-manager.js:\n- Emit 'worktree.created' after successful create\n- Emit 'worktree.removed' after successful remove\n- Include basic data (taskId, path, branch)",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Test event emission",
+          "description": "Verify events are emitted correctly",
+          "dependencies": [
+            1
+          ],
+          "details": "Add simple test:\n- Listen for events\n- Create/remove worktree\n- Verify events fired with correct data",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Manually prove functionality",
+          "description": "Manual testing of event emission before automation",
+          "details": "Manually test event emission functionality:\n- Test 'worktree.created' event emission after successful create\n- Test 'worktree.removed' event emission after successful remove\n- Test event data includes correct taskId, path, and branch\n- Test event listeners can receive and process events\n- Test events work with existing Task Master event system\n- Test events don't interfere with core functionality\n- Document manual test results and edge cases",
+          "status": "pending",
+          "dependencies": [
+            1,
+            2
+          ],
+          "parentTaskId": 8
+        },
+        {
+          "id": 4,
+          "title": "Create atomic task-specific script",
+          "description": "Build atomic test script for event emission functionality",
+          "details": "Create scripts/test-event-emission.js that:\n- Tests event emission during worktree create/remove operations\n- Tests event data structure and content accuracy\n- Tests event listener registration and callback execution\n- Tests events don't break core worktree functionality\n- Tests event system integration with existing patterns\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success",
+          "status": "pending",
+          "dependencies": [
+            3
+          ],
+          "parentTaskId": 8
+        },
+        {
+          "id": 5,
+          "title": "Update e2e test script",
+          "description": "Enhance e2e test to include event emission scenarios",
+          "details": "Update scripts/test-worktree-e2e.js to add:\n- Test event emission during e2e worktree workflows\n- Test event listener integration with full workflow\n- Test events fire correctly in integrated scenarios\n- Test events don't interfere with other functionality\n- Test event data accuracy in real-world workflows\n- Verify events work with all components (CLI, MCP, etc.)\n- Maintain atomic cleanup behavior",
+          "status": "pending",
+          "dependencies": [
+            4
+          ],
+          "parentTaskId": 8
+        }
+      ],
+      "tags": [
+        "implementation",
+        "events",
+        "integration"
+      ],
+      "details": "Minimal event integration - just emit, no listeners or automation in MVP.",
+      "acceptanceCriteria": [
+        "Events emitted on create/remove",
+        "Basic event data included",
+        "Uses existing event patterns"
+      ],
+      "testStrategy": "Simple event emission tests"
+    },
+    {
+      "id": 9,
+      "title": "Create Basic Tests",
+      "description": "Write essential tests for worktree functionality",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [
+        6,
+        7,
+        8
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Write worktree-manager tests",
+          "description": "Test core worktree functions",
+          "dependencies": [],
+          "details": "Test:\n- createWorktree with valid/invalid inputs\n- removeWorktree success/failure\n- listWorktrees output parsing\n- Mock git commands",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Write registry tests",
+          "description": "Test registry operations",
+          "dependencies": [],
+          "details": "Test:\n- Registry read/write\n- Add/remove entries\n- Find by task ID\n- Mock filesystem",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Write CLI command tests",
+          "description": "Test CLI commands work correctly",
+          "dependencies": [],
+          "details": "Test:\n- Command parsing\n- Success scenarios\n- Error handling\n- Feature flag enforcement",
+          "status": "pending"
+        }
+      ],
+      "tags": [
+        "testing",
+        "quality",
+        "validation"
+      ],
+      "details": "Focus on core functionality tests. No need for exhaustive coverage in MVP.",
+      "acceptanceCriteria": [
+        "Core functions have tests",
+        "CLI commands tested",
+        "Mocked dependencies",
+        "Tests pass reliably"
+      ],
+      "testStrategy": "Jest with mocked git commands and filesystem"
+    },
+    {
+      "id": 10,
+      "title": "Write Basic Documentation",
+      "description": "Document worktree feature for users",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [
+        9
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add worktree section to README",
+          "description": "Document basic worktree usage",
+          "dependencies": [],
+          "details": "Add section covering:\n- What worktrees are (brief)\n- How to enable the feature\n- Basic command examples\n- Git 2.5+ requirement",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Document CLI commands",
+          "description": "Add command reference for worktree commands",
+          "dependencies": [],
+          "details": "Document:\n- tm worktree create --task <id>\n- tm worktree list\n- tm worktree remove\n- tm worktree status\n- Include examples",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Document MCP tools",
+          "description": "Add MCP tool documentation",
+          "dependencies": [],
+          "details": "Document:\n- create_worktree tool\n- remove_worktree tool\n- list_worktrees tool\n- How to enable in MCP config",
+          "status": "pending"
+        }
+      ],
+      "tags": [
+        "documentation",
+        "user-guide",
+        "examples"
+      ],
+      "details": "Keep documentation simple and practical. Focus on how to use, not theory.",
+      "acceptanceCriteria": [
+        "README includes worktree section",
+        "Commands documented with examples",
+        "MCP tools documented",
+        "Setup instructions clear"
+      ],
+      "testStrategy": "Documentation review"
     }
-  },
-  "feat-git-worktrees": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Research Git Worktree Basic Requirements",
-        "description": "Research Git worktree commands and understand basic usage patterns. Focus on practical implementation needs for MVP.",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Test basic Git worktree commands",
-            "description": "Manually test git worktree add, remove, list, and prune to understand their behavior",
-            "dependencies": [],
-            "details": "Create a test repository and run through basic worktree operations:\n- git worktree add ./test-worktree\n- git worktree list\n- git worktree remove ./test-worktree\n- Document command outputs and any errors encountered\n<info added on 2025-06-18T00:48:39.268Z>\nBased on the successful testing results, here's the information that should be appended to subtask 1.2:\n\n**Testing Results - Git Version 2.39.5:**\n\nAll basic Git worktree operations tested successfully:\n\n✅ **git worktree list** - Shows all worktrees with paths, commit hashes, and branch names\n✅ **git worktree add ../test-worktree feature-test** - Creates new worktree, automatically checks out specified branch  \n✅ **git worktree remove ../test-worktree** - Removes worktree cleanly\n✅ **git worktree prune** - Cleans up any stale worktree references\n\n**Key Findings:**\n- Worktree creation is instantaneous and creates physical directory\n- Each worktree shows current commit hash and branch in list output\n- Remove operation is clean with no residual files\n- All commands work smoothly with Git 2.39.5\n\n**Version Requirement:** Git 2.39.5 confirmed working - this meets the minimum requirement for Git worktree functionality (Git 2.5+ where worktree was introduced).\n</info added on 2025-06-18T00:48:39.268Z>",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Verify Git version requirements",
-            "description": "Check that Git 2.5+ is available and test worktree features",
-            "dependencies": [],
-            "details": "Run git --version and verify it's 2.5 or higher. Test that worktree commands are available. Document the exact version being used for development.\n<info added on 2025-06-18T00:49:22.365Z>\n**Git Version Verification Results:**\n\nGit version 2.39.5 (Apple Git-154) confirmed compatible with Task Master worktree requirements. All core worktree commands (add, list, remove, prune) are available and functional. Version significantly exceeds the minimum Git 2.5.0 requirement, providing robust worktree support for the development environment.\n\n**Status:** ✅ VERIFICATION COMPLETE - Ready for worktree implementation.\n</info added on 2025-06-18T00:49:22.365Z>",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Document worktree limitations",
-            "description": "Note key limitations like one branch per worktree and submodule handling",
-            "dependencies": [
-              1
-            ],
-            "details": "Create a simple notes file documenting:\n- One branch per worktree restriction\n- How worktrees handle submodules\n- Any platform-specific issues encountered\n- Keep it practical, not theoretical\n<info added on 2025-06-18T00:50:24.484Z>\nBased on the completed research, here's the documentation for the subtask:\n\n**Research Completed - Key Git Worktree Limitations Documented**\n\n✅ **One Branch Per Worktree Restriction (CRITICAL)**\n- Confirmed: `fatal: 'main' is already checked out at '/path/to/worktree'`\n- Each branch can only be active in one worktree at a time\n- Task Master must implement branch usage tracking to prevent conflicts\n\n✅ **Branch Checkout Conflicts**\n- Multiple worktrees cannot use the same branch simultaneously\n- Solution: Auto-generate unique branch names using `task-{id}` pattern\n- New branches must be created for each worktree instance\n\n✅ **Directory Management Requirements**\n- Worktrees create physical directories requiring cleanup\n- Failed worktree creation leaves no residual files (clean failure)\n- Path conflicts occur if target directory already exists\n\n✅ **Platform Testing Results**\n- Tested on macOS with Git 2.39.5 - standard behavior confirmed\n- No submodule complications identified for MVP scope\n- Git error messages are consistent and catchable for proper error handling\n\n**Implementation Requirements Identified:**\n1. Registry system to track active branch usage\n2. Automated branch naming strategy implementation\n3. Robust directory cleanup for remove operations\n4. Error handling for Git's specific error message patterns\n\nResearch complete - ready for implementation phase.\n</info added on 2025-06-18T00:50:24.484Z>",
-            "status": "done"
-          }
-        ],
-        "tags": [
-          "research",
-          "git",
-          "worktree"
-        ],
-        "details": "Focus on understanding the basics needed for implementation. No performance testing or complex scenarios - just what we need to build the MVP.",
-        "acceptanceCriteria": [
-          "Basic understanding of git worktree commands",
-          "Confirmed Git 2.5+ requirement",
-          "Simple documentation of key limitations"
-        ],
-        "testStrategy": "Manual testing with a sample repository"
-      },
-      {
-        "id": 2,
-        "title": "Create Worktree Manager Module Core",
-        "description": "Implement the core Worktree Manager module at scripts/modules/utils/worktree-manager.js with basic create/remove functionality using Task Master's existing error patterns.",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create basic worktree wrapper functions",
-            "description": "Implement createWorktree and removeWorktree functions that wrap git commands",
-            "dependencies": [],
-            "details": "Create worktree-manager.js with two functions:\n- createWorktree(taskId, branch) - runs git worktree add\n- removeWorktree(worktreeId) - runs git worktree remove\n- Use standard throw new Error() for any failures\n- Path should be ./worktrees/task-{id}/\n<info added on 2025-06-18T01:04:27.185Z>\nImplementation completed successfully with createWorktree() and removeWorktree() functions following project patterns. Functions use execAsync from git-utils.js, include proper error handling with throw new Error(), and implement the specified ./worktrees/task-{id}/ directory structure with task-{id} branch naming. Ready to proceed with listWorktrees function implementation.\n</info added on 2025-06-18T01:04:27.185Z>",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Add listWorktrees function",
-            "description": "Implement function to list current worktrees",
-            "dependencies": [
-              1
-            ],
-            "details": "Add listWorktrees() function that:\n- Runs git worktree list --porcelain\n- Parses the output into a simple array\n- Returns structured data with path and branch info\n<info added on 2025-06-18T01:05:25.397Z>\n**✅ COMPLETED - listWorktrees() Implementation**\n\nAdded `listWorktrees(projectRoot)` function to `scripts/modules/utils/worktree-manager.js`:\n\n- **Core functionality**: Executes `git worktree list --porcelain` and parses machine-readable output\n- **Structured parsing**: Converts raw output into objects with `path`, `head`, `branch` properties\n- **Task Master integration**: Auto-detects `task-{id}` pattern worktrees and adds `taskId` + `isTaskMasterWorktree` flags\n- **Branch cleanup**: Handles bare repos and cleans `refs/heads/` prefixes from branch names\n- **Error handling**: Uses existing error patterns with clear messages\n\nFunction returns array of structured worktree objects ready for Task Master consumption. Implementation complete and ready for logger integration in subtask 2.3.\n</info added on 2025-06-18T01:05:25.397Z>",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Integrate with Task Master's logger",
-            "description": "Use existing logger utilities for info and warning messages",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Import Task Master's logger and use it for:\n- Info messages when worktrees are created/removed\n- Warning messages for non-critical issues\n- Let Git errors bubble up with throw new Error()\n<info added on 2025-06-18T01:07:36.740Z>\nSuccessfully integrated Task Master's logger pattern into all worktree functions. All three core functions (createWorktree, removeWorktree, listWorktrees) now support optional logging via mcpLog parameter while maintaining backward compatibility and clean error handling with throw new Error().\n</info added on 2025-06-18T01:07:36.740Z>",
-            "status": "done"
-          },
-          {
-            "id": 4,
-            "title": "Create functional verification script",
-            "description": "Create atomic test script to verify worktree-manager functionality and prevent regressions",
-            "details": "Create scripts/test-worktree-manager.js that:\n- Tests module import and function availability\n- Verifies listWorktrees with real Git operations\n- Tests createWorktree with filesystem verification (not just return values)\n- Tests removeWorktree with filesystem verification\n- Tests error handling for invalid inputs\n- Cleans up artifacts on success, preserves them on failure for debugging\n- Provides clear error messages and investigation instructions\n<info added on 2025-06-18T01:26:48.845Z>\nTest script implementation completed and verified working. Provides comprehensive verification of worktree-manager module including module import testing, real Git operations verification, filesystem change confirmation, error handling validation, and proper artifact cleanup. Script ready for ongoing regression testing during future development.\n</info added on 2025-06-18T01:26:48.845Z>",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 2
-          }
-        ],
-        "tags": [
-          "implementation",
-          "worktree",
-          "core"
-        ],
-        "details": "Keep it simple - just wrap Git commands and use existing patterns. No custom error classes or complex abstractions.",
-        "acceptanceCriteria": [
-          "Module exports createWorktree, removeWorktree, and listWorktrees",
-          "Uses standard error handling (throw new Error)",
-          "Creates worktrees in ./worktrees/task-{id}/ structure",
-          "Uses existing logger utilities"
-        ],
-        "testStrategy": "Basic unit tests with mocked git commands"
-      },
-      {
-        "id": 3,
-        "title": "Implement Simple Worktree Registry",
-        "description": "Create a simple JSON file to track active worktrees at .taskmaster/worktree-registry.json",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [
-          2
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create basic registry read/write functions",
-            "description": "Implement simple functions to read and write the registry JSON file",
-            "dependencies": [],
-            "details": "Create registry functions:\n- readRegistry() - read JSON file, return empty object if missing\n- writeRegistry(data) - write JSON file with pretty formatting\n- Use fs.readFileSync/writeFileSync for simplicity",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Add registry entry management",
-            "description": "Implement functions to add and remove registry entries",
-            "dependencies": [
-              1
-            ],
-            "details": "Add functions:\n- addToRegistry(entry) - add worktree info to registry\n- removeFromRegistry(worktreeId) - remove entry\n- findByTaskId(taskId) - find worktree for a task\n- Entry format: {worktreeId, taskId, branch, path, createdAt}",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Integrate registry with worktree operations",
-            "description": "Update worktree create/remove to use registry",
-            "dependencies": [
-              2
-            ],
-            "details": "Modify worktree-manager.js:\n- createWorktree should add to registry after success\n- removeWorktree should remove from registry\n- Handle registry errors gracefully (log but don't fail operation)",
-            "status": "done"
-          },
-          {
-            "id": 4,
-            "title": "Create comprehensive atomic test suite",
-            "description": "Build atomic test scripts for regression testing of registry functionality",
-            "details": "Created test scripts with atomic behavior:\n- scripts/test-worktree-registry.js - Basic registry read/write operations\n- scripts/test-registry-entry-management.js - Entry CRUD operations with filesystem verification\n- scripts/verify-registry-filesystem.js - Filesystem persistence verification\n- All tests clean up artifacts on success, preserve on failure for debugging\n- Real filesystem verification instead of relying on return values\n<info added on 2025-06-18T01:42:50.444Z>\nI need to update the dependencies for this subtask to include the three registry implementation subtasks. Let me do this using the Task Master tools.\nDependencies updated for subtask 3.4: Tests now depend on subtasks 3.1 (core registry implementation), 3.2 (entry management system), and 3.3 (registry integration) to ensure all functionality is available before testing begins.\n</info added on 2025-06-18T01:42:50.444Z>",
-            "status": "done",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "parentTaskId": 3
-          }
-        ],
-        "tags": [
-          "implementation",
-          "registry",
-          "data"
-        ],
-        "details": "Simple JSON file storage - no schema validation or complex operations. Follow Task Master's existing JSON patterns.",
-        "acceptanceCriteria": [
-          "Registry stored in .taskmaster/worktree-registry.json",
-          "Basic add/remove/find operations",
-          "Simple JSON read/write (no locking needed for MVP)",
-          "Registry errors don't break worktree operations"
-        ],
-        "testStrategy": "Test with mock filesystem operations"
-      },
-      {
-        "id": 4,
-        "title": "Add Worktree Detection to Git Utils",
-        "description": "Extend scripts/modules/utils/git-utils.js with basic worktree detection",
-        "status": "done",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add isWorktree function",
-            "description": "Implement function to detect if current directory is a worktree",
-            "dependencies": [],
-            "details": "Add isWorktree() function that:\n- Checks if .git is a file (not directory)\n- Returns true if in worktree, false otherwise\n- Simple and reliable detection",
-            "status": "done"
-          },
-          {
-            "id": 2,
-            "title": "Add getWorktreeInfo function",
-            "description": "Get basic info about current worktree",
-            "dependencies": [
-              1
-            ],
-            "details": "Add getWorktreeInfo() that returns:\n- Current branch name\n- Path to main worktree\n- Return null if not in a worktree",
-            "status": "done"
-          },
-          {
-            "id": 3,
-            "title": "Add Git version check",
-            "description": "Simple check for Git 2.5+ requirement",
-            "dependencies": [],
-            "details": "Add validateGitVersion() that:\n- Runs git --version\n- Checks if version is 2.5 or higher\n- Throws clear error if version too old",
-            "status": "done"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "git",
-          "utils"
-        ],
-        "details": "Basic detection functions - keep it simple and let Git handle edge cases.",
-        "acceptanceCriteria": [
-          "Accurate worktree detection",
-          "Git version check with clear error",
-          "Basic worktree info extraction",
-          "Integration with existing git-utils"
-        ],
-        "testStrategy": "Test with mock git command outputs"
-      },
-      {
-        "id": 5,
-        "title": "Implement Feature Toggle",
-        "description": "Add simple worktree feature toggle to config.json with runtime checks",
-        "status": "pending",
-        "priority": "high",
-        "dependencies": [
-          2,
-          3
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree config option",
-            "description": "Add features.worktrees boolean to config schema",
-            "dependencies": [],
-            "details": "Update config to include:\n- features.worktrees: false (default)\n- Add to config schema definition\n- Document in config template",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Add feature check to worktree functions",
-            "description": "Check config before any worktree operation",
-            "dependencies": [
-              1
-            ],
-            "details": "In every worktree function:\n- Load config and check features.worktrees\n- If false, throw new Error('Worktrees are disabled')\n- Clear error message that it's intentionally disabled",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Implement config locking",
-            "description": "Simple mechanism to prevent config tampering",
-            "dependencies": [
-              1
-            ],
-            "details": "Add _locked array to config:\n- List of config keys that can't be changed\n- Check on config write if key is locked\n- Throw error if attempting to modify locked key",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "config",
-          "security"
-        ],
-        "details": "Simple binary toggle - either enabled or disabled. Runtime checks prevent bypassing.",
-        "acceptanceCriteria": [
-          "Config includes features.worktrees (default false)",
-          "Runtime checks in all worktree functions",
-          "Config locking prevents tampering",
-          "Clear error messages when disabled"
-        ],
-        "testStrategy": "Test with various config states"
-      },
-      {
-        "id": 6,
-        "title": "Create CLI Commands",
-        "description": "Add worktree commands to Task Master CLI",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          3,
-          4,
-          5
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree create command",
-            "description": "Implement 'tm worktree create --task <id>' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Accepts task ID parameter\n- Calls createWorktree from worktree-manager\n- Shows success message with worktree path\n- Handles errors gracefully",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Add worktree list command",
-            "description": "Implement 'tm worktree list' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Calls listWorktrees\n- Formats output as simple table\n- Shows path, branch, and associated task",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Add worktree remove command",
-            "description": "Implement 'tm worktree remove' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Accepts worktree path or uses current directory\n- Calls removeWorktree\n- Confirms before removal\n- Shows success message",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Add basic worktree status command",
-            "description": "Implement 'tm worktree status' command",
-            "dependencies": [],
-            "details": "Add command that:\n- Shows if in a worktree\n- Displays current branch and task info\n- Simple output, no complex checks",
-            "status": "pending"
-          },
-          {
-            "id": 5,
-            "title": "Update .gitignore automatically",
-            "description": "Add worktrees/ to .gitignore when first worktree created",
-            "dependencies": [
-              1
-            ],
-            "details": "When creating first worktree:\n- Check if worktrees/ is in .gitignore\n- If not, append it\n- Simple implementation, no complex logic",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "cli",
-          "commands"
-        ],
-        "details": "Basic CLI commands - no sync or complex operations in MVP. Manual operations only.",
-        "acceptanceCriteria": [
-          "Four basic CLI commands work",
-          "Feature flag checked on each command",
-          "Clear output and error messages",
-          "Auto-update .gitignore"
-        ],
-        "testStrategy": "CLI integration tests with mocked functions"
-      },
-      {
-        "id": 7,
-        "title": "Create MCP Tools",
-        "description": "Add MCP tools for worktree operations",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          3,
-          4,
-          5
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create create_worktree MCP tool",
-            "description": "Implement MCP tool for creating worktrees",
-            "dependencies": [],
-            "details": "Create mcp-server/src/tools/worktree/create-worktree.js:\n- Validate task ID exists\n- Check feature flag\n- Call worktree-manager createWorktree\n- Return success with worktree path",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Create remove_worktree MCP tool",
-            "description": "Implement MCP tool for removing worktrees",
-            "dependencies": [],
-            "details": "Create remove-worktree.js:\n- Accept worktree path parameter\n- Call worktree-manager removeWorktree\n- Return success confirmation",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Create list_worktrees MCP tool",
-            "description": "Implement MCP tool for listing worktrees",
-            "dependencies": [],
-            "details": "Create list-worktrees.js:\n- Call worktree-manager listWorktrees\n- Return structured list of worktrees\n- Include task associations",
-            "status": "pending"
-          },
-          {
-            "id": 4,
-            "title": "Conditionally register worktree tools",
-            "description": "Only register tools when feature is enabled",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "details": "Update tool registration:\n- Check config for features.worktrees\n- Only register tools if enabled\n- Tools invisible when feature disabled",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "mcp",
-          "tools"
-        ],
-        "details": "Basic MCP tools matching CLI functionality. No sync tool in MVP.",
-        "acceptanceCriteria": [
-          "Three MCP tools implemented",
-          "Dynamic registration based on config",
-          "Structured responses",
-          "Proper error handling"
-        ],
-        "testStrategy": "MCP tool tests with mocked core functions"
-      },
-      {
-        "id": 8,
-        "title": "Add Basic Event Emission",
-        "description": "Emit events when worktrees are created/removed using existing event system",
-        "status": "pending",
-        "priority": "low",
-        "dependencies": [
-          6,
-          7
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add event emission to create/remove",
-            "description": "Emit events in worktree operations",
-            "dependencies": [],
-            "details": "In worktree-manager.js:\n- Emit 'worktree.created' after successful create\n- Emit 'worktree.removed' after successful remove\n- Include basic data (taskId, path, branch)",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Test event emission",
-            "description": "Verify events are emitted correctly",
-            "dependencies": [
-              1
-            ],
-            "details": "Add simple test:\n- Listen for events\n- Create/remove worktree\n- Verify events fired with correct data",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "implementation",
-          "events",
-          "integration"
-        ],
-        "details": "Minimal event integration - just emit, no listeners or automation in MVP.",
-        "acceptanceCriteria": [
-          "Events emitted on create/remove",
-          "Basic event data included",
-          "Uses existing event patterns"
-        ],
-        "testStrategy": "Simple event emission tests"
-      },
-      {
-        "id": 9,
-        "title": "Create Basic Tests",
-        "description": "Write essential tests for worktree functionality",
-        "status": "pending",
-        "priority": "medium",
-        "dependencies": [
-          6,
-          7,
-          8
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Write worktree-manager tests",
-            "description": "Test core worktree functions",
-            "dependencies": [],
-            "details": "Test:\n- createWorktree with valid/invalid inputs\n- removeWorktree success/failure\n- listWorktrees output parsing\n- Mock git commands",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Write registry tests",
-            "description": "Test registry operations",
-            "dependencies": [],
-            "details": "Test:\n- Registry read/write\n- Add/remove entries\n- Find by task ID\n- Mock filesystem",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Write CLI command tests",
-            "description": "Test CLI commands work correctly",
-            "dependencies": [],
-            "details": "Test:\n- Command parsing\n- Success scenarios\n- Error handling\n- Feature flag enforcement",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "testing",
-          "quality",
-          "validation"
-        ],
-        "details": "Focus on core functionality tests. No need for exhaustive coverage in MVP.",
-        "acceptanceCriteria": [
-          "Core functions have tests",
-          "CLI commands tested",
-          "Mocked dependencies",
-          "Tests pass reliably"
-        ],
-        "testStrategy": "Jest with mocked git commands and filesystem"
-      },
-      {
-        "id": 10,
-        "title": "Write Basic Documentation",
-        "description": "Document worktree feature for users",
-        "status": "pending",
-        "priority": "low",
-        "dependencies": [
-          9
-        ],
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add worktree section to README",
-            "description": "Document basic worktree usage",
-            "dependencies": [],
-            "details": "Add section covering:\n- What worktrees are (brief)\n- How to enable the feature\n- Basic command examples\n- Git 2.5+ requirement",
-            "status": "pending"
-          },
-          {
-            "id": 2,
-            "title": "Document CLI commands",
-            "description": "Add command reference for worktree commands",
-            "dependencies": [],
-            "details": "Document:\n- tm worktree create --task <id>\n- tm worktree list\n- tm worktree remove\n- tm worktree status\n- Include examples",
-            "status": "pending"
-          },
-          {
-            "id": 3,
-            "title": "Document MCP tools",
-            "description": "Add MCP tool documentation",
-            "dependencies": [],
-            "details": "Document:\n- create_worktree tool\n- remove_worktree tool\n- list_worktrees tool\n- How to enable in MCP config",
-            "status": "pending"
-          }
-        ],
-        "tags": [
-          "documentation",
-          "user-guide",
-          "examples"
-        ],
-        "details": "Keep documentation simple and practical. Focus on how to use, not theory.",
-        "acceptanceCriteria": [
-          "README includes worktree section",
-          "Commands documented with examples",
-          "MCP tools documented",
-          "Setup instructions clear"
-        ],
-        "testStrategy": "Documentation review"
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-17T21:13:25.947Z",
-      "updated": "2025-06-18T01:45:53.633Z",
-      "description": "Simplified tasks for git worktree MVP - following 'nail it before we scale it' philosophy"
-    }
+  ],
+  "metadata": {
+    "created": "2025-06-17T21:13:25.947Z",
+    "updated": "2025-06-18T01:45:53.633Z",
+    "description": "Simplified tasks for git worktree MVP - following 'nail it before we scale it' philosophy"
   }
 }
