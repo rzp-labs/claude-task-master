@@ -7,6 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import {
 	COMPLEXITY_REPORT_FILE,
 	LEGACY_COMPLEXITY_REPORT_FILE,
@@ -15,6 +17,8 @@ import {
 // Import specific config getters needed here
 import { getDebugFlag, getLogLevel } from './config-manager.js';
 import * as gitUtils from './utils/git-utils.js';
+
+const execAsync = promisify(exec);
 
 // Global silent mode flag
 let silentMode = false;
@@ -102,6 +106,45 @@ function findProjectRoot(
 	return hasMarkerInRoot ? rootPath : null;
 }
 
+/**
+ * Worktree-aware project root finder that detects when running inside a Git worktree
+ * and returns the main project root instead of the worktree's local copy.
+ * Falls back to standard findProjectRoot() behavior if Git commands fail.
+ * @param {string} [startDir=process.cwd()] - The directory to start searching from.
+ * @returns {Promise<string|null>} The path to the main project root, or null if not found.
+ */
+async function findMainProjectRoot(startDir = process.cwd()) {
+	const currentProjectRoot = findProjectRoot(startDir);
+
+	// If we couldn't find a project root with standard method, return null
+	if (!currentProjectRoot) {
+		return null;
+	}
+
+	try {
+		// Use Git's native worktree detection to find the main repository
+		const { stdout } = await execAsync('git rev-parse --git-common-dir', {
+			cwd: startDir
+		});
+		const gitCommonDir = stdout.trim();
+
+		// git-common-dir returns the path to the main repository's .git directory
+		// The main project root is the parent of this .git directory
+		const mainProjectRoot = path.dirname(gitCommonDir);
+
+		// Verify this is actually a valid Task Master project
+		if (fs.existsSync(path.join(mainProjectRoot, '.taskmaster'))) {
+			return mainProjectRoot;
+		}
+
+		// If the Git-detected root doesn't have .taskmaster, fall back to standard logic
+		return currentProjectRoot;
+	} catch (error) {
+		// Git command failed (not in a Git repo, Git not available, etc.)
+		// Fall back to standard project root detection
+		return currentProjectRoot;
+	}
+}
 // --- Dynamic Configuration Function --- (REMOVED)
 
 // --- Logging and Utility Functions ---
@@ -1338,6 +1381,7 @@ export {
 	addComplexityToTask,
 	resolveEnvVariable,
 	findProjectRoot,
+	findMainProjectRoot,
 	aggregateTelemetry,
 	getCurrentTag,
 	resolveTag,

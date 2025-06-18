@@ -1,8 +1,17 @@
 {
 	"mcpServers": {
-		"desktop-commander": {
-			"command": "npx",
-			"args": ["-y", "@wonderwhy-er/desktop-commander"]
+		"serena": {
+			"type": "stdio",
+			"command": "/Users/stephen/.local/bin/uv",
+			"args": [
+				"run",
+				"--directory",
+				"/Users/stephen/Projects/MCP/serena",
+				"serena-mcp-server",
+				"--context",
+				"agent"
+			],
+			"env": {}
 		},
 		"conport": {
 			"type": "stdio",
@@ -48,17 +57,6 @@
 			"env": {
 				"PERPLEXITY_API_KEY": "op://rzp-labs/PERPLEXITY_API_KEY/api_key"
 			}
-		},
-		"language-server": {
-			"command": "mcp-language-server",
-			"args": [
-				"--workspace",
-				"/Users/stephen/Projects/mcp/task-master-ai",
-				"--lsp",
-				"typescript-language-server",
-				"--",
-				"--stdio"
-			]
 		}
 	}
 }

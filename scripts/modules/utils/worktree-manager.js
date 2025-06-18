@@ -10,11 +10,16 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import {
-	WORKTREE_PREFIX,
-	WORKTREES_DIR
+	WORKTREES_DIR,
+	WORKTREE_PREFIX
 } from '../../../src/constants/paths.js';
 import { isWorktreesEnabled } from '../config-manager.js';
-import { addToRegistry, removeFromRegistry } from './worktree-registry.js';
+import { findMainProjectRoot } from '../utils.js';
+import {
+	addToRegistry,
+	removeFromRegistry,
+	syncWorktreeRegistry
+} from './worktree-registry.js';
 
 const execAsync = promisify(exec);
 
@@ -58,7 +63,9 @@ async function createWorktree(
 
 	const { mcpLog } = options;
 	const worktreeTitle = getWorktreeTitle(taskId);
-	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+	const worktreePath = path.resolve(
+		path.join(projectRoot, WORKTREES_DIR, worktreeTitle)
+	);
 	const branchName = worktreeTitle;
 
 	// Logger helper
@@ -156,7 +163,7 @@ async function createWorktree(
  * @param {Function} [options.mcpLog] - MCP logger object (optional)
  * @param {boolean} [options.force] - Force removal even with uncommitted changes
  * @param {Function} [options.confirm] - Confirmation callback for destructive operations
- * @param {boolean} [options.deleteBranch] - Also delete the branch after removing worktree
+ * @param {boolean} [options.removeBranch] - Also remove the branch after removing worktree
  * @returns {Promise<Object>} Worktree removal result
  */
 async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
@@ -175,7 +182,17 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 	}
 
 	const { mcpLog, force = false, confirm, removeBranch = false } = options;
-	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+
+	// Delegate to specialized function for worktree+branch removal
+	if (removeBranch) {
+		return await removeWorktreeAndBranch(projectRoot, worktreeTitle, {
+			mcpLog,
+			force // This will trigger the existing validation in removeWorktreeAndBranch
+		});
+	}
+	const worktreePath = path.resolve(
+		path.join(projectRoot, WORKTREES_DIR, worktreeTitle)
+	);
 	const branchName = worktreeTitle;
 
 	// Logger helper
@@ -185,8 +202,31 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 		}
 	};
 
-	// GIVEN the worktree does not exist
+	// Sync registry with reality before removal (clean up stale entries)
+	try {
+		await syncWorktreeRegistry(projectRoot, { mcpLog });
+	} catch (syncError) {
+		// Don't fail the operation if sync fails, just log it
+		report('warn', `Registry sync failed: ${syncError.message}`);
+	}
+
+	// CRITICAL SAFETY CHECK: Prevent removing worktree from inside it
+	const currentDir = path.resolve(process.cwd()).toLowerCase();
+	const normalizedWorktreePath = path.resolve(worktreePath).toLowerCase();
+	if (currentDir.startsWith(normalizedWorktreePath)) {
+		throw new Error(
+			`Cannot remove worktree while inside it. You are currently in: ${currentDir}. Please navigate out first: cd ${projectRoot}`
+		);
+	}
+
+	// Check if worktree exists with better error context
 	if (!fs.existsSync(worktreePath)) {
+		// Provide helpful context if user appears to be inside a worktree
+		if (currentDir.includes('worktrees')) {
+			throw new Error(
+				`Cannot find worktree '${worktreeTitle}'. Note: you appear to be inside a worktree. Try running from the main project directory.`
+			);
+		}
 		throw new Error(`${worktreeTitle} does not exist`);
 	}
 
@@ -252,26 +292,14 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 			);
 		}
 
-		// Delete branch if requested
-		if (removeBranch) {
-			try {
-				await execAsync(`git branch -d ${branchName}`, { cwd: projectRoot });
-				report('info', `Removed branch ${branchName}`);
-			} catch (branchError) {
-				// Log branch removal error but don't fail the operation
-				report(
-					'warn',
-					`Failed to remove branch ${branchName}: ${branchError.message}`
-				);
-			}
-		}
+		// Note: Branch removal is handled by delegation to removeWorktreeAndBranch above
 
 		return {
 			success: true,
 			worktreeTitle,
 			worktreePath,
 			branchName,
-			branchDeleted: removeBranch
+			branchRemoved: false // Only worktree removed, branch removal is handled by delegation
 		};
 	} catch (error) {
 		report('error', `Failed to remove ${worktreeTitle}: ${error.message}`);
@@ -308,7 +336,9 @@ async function removeWorktreeAndBranch(
 	}
 
 	const { mcpLog, force } = options;
-	const worktreePath = path.join(projectRoot, WORKTREES_DIR, worktreeTitle);
+	const worktreePath = path.resolve(
+		path.join(projectRoot, WORKTREES_DIR, worktreeTitle)
+	);
 	const branchName = worktreeTitle;
 
 	// Logger helper
@@ -321,6 +351,15 @@ async function removeWorktreeAndBranch(
 	// GIVEN the worktree exists WHEN removeWorktreeAndBranch is called with the --force flag
 	if (force) {
 		throw new Error('--force not supported for removeWorktreeAndBranch');
+	}
+
+	// CRITICAL SAFETY CHECK: Prevent removing worktree from inside it
+	const currentDir = path.resolve(process.cwd()).toLowerCase();
+	const normalizedWorktreePath = path.resolve(worktreePath).toLowerCase();
+	if (currentDir.startsWith(normalizedWorktreePath)) {
+		throw new Error(
+			`Cannot remove worktree while inside it. You are currently in: ${currentDir}. Please navigate out first: cd ${projectRoot}`
+		);
 	}
 
 	// Check if worktree exists
@@ -403,7 +442,7 @@ async function removeWorktreeAndBranch(
 			worktreeTitle,
 			worktreePath,
 			branchName,
-			branchDeleted: true
+			branchRemoved: true
 		};
 	} catch (error) {
 		report(
@@ -441,6 +480,14 @@ async function listWorktrees(projectRoot, options = {}) {
 			mcpLog[level](...args);
 		}
 	};
+
+	// Sync registry with reality before listing (clean up stale entries)
+	try {
+		await syncWorktreeRegistry(projectRoot, { mcpLog });
+	} catch (syncError) {
+		// Don't fail the operation if sync fails, just log it
+		report('warn', `Registry sync failed: ${syncError.message}`);
+	}
 
 	try {
 		const { stdout } = await execAsync('git worktree list --porcelain', {

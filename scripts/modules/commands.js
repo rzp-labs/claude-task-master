@@ -37,6 +37,7 @@ import {
 import {
 	detectCamelCaseFlags,
 	findProjectRoot,
+	findMainProjectRoot,
 	getCurrentTag,
 	log,
 	readJSON,
@@ -75,15 +76,16 @@ import {
 	COMPLEXITY_REPORT_FILE,
 	PRD_FILE,
 	TASKMASTER_CONFIG_FILE,
-	TASKMASTER_TASKS_FILE
+	TASKMASTER_TASKS_FILE,
+	WORKTREES_DIR
 } from '../../src/constants/paths.js';
 
 import {
-	getWorktreeTitle,
 	createWorktree,
+	getWorktreeTitle,
+	listWorktrees,
 	removeWorktree,
-	removeWorktreeAndBranch,
-	listWorktrees
+	removeWorktreeAndBranch
 } from './utils/worktree-manager.js';
 
 import {
@@ -4123,9 +4125,6 @@ Examples:
 			process.exit(1);
 		});
 
-
-
-
 	// worktree create command
 	programInstance
 		.command('worktree-create')
@@ -4134,7 +4133,7 @@ Examples:
 		.option('--base-branch <branch>', 'Base branch to create from', 'main')
 		.action(async (options) => {
 			try {
-				const projectRoot = findProjectRoot();
+				const projectRoot = await findMainProjectRoot();
 				if (!projectRoot) {
 					console.error(chalk.red('Error: Could not find project root.'));
 					process.exit(1);
@@ -4151,12 +4150,16 @@ Examples:
 					}
 				};
 
-				const result = await createWorktree(projectRoot, taskId, baseBranch, createOptions);
-				
+				const result = await createWorktree(
+					projectRoot,
+					taskId,
+					baseBranch,
+					createOptions
+				);
+
 				console.log(chalk.green(`✅ Worktree created successfully!`));
 				console.log(chalk.white(`Path: ${chalk.cyan(result.worktreePath)}`));
 				console.log(chalk.white(`Branch: ${chalk.cyan(result.branchName)}`));
-
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error.message}`));
 				process.exit(1);
@@ -4169,7 +4172,7 @@ Examples:
 		.description('List all Git worktrees')
 		.action(async () => {
 			try {
-				const projectRoot = findProjectRoot();
+				const projectRoot = await findMainProjectRoot();
 				if (!projectRoot) {
 					console.error(chalk.red('Error: Could not find project root.'));
 					process.exit(1);
@@ -4184,7 +4187,7 @@ Examples:
 				};
 
 				const worktrees = await listWorktrees(projectRoot, listOptions);
-				
+
 				if (worktrees.length === 0) {
 					console.log(chalk.gray('No worktrees found.'));
 					return;
@@ -4192,25 +4195,24 @@ Examples:
 
 				console.log(chalk.white.bold('\nWorktrees:'));
 				console.log('');
-				
+
 				worktrees.forEach((worktree) => {
 					const isMain = worktree.bare || worktree.path === projectRoot;
-					const pathDisplay = isMain ? 
-						chalk.yellow('(main repository)') : 
-						chalk.gray(worktree.path);
-					
-					const branchDisplay = worktree.branch ? 
-						chalk.cyan(worktree.branch) : 
-						chalk.gray('(no branch)');
-					
-					const taskDisplay = worktree.isTaskMasterWorktree ? 
-						chalk.green(`[Task ${worktree.taskId}]`) : 
-						'';
-					
+					const pathDisplay = isMain
+						? chalk.yellow('(main repository)')
+						: chalk.gray(worktree.path);
+
+					const branchDisplay = worktree.branch
+						? chalk.cyan(worktree.branch)
+						: chalk.gray('(no branch)');
+
+					const taskDisplay = worktree.isTaskMasterWorktree
+						? chalk.green(`[Task ${worktree.taskId}]`)
+						: '';
+
 					console.log(`  ${branchDisplay} ${pathDisplay} ${taskDisplay}`);
 				});
 				console.log('');
-
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error.message}`));
 				process.exit(1);
@@ -4225,7 +4227,7 @@ Examples:
 		.option('--remove-branch', 'Also remove the branch')
 		.action(async (worktreeTitle, options) => {
 			try {
-				const projectRoot = findProjectRoot();
+				const projectRoot = await findMainProjectRoot();
 				if (!projectRoot) {
 					console.error(chalk.red('Error: Could not find project root.'));
 					process.exit(1);
@@ -4269,7 +4271,7 @@ Examples:
 		.description('Show current worktree status and information')
 		.action(async () => {
 			try {
-				const projectRoot = findProjectRoot();
+				const projectRoot = await findMainProjectRoot();
 				if (!projectRoot) {
 					console.error(chalk.red('Error: Could not find project root.'));
 					process.exit(1);

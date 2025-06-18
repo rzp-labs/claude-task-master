@@ -157,6 +157,13 @@ Comprehensive manual testing plan for Task Master worktree functionality. This d
 - **Expected**: Shows feature disabled error
 - **Status**: [ ] Not tested
 
+#### Test 3.9: **CRITICAL SAFETY** - Attempt to delete while inside worktree
+- **Setup**: Create worktree and navigate into it: `cd worktrees/task-112`
+- **Command**: `../../scripts/dev.js worktree-remove task-112`
+- **Expected**: Shows error preventing deletion, suggests navigating out first
+- **Status**: [✅] Critical bug identified and fixed
+- **Fix**: Added safety check to prevent terminal session corruption
+
 ### 4. `worktree-status` Command
 
 #### Test 4.1: In main repository

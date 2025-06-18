@@ -193,6 +193,123 @@ function findByTaskId(projectRoot, taskId) {
 	return null;
 }
 
+/**
+ * Sync the worktree registry with actual Git worktrees and filesystem state
+ * Removes stale entries and reports inconsistencies
+ * @param {string} projectRoot - Project root directory (required)
+ * @param {Object} [options] - Options for the sync operation
+ * @param {Function} [options.mcpLog] - MCP logger object (optional)
+ * @returns {Promise<Object>} Sync report with removed entries and issues found
+ */
+async function syncWorktreeRegistry(projectRoot, options = {}) {
+	if (!projectRoot) {
+		throw new Error('projectRoot is required for syncWorktreeRegistry');
+	}
+
+	const { mcpLog } = options;
+	const { exec } = await import('child_process');
+	const { promisify } = await import('util');
+	const execAsync = promisify(exec);
+
+	// Logger helper
+	const report = (level, ...args) => {
+		if (mcpLog && typeof mcpLog[level] === 'function') {
+			mcpLog[level](...args);
+		}
+	};
+
+	const syncReport = {
+		removedEntries: [],
+		gitWorktrees: [],
+		registryEntries: [],
+		issues: []
+	};
+
+	try {
+		// Get current registry state
+		const registry = readRegistry(projectRoot);
+		const registryWorktrees = registry.worktrees || {};
+		syncReport.registryEntries = Object.keys(registryWorktrees);
+
+		// Get actual Git worktrees
+		try {
+			const { stdout } = await execAsync('git worktree list --porcelain', {
+				cwd: projectRoot
+			});
+
+			// Parse Git worktrees
+			const gitWorktreePaths = [];
+			const lines = stdout.trim().split('\n');
+			let currentWorktree = {};
+
+			for (const line of lines) {
+				if (line.startsWith('worktree ')) {
+					if (Object.keys(currentWorktree).length > 0) {
+						gitWorktreePaths.push(currentWorktree.path);
+					}
+					currentWorktree = {
+						path: line.substring(9) // Remove 'worktree ' prefix
+					};
+				}
+			}
+
+			// Add the last worktree if exists
+			if (Object.keys(currentWorktree).length > 0) {
+				gitWorktreePaths.push(currentWorktree.path);
+			}
+
+			syncReport.gitWorktrees = gitWorktreePaths;
+		} catch (gitError) {
+			syncReport.issues.push(`Git worktree list failed: ${gitError.message}`);
+			report('warn', `Could not get Git worktrees: ${gitError.message}`);
+		}
+
+		// Check each registry entry against reality
+		const staleEntries = [];
+		for (const [worktreeId, entry] of Object.entries(registryWorktrees)) {
+			const pathExists = (await import('fs')).existsSync(entry.path);
+			const inGitWorktrees = syncReport.gitWorktrees.includes(entry.path);
+
+			if (!pathExists || !inGitWorktrees) {
+				staleEntries.push(worktreeId);
+				syncReport.issues.push(
+					`Stale entry: ${worktreeId} (path exists: ${pathExists}, in Git: ${inGitWorktrees})`
+				);
+			}
+		}
+
+		// Remove stale entries
+		for (const worktreeId of staleEntries) {
+			try {
+				removeFromRegistry(projectRoot, worktreeId);
+				syncReport.removedEntries.push(worktreeId);
+				report('info', `Removed stale registry entry: ${worktreeId}`);
+			} catch (error) {
+				syncReport.issues.push(
+					`Failed to remove ${worktreeId}: ${error.message}`
+				);
+				report(
+					'warn',
+					`Could not remove stale entry ${worktreeId}: ${error.message}`
+				);
+			}
+		}
+
+		if (syncReport.removedEntries.length > 0) {
+			report(
+				'info',
+				`Registry sync completed: removed ${syncReport.removedEntries.length} stale entries`
+			);
+		}
+
+		return syncReport;
+	} catch (error) {
+		syncReport.issues.push(`Sync operation failed: ${error.message}`);
+		report('error', `Registry sync failed: ${error.message}`);
+		return syncReport;
+	}
+}
+
 // Export functions
 export {
 	readRegistry,
@@ -200,5 +317,6 @@ export {
 	getRegistryPath,
 	addToRegistry,
 	removeFromRegistry,
-	findByTaskId
+	findByTaskId,
+	syncWorktreeRegistry
 };
