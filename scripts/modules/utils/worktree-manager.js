@@ -9,6 +9,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
+import { addToRegistry, removeFromRegistry } from './worktree-registry.js';
 
 const execAsync = promisify(exec);
 
@@ -66,6 +67,23 @@ async function createWorktree(
 
 		report('info', `Successfully created worktree at ${worktreePath}`);
 
+		// Add to registry after successful Git operation
+		try {
+			addToRegistry(projectRoot, {
+				worktreeId: `task-${taskId}`,
+				taskId,
+				branch: branchName,
+				path: worktreePath
+			});
+			report('info', `Added worktree to registry: task-${taskId}`);
+		} catch (registryError) {
+			// Log registry error but don't fail the operation
+			report(
+				'warn',
+				`Failed to add worktree to registry: ${registryError.message}`
+			);
+		}
+
 		return {
 			success: true,
 			taskId,
@@ -121,6 +139,18 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 		);
 
 		report('info', `Successfully removed worktree for task ${taskId}`);
+
+		// Remove from registry after successful Git operation
+		try {
+			removeFromRegistry(projectRoot, `task-${taskId}`);
+			report('info', `Removed worktree from registry: task-${taskId}`);
+		} catch (registryError) {
+			// Log registry error but don't fail the operation
+			report(
+				'warn',
+				`Failed to remove worktree from registry: ${registryError.message}`
+			);
+		}
 
 		return {
 			success: true,

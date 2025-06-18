@@ -671,7 +671,7 @@
         "id": 3,
         "title": "Implement Simple Worktree Registry",
         "description": "Create a simple JSON file to track active worktrees at .taskmaster/worktree-registry.json",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           2
@@ -683,7 +683,7 @@
             "description": "Implement simple functions to read and write the registry JSON file",
             "dependencies": [],
             "details": "Create registry functions:\n- readRegistry() - read JSON file, return empty object if missing\n- writeRegistry(data) - write JSON file with pretty formatting\n- Use fs.readFileSync/writeFileSync for simplicity",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 2,
@@ -693,7 +693,7 @@
               1
             ],
             "details": "Add functions:\n- addToRegistry(entry) - add worktree info to registry\n- removeFromRegistry(worktreeId) - remove entry\n- findByTaskId(taskId) - find worktree for a task\n- Entry format: {worktreeId, taskId, branch, path, createdAt}",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 3,
@@ -703,7 +703,7 @@
               2
             ],
             "details": "Modify worktree-manager.js:\n- createWorktree should add to registry after success\n- removeWorktree should remove from registry\n- Handle registry errors gracefully (log but don't fail operation)",
-            "status": "pending"
+            "status": "done"
           }
         ],
         "tags": [
@@ -1105,7 +1105,7 @@
     ],
     "metadata": {
       "created": "2025-06-17T21:13:25.947Z",
-      "updated": "2025-06-18T01:27:47.130Z",
+      "updated": "2025-06-18T01:36:30.907Z",
       "description": "Simplified tasks for git worktree MVP - following 'nail it before we scale it' philosophy"
     }
   }
