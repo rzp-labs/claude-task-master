@@ -167,7 +167,7 @@ describe('updateSingleTaskStatus function', () => {
 
 		// Remove subtasks from task 3
 		const taskWithoutSubtasks = { ...testTasksData.tasks[2] };
-		delete taskWithoutSubtasks.subtasks;
+		taskWithoutSubtasks.subtasks = undefined;
 		testTasksData.tasks[2] = taskWithoutSubtasks;
 
 		// Assert

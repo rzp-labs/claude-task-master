@@ -73,7 +73,9 @@ jest.unstable_mockModule('chalk', () => ({
 }));
 
 // --- Import modules (AFTER mock setup) ---
-let configManager, ui, chalk;
+let configManager;
+let ui;
+let chalk;
 
 describe('CLI Models Command (Action Handler Test)', () => {
 	// Setup dynamic imports before tests run

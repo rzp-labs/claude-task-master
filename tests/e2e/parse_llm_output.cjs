@@ -19,7 +19,9 @@ rl.on('line', (line) => {
 
 // Make the callback async to allow await for dynamic imports
 rl.on('close', async () => {
-	let chalk, boxen, Table;
+	let chalk;
+	let boxen;
+	let Table;
 	try {
 		// Dynamically import libraries
 		chalk = (await import('chalk')).default;

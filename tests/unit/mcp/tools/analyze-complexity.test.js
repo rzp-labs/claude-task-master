@@ -58,7 +58,7 @@ const createZodMock = () => {
 		const numValue = typeof value === 'string' ? Number(value) : value;
 
 		// Check if it's a valid number
-		if (isNaN(numValue)) {
+		if (Number.isNaN(numValue)) {
 			throw new Error(`Invalid type for parameter 'threshold'`);
 		}
 

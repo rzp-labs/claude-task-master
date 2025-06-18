@@ -37,6 +37,11 @@ import { registerUpdateTool } from './update.js';
 import { registerUseTagTool } from './use-tag.js';
 import { registerValidateDependenciesTool } from './validate-dependencies.js';
 
+// Worktree tools
+import { registerCreateWorktreeTool } from './worktree/create-worktree.js';
+import { registerListWorktreesTool } from './worktree/list-worktrees.js';
+import { registerRemoveWorktreeTool } from './worktree/remove-worktree.js';
+
 /**
  * Register all Task Master tools with the MCP server
  * @param {Object} server - FastMCP server instance
@@ -92,6 +97,11 @@ export function registerTaskMasterTools(server) {
 
 		// Group 8: Research Features
 		registerResearchTool(server);
+
+		// Group 9: Worktree Management (conditional based on feature flag)
+		registerCreateWorktreeTool(server);
+		registerRemoveWorktreeTool(server);
+		registerListWorktreesTool(server);
 	} catch (error) {
 		logger.error(`Error registering Task Master tools: ${error.message}`);
 		throw error;

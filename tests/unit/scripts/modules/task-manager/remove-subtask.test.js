@@ -63,7 +63,7 @@ const testRemoveSubtask = (
 
 	// If parent has no more subtasks, remove the subtasks array
 	if (parentTask.subtasks.length === 0) {
-		delete parentTask.subtasks;
+		parentTask.subtasks = undefined;
 	}
 
 	let convertedTask = null;

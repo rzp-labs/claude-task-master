@@ -453,7 +453,7 @@
         "id": 7,
         "title": "Create MCP Tools",
         "description": "Add MCP tools for worktree operations",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           2,
@@ -468,7 +468,7 @@
             "description": "Implement MCP tool for creating worktrees",
             "dependencies": [],
             "details": "Create mcp-server/src/tools/worktree/create-worktree.js:\n- Validate task ID exists\n- Check feature flag\n- Call worktree-manager createWorktree\n- Return success with worktree path",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 2,
@@ -476,7 +476,7 @@
             "description": "Implement MCP tool for removing worktrees",
             "dependencies": [],
             "details": "Create remove-worktree.js:\n- Accept worktree path parameter\n- Call worktree-manager removeWorktree\n- Return success confirmation",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 3,
@@ -484,7 +484,7 @@
             "description": "Implement MCP tool for listing worktrees",
             "dependencies": [],
             "details": "Create list-worktrees.js:\n- Call worktree-manager listWorktrees\n- Return structured list of worktrees\n- Include task associations",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 4,
@@ -496,14 +496,14 @@
               3
             ],
             "details": "Update tool registration:\n- Check config for features.worktrees\n- Only register tools if enabled\n- Tools invisible when feature disabled",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 5,
             "title": "Manually prove functionality",
             "description": "Manual testing of MCP tools before automation",
-            "details": "Manually test MCP tool functionality:\n- Test create_worktree MCP tool with task validation\n- Test remove_worktree MCP tool with path parameters\n- Test list_worktrees MCP tool structured responses\n- Test conditional tool registration based on feature flags\n- Test MCP tool error handling and responses\n- Test integration with existing MCP server infrastructure\n- Document manual test results and edge cases",
-            "status": "pending",
+            "details": "Manually test MCP tool functionality:\n- Test create_worktree MCP tool with task validation\n- Test remove_worktree MCP tool with path parameters\n- Test list_worktrees MCP tool structured responses\n- Test conditional tool registration based on feature flags\n- Test MCP tool error handling and responses\n- Test integration with existing MCP server infrastructure\n- Document manual test results and edge cases\n<info added on 2025-06-18T19:42:00.561Z>\nTesting results documented - all three MCP worktree tools verified working correctly:\n- Tool registration and MCP server integration confirmed\n- Parameter validation with Zod schemas functioning\n- Feature flag checks working properly  \n- Error handling and response formatting correct\n- Import paths resolved and CLI functionality verified\n- Manual testing of create/remove operations successful\nPerfect! Manual testing completed and documented. All three MCP worktree tools are fully functional and ready for production use.\n</info added on 2025-06-18T19:42:00.561Z>",
+            "status": "done",
             "dependencies": [
               1,
               2,
@@ -516,8 +516,8 @@
             "id": 6,
             "title": "Create atomic task-specific script",
             "description": "Build atomic test script for MCP tool functionality",
-            "details": "Create scripts/test-mcp-tools.js that:\n- Tests MCP tool registration and availability\n- Tests create_worktree tool with various parameters\n- Tests remove_worktree tool error handling\n- Tests list_worktrees tool structured output\n- Tests conditional registration based on feature flags\n- Tests MCP tool integration with core functions\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success",
-            "status": "pending",
+            "details": "Create scripts/test-mcp-tools.js that:\n- Tests MCP tool registration and availability\n- Tests create_worktree tool with various parameters\n- Tests remove_worktree tool error handling\n- Tests list_worktrees tool structured output\n- Tests conditional registration based on feature flags\n- Tests MCP tool integration with core functions\n- Atomic behavior: preserve artifacts on failure for debugging\n- No cleanup on failure, clean artifacts on success\n<info added on 2025-06-18T20:16:59.804Z>\nSuccessfully created scripts/test-mcp-tools.js implementing comprehensive MCP tool testing:\n\n**Implementation Details:**\n- Spawns real MCP server process (mcp-server/server.js) as subprocess\n- Implements proper JSON-RPC 2.0 communication protocol over stdio\n- Tests tool registration by calling tools/list method\n- Validates all 3 worktree tools (create_worktree, remove_worktree, list_worktrees) are registered\n- Tests functional operations with real filesystem interactions\n- Implements atomic cleanup behavior (preserves artifacts on failure, cleans on success)\n- Includes error handling validation for invalid inputs\n\n**Test Coverage:**\n- Tool registration and availability verification\n- create_worktree with various parameter combinations\n- remove_worktree error handling scenarios\n- list_worktrees structured output validation\n- Filesystem verification of actual worktree creation/removal\n- Proper JSON-RPC error responses for invalid requests\n\n**Status:** Complete - MCP tools are properly integrated and functionally validated through real server communication\n</info added on 2025-06-18T20:16:59.804Z>",
+            "status": "done",
             "dependencies": [
               5
             ],
@@ -528,7 +528,7 @@
             "title": "Update e2e test script",
             "description": "Enhance e2e test to include MCP tool scenarios",
             "details": "Update scripts/test-worktree-e2e.js to add:\n- Test MCP tool integration with core worktree functions\n- Test MCP tool registration and dynamic availability\n- Test MCP tool responses match expected formats\n- Test MCP tools work with feature toggles\n- Test MCP tool error handling in integrated workflows\n- Verify MCP tools don't break existing integration\n- Maintain atomic cleanup behavior",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               6
             ],
@@ -729,7 +729,7 @@
     ],
     "metadata": {
       "created": "2025-06-17T21:13:25.947Z",
-      "updated": "2025-06-18T17:36:31.208Z",
+      "updated": "2025-06-18T20:35:11.459Z",
       "description": "Simplified tasks for git worktree MVP - following 'nail it before we scale it' philosophy"
     }
   }
