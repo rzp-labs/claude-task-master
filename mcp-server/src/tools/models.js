@@ -4,12 +4,12 @@
  */
 
 import { z } from 'zod';
+import { modelsDirect } from '../core/task-master-core.js';
 import {
-	handleApiResult,
 	createErrorResponse,
+	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { modelsDirect } from '../core/task-master-core.js';
 
 /**
  * Register the models tool with the MCP server

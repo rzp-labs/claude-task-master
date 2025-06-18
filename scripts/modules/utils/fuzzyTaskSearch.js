@@ -150,7 +150,7 @@ export class FuzzyTaskSearch {
 		const fuzzyResults = this.fuse.search(prompt);
 
 		// Also search for each significant word to catch different aspects
-		let wordResults = [];
+		const wordResults = [];
 		for (const word of promptWords) {
 			if (word.length > 5) {
 				// Only use significant words

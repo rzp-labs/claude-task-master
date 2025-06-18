@@ -4,13 +4,13 @@
  */
 
 import { z } from 'zod';
+import { addTagDirect } from '../core/task-master-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import {
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { addTagDirect } from '../core/task-master-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the addTag tool with the MCP server

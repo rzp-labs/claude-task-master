@@ -1,4 +1,4 @@
-import { generateText, streamText, generateObject } from 'ai';
+import { generateObject, generateText, streamText } from 'ai';
 import { log } from '../../scripts/modules/index.js';
 
 /**

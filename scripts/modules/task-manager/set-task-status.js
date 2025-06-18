@@ -1,24 +1,24 @@
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 
 import {
-	log,
-	readJSON,
-	writeJSON,
+	TASK_STATUS_OPTIONS,
+	isValidTaskStatus
+} from '../../../src/constants/task-status.js';
+import { getDebugFlag } from '../config-manager.js';
+import { validateTaskDependencies } from '../dependency-manager.js';
+import { displayBanner } from '../ui.js';
+import {
+	ensureTagMetadata,
 	findTaskById,
 	getCurrentTag,
-	ensureTagMetadata
+	log,
+	readJSON,
+	writeJSON
 } from '../utils.js';
-import { displayBanner } from '../ui.js';
-import { validateTaskDependencies } from '../dependency-manager.js';
-import { getDebugFlag } from '../config-manager.js';
-import updateSingleTaskStatus from './update-single-task-status.js';
 import generateTaskFiles from './generate-task-files.js';
-import {
-	isValidTaskStatus,
-	TASK_STATUS_OPTIONS
-} from '../../../src/constants/task-status.js';
+import updateSingleTaskStatus from './update-single-task-status.js';
 
 /**
  * Set the status of a task

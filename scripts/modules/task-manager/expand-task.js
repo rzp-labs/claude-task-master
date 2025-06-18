@@ -2,26 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import { z } from 'zod';
 
-import { log, readJSON, writeJSON, isSilentMode } from '../utils.js';
+import { isSilentMode, log, readJSON, writeJSON } from '../utils.js';
 
 import {
+	displayAiUsageSummary,
 	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayAiUsageSummary
+	stopLoadingIndicator
 } from '../ui.js';
 
 import { generateTextService } from '../ai-services-unified.js';
 
-import { getDefaultSubtasks, getDebugFlag } from '../config-manager.js';
-import generateTaskFiles from './generate-task-files.js';
 import { COMPLEXITY_REPORT_FILE } from '../../../src/constants/paths.js';
-import { ContextGatherer } from '../utils/contextGatherer.js';
-import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
+import { getDebugFlag, getDefaultSubtasks } from '../config-manager.js';
 import {
-	flattenTasksWithSubtasks,
 	findProjectRoot,
+	flattenTasksWithSubtasks,
 	getCurrentTag
 } from '../utils.js';
+import { ContextGatherer } from '../utils/contextGatherer.js';
+import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
+import generateTaskFiles from './generate-task-files.js';
 
 // --- Zod Schemas (Keep from previous step) ---
 const subtaskSchema = z

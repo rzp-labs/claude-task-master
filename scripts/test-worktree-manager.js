@@ -3,7 +3,7 @@
 /**
  * test-worktree-manager.js
  * Functional verification script for worktree-manager.js
- * 
+ *
  * Tests what actually works:
  * 1. Module imports
  * 2. listWorktrees with real Git
@@ -12,8 +12,8 @@
  * 5. Error handling
  */
 
-import fs from 'fs';
 import { exec } from 'child_process';
+import fs from 'fs';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -53,26 +53,36 @@ async function runTests() {
 		// Test 2: listWorktrees
 		console.log('2. Testing listWorktrees...');
 		const initialWorktrees = await wm.listWorktrees(projectRoot);
-		console.log('✓ listWorktrees works, found', initialWorktrees.length, 'worktree(s)');
+		console.log(
+			'✓ listWorktrees works, found',
+			initialWorktrees.length,
+			'worktree(s)'
+		);
 		console.log('');
 
 		// Test 3: createWorktree with filesystem verification
 		console.log('3. Testing createWorktree...');
-		const createResult = await wm.createWorktree(projectRoot, testTaskId, 'research-git-worktree-basics');
+		const createResult = await wm.createWorktree(
+			projectRoot,
+			testTaskId,
+			'research-git-worktree-basics'
+		);
 		console.log('✓ Function returned success:', createResult.success);
-		
+
 		// Verify directory actually exists
 		const dirExists = fs.existsSync(worktreePath);
 		console.log('✓ Directory exists on filesystem:', dirExists);
-		
+
 		if (dirExists) {
 			const gitExists = fs.existsSync(`${worktreePath}/.git`);
 			console.log('✓ Has .git file (worktree indicator):', gitExists);
 		}
-		
+
 		// Verify through listWorktrees
 		const worktreesAfterCreate = await wm.listWorktrees(projectRoot);
-		const testWorktree = worktreesAfterCreate.find(w => w.taskId === testTaskId);
+		const testWorktree = worktreesAfterCreate.find(
+			(w) => w.taskId === testTaskId
+		);
 		console.log('✓ Detected by listWorktrees:', testWorktree ? 'YES' : 'NO');
 		console.log('');
 
@@ -80,14 +90,16 @@ async function runTests() {
 		console.log('4. Testing removeWorktree...');
 		const removeResult = await wm.removeWorktree(projectRoot, testTaskId);
 		console.log('✓ Function returned success:', removeResult.success);
-		
+
 		// Verify directory actually deleted
 		const dirStillExists = fs.existsSync(worktreePath);
 		console.log('✓ Directory removed from filesystem:', !dirStillExists);
-		
+
 		// Verify through listWorktrees
 		const worktreesAfterRemove = await wm.listWorktrees(projectRoot);
-		const testWorktreeGone = !worktreesAfterRemove.find(w => w.taskId === testTaskId);
+		const testWorktreeGone = !worktreesAfterRemove.find(
+			(w) => w.taskId === testTaskId
+		);
 		console.log('✓ Removed from listWorktrees:', testWorktreeGone);
 		console.log('');
 
@@ -117,7 +129,6 @@ async function runTests() {
 			// Ignore cleanup errors
 		}
 		await cleanupBranch(testTaskId);
-
 	} catch (error) {
 		console.error('💥 TEST FAILED:', error.message);
 		console.error('📋 Artifacts left for investigation:');

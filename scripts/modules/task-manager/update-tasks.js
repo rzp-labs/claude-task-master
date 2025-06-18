@@ -1,31 +1,31 @@
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import Table from 'cli-table3';
 import { z } from 'zod'; // Keep Zod for post-parsing validation
 
 import {
 	log as consoleLog,
+	isSilentMode,
 	readJSON,
-	writeJSON,
 	truncate,
-	isSilentMode
+	writeJSON
 } from '../utils.js';
 
 import {
+	displayAiUsageSummary,
 	getStatusWithColor,
 	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayAiUsageSummary
+	stopLoadingIndicator
 } from '../ui.js';
 
-import { getDebugFlag } from '../config-manager.js';
-import generateTaskFiles from './generate-task-files.js';
 import { generateTextService } from '../ai-services-unified.js';
-import { getModelConfiguration } from './models.js';
+import { getDebugFlag } from '../config-manager.js';
+import { findProjectRoot, flattenTasksWithSubtasks } from '../utils.js';
 import { ContextGatherer } from '../utils/contextGatherer.js';
 import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
-import { flattenTasksWithSubtasks, findProjectRoot } from '../utils.js';
+import generateTaskFiles from './generate-task-files.js';
+import { getModelConfiguration } from './models.js';
 
 // Zod schema for validating the structure of tasks AFTER parsing
 const updatedTaskSchema = z

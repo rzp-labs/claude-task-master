@@ -2,8 +2,8 @@
 
 /**
  * test-worktree-e2e.js
- * End-to-end test combining Tasks 2, 3, and 4 functionality
- * Tests integration of worktree-manager, worktree-registry, and git-utils
+ * End-to-end test combining Tasks 2, 3, 4, and 5 functionality
+ * Tests integration of worktree-manager, worktree-registry, git-utils, and feature toggles
  */
 
 import fs from 'fs';
@@ -18,6 +18,8 @@ async function testWorktreeE2E() {
 		'.taskmaster',
 		'worktree-registry.json'
 	);
+	const configPath = path.join(projectRoot, '.taskmaster', 'config.json');
+	const backupConfigPath = `${configPath}.e2e-backup`;
 
 	let testFailed = false;
 
@@ -29,6 +31,7 @@ async function testWorktreeE2E() {
 			'./modules/utils/worktree-registry.js'
 		);
 		const gitUtils = await import('./modules/utils/git-utils.js');
+		const configManager = await import('./modules/config-manager.js');
 		console.log('✓ All modules imported successfully\n');
 
 		// Cleanup any existing test artifacts
@@ -49,13 +52,76 @@ async function testWorktreeE2E() {
 			}
 		}
 
-		// Test 1: Git version validation (Task 4)
-		console.log('2. Testing Git version validation...');
+		// Backup original config for feature toggle tests
+		if (fs.existsSync(configPath)) {
+			fs.copyFileSync(configPath, backupConfigPath);
+		}
+
+		// Test 1: Feature toggle disabled state (Task 5)
+		console.log('2. Testing feature toggle disabled state...');
+
+		// Ensure feature starts disabled for this test
+		const originalConfig = configManager.getConfig(projectRoot);
+		const disabledConfig = {
+			...originalConfig,
+			features: { worktrees: false }
+		};
+		configManager.writeConfig(disabledConfig, projectRoot);
+
+		// Verify feature is now disabled
+		if (configManager.isWorktreesEnabled(projectRoot)) {
+			throw new Error('Failed to disable worktrees for testing');
+		}
+
+		// Test that worktree functions are blocked when disabled
+		try {
+			await worktreeManager.createWorktree(projectRoot, '101', 'main');
+			throw new Error('createWorktree should be blocked when disabled');
+		} catch (error) {
+			if (!error.message.includes('Worktrees are disabled')) {
+				throw new Error(`Unexpected error: ${error.message}`);
+			}
+		}
+
+		try {
+			await worktreeManager.listWorktrees(projectRoot);
+			throw new Error('listWorktrees should be blocked when disabled');
+		} catch (error) {
+			if (!error.message.includes('Worktrees are disabled')) {
+				throw new Error(`Unexpected error: ${error.message}`);
+			}
+		}
+
+		console.log('✓ Feature toggle correctly blocks operations when disabled\n');
+
+		// Test 2: Enable feature toggle for remaining tests (Task 5)
+		console.log('3. Enabling worktree feature for integration tests...');
+
+		const currentConfig = configManager.getConfig(projectRoot);
+		const enabledConfig = {
+			...currentConfig,
+			features: { worktrees: true }
+		};
+
+		const writeSuccess = configManager.writeConfig(enabledConfig, projectRoot);
+		if (!writeSuccess) {
+			throw new Error('Failed to enable worktree feature');
+		}
+
+		// Verify feature is now enabled
+		if (!configManager.isWorktreesEnabled(projectRoot)) {
+			throw new Error('Feature should be enabled after config write');
+		}
+
+		console.log('✓ Worktree feature enabled for integration testing\n');
+
+		// Test 3: Git version validation (Task 4)
+		console.log('4. Testing Git version validation...');
 		await gitUtils.validateGitVersion(projectRoot);
 		console.log('✓ Git version is compatible with worktrees\n');
 
-		// Test 2: Create first worktree (Task 2 + Task 3)
-		console.log('3. Creating first worktree (task-101)...');
+		// Test 4: Create first worktree (Task 2 + Task 3)
+		console.log('5. Creating first worktree (task-101)...');
 		const worktree1 = await worktreeManager.createWorktree(
 			projectRoot,
 			'101',
@@ -178,11 +244,18 @@ async function testWorktreeE2E() {
 		console.log('✓ Second worktree correctly preserved');
 
 		// Cleanup
-		console.log('\n4. Cleaning up test artifacts...');
+		console.log('\n6. Cleaning up test artifacts...');
 		await worktreeManager.removeWorktree(projectRoot, '102');
 		if (fs.existsSync(registryPath)) {
 			fs.unlinkSync(registryPath);
 		}
+
+		// Restore original config
+		if (fs.existsSync(backupConfigPath)) {
+			fs.copyFileSync(backupConfigPath, configPath);
+			fs.unlinkSync(backupConfigPath);
+		}
+
 		console.log('✓ Cleanup completed\n');
 
 		console.log('🎉 ALL END-TO-END TESTS PASSED!');
@@ -191,6 +264,9 @@ async function testWorktreeE2E() {
 			'✓ Task 3 (worktree-registry): CRUD operations and integration'
 		);
 		console.log('✓ Task 4 (git-utils): worktree detection and info extraction');
+		console.log(
+			'✓ Task 5 (feature-toggle): disabled/enabled state enforcement'
+		);
 		console.log('✓ Integration: All components work together seamlessly');
 	} catch (error) {
 		testFailed = true;
@@ -204,7 +280,18 @@ async function testWorktreeE2E() {
 			'- Worktrees directory:',
 			path.join(projectRoot, 'worktrees')
 		);
+		console.error('- Config backup:', backupConfigPath);
 		console.error('- Check filesystem state manually');
+
+		// Restore original config on failure
+		if (fs.existsSync(backupConfigPath)) {
+			try {
+				fs.copyFileSync(backupConfigPath, configPath);
+				console.error('- Original config restored');
+			} catch (restoreError) {
+				console.error('- Failed to restore config:', restoreError.message);
+			}
+		}
 
 		process.exit(1);
 	}

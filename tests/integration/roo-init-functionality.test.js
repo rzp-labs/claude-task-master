@@ -1,6 +1,6 @@
-import { jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { jest } from '@jest/globals';
 
 describe('Roo Initialization Functionality', () => {
 	let initJsContent;

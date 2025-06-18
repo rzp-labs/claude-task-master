@@ -4,16 +4,16 @@
  */
 
 import { spawnSync } from 'child_process';
-import path from 'path';
 import fs from 'fs';
-import { contextManager } from '../core/context-manager.js'; // Import the singleton
+import path from 'path';
 import { fileURLToPath } from 'url';
 import { getCurrentTag } from '../../../scripts/modules/utils.js';
+import { contextManager } from '../core/context-manager.js'; // Import the singleton
 
 // Import path utilities to ensure consistent path resolution
 import {
-	lastFoundProjectRoot,
-	PROJECT_MARKERS
+	PROJECT_MARKERS,
+	lastFoundProjectRoot
 } from '../core/utils/path-utils.js';
 
 const __filename = fileURLToPath(import.meta.url);

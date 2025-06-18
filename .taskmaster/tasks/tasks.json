@@ -360,7 +360,7 @@
             "title": "Add worktree create command",
             "description": "Implement 'tm worktree create --task <id>' command",
             "dependencies": [],
-            "details": "Add command that:\n- Accepts task ID parameter\n- Calls createWorktree from worktree-manager\n- Shows success message with worktree path\n- Handles errors gracefully",
+            "details": "Add command that:\n- Accepts task ID parameter\n- Calls createWorktree from worktree-manager\n- Shows success message with worktree path\n- Handles errors gracefully\n<info added on 2025-06-18T03:00:12.937Z>\nBased on the user's workflow discovery and implementation notes, here's the new information that should be appended to subtask 6.2:\n\n**Implementation Note**: CLI commands in worktrees require commits and merging/cherry-picking to main for testing since CLI runs from main project context while worktree files aren't shared.\n\n**Status**: ✅ Implemented basic worktree create command following project patterns:\n- Uses ✅/❌ emojis for status indicators\n- Implements chalk colors for output formatting  \n- Follows standard error handling patterns\n- Command structure matches existing CLI patterns\n- Supports options for task ID and base branch parameters\n</info added on 2025-06-18T03:00:12.937Z>",
             "status": "in-progress"
           },
           {

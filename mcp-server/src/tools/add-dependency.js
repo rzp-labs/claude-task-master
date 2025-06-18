@@ -4,13 +4,13 @@
  */
 
 import { z } from 'zod';
-import {
-	handleApiResult,
-	createErrorResponse,
-	withNormalizedProjectRoot
-} from './utils.js';
 import { addDependencyDirect } from '../core/task-master-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	createErrorResponse,
+	handleApiResult,
+	withNormalizedProjectRoot
+} from './utils.js';
 
 /**
  * Register the addDependency tool with the MCP server

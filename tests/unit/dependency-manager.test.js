@@ -4,12 +4,12 @@
 
 import { jest } from '@jest/globals';
 import {
-	validateTaskDependencies,
-	isCircularDependency,
-	removeDuplicateDependencies,
 	cleanupSubtaskDependencies,
 	ensureAtLeastOneIndependentSubtask,
-	validateAndFixDependencies
+	isCircularDependency,
+	removeDuplicateDependencies,
+	validateAndFixDependencies,
+	validateTaskDependencies
 } from '../../scripts/modules/dependency-manager.js';
 import * as utils from '../../scripts/modules/utils.js';
 import { sampleTasks } from '../fixtures/sample-tasks.js';

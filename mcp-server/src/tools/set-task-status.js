@@ -4,20 +4,20 @@
  */
 
 import { z } from 'zod';
+import { TASK_STATUS_OPTIONS } from '../../../src/constants/task-status.js';
 import {
-	handleApiResult,
-	createErrorResponse,
-	withNormalizedProjectRoot
-} from './utils.js';
-import {
-	setTaskStatusDirect,
-	nextTaskDirect
+	nextTaskDirect,
+	setTaskStatusDirect
 } from '../core/task-master-core.js';
 import {
-	findTasksPath,
-	findComplexityReportPath
+	findComplexityReportPath,
+	findTasksPath
 } from '../core/utils/path-utils.js';
-import { TASK_STATUS_OPTIONS } from '../../../src/constants/task-status.js';
+import {
+	createErrorResponse,
+	handleApiResult,
+	withNormalizedProjectRoot
+} from './utils.js';
 
 /**
  * Register the setTaskStatus tool with the MCP server

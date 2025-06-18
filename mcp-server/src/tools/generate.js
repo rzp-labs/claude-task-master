@@ -3,15 +3,15 @@
  * Tool to generate individual task files from tasks.json
  */
 
+import path from 'path';
 import { z } from 'zod';
-import {
-	handleApiResult,
-	createErrorResponse,
-	withNormalizedProjectRoot
-} from './utils.js';
 import { generateTaskFilesDirect } from '../core/task-master-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
-import path from 'path';
+import {
+	createErrorResponse,
+	handleApiResult,
+	withNormalizedProjectRoot
+} from './utils.js';
 
 /**
  * Register the generate tool with the MCP server

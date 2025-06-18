@@ -5,24 +5,24 @@
 
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
-import inquirer from 'inquirer';
+import chalk from 'chalk';
 import { highlight } from 'cli-highlight';
-import { ContextGatherer } from '../utils/contextGatherer.js';
-import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
+import inquirer from 'inquirer';
 import { generateTextService } from '../ai-services-unified.js';
-import {
-	log as consoleLog,
-	findProjectRoot,
-	readJSON,
-	flattenTasksWithSubtasks
-} from '../utils.js';
 import {
 	displayAiUsageSummary,
 	startLoadingIndicator,
 	stopLoadingIndicator
 } from '../ui.js';
+import {
+	log as consoleLog,
+	findProjectRoot,
+	flattenTasksWithSubtasks,
+	readJSON
+} from '../utils.js';
+import { ContextGatherer } from '../utils/contextGatherer.js';
+import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
 
 /**
  * Perform AI-powered research with project context

@@ -1,7 +1,7 @@
 import path from 'path';
 
-import { log, readJSON, writeJSON } from '../utils.js';
 import { isTaskDependentOn } from '../task-manager.js';
+import { log, readJSON, writeJSON } from '../utils.js';
 import generateTaskFiles from './generate-task-files.js';
 
 /**

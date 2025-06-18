@@ -1,0 +1,16 @@
+{
+  "worktrees": {
+    "task-6": {
+      "worktreeId": "task-6",
+      "taskId": "6",
+      "branch": "task-6",
+      "path": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-6",
+      "createdAt": "2025-06-18T02:55:09.035Z"
+    }
+  },
+  "metadata": {
+    "created": "2025-06-18T02:55:09.032Z",
+    "updated": "2025-06-18T02:55:09.035Z",
+    "version": "1.0"
+  }
+}

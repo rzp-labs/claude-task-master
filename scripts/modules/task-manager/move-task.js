@@ -1,12 +1,12 @@
 import path from 'path';
+import { isTaskDependentOn } from '../task-manager.js';
 import {
+	getCurrentTag,
 	log,
 	readJSON,
-	writeJSON,
-	getCurrentTag,
-	setTasksForTag
+	setTasksForTag,
+	writeJSON
 } from '../utils.js';
-import { isTaskDependentOn } from '../task-manager.js';
 import generateTaskFiles from './generate-task-files.js';
 
 /**

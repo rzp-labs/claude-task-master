@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
 
-import { log, readJSON } from '../utils.js';
-import { formatDependenciesWithStatus } from '../ui.js';
-import { validateAndFixDependencies } from '../dependency-manager.js';
 import { getDebugFlag } from '../config-manager.js';
+import { validateAndFixDependencies } from '../dependency-manager.js';
+import { formatDependenciesWithStatus } from '../ui.js';
+import { log, readJSON } from '../utils.js';
 
 /**
  * Generate individual task files from tasks.json

@@ -62,17 +62,17 @@ jest.mock('../../src/utils/path-utils.js', () => ({
 
 // Import the actual module to test
 import {
-	truncate,
-	log,
-	readJSON,
-	writeJSON,
-	sanitizePrompt,
-	readComplexityReport,
-	findTaskInComplexityReport,
-	taskExists,
-	formatTaskId,
 	findCycles,
-	toKebabCase
+	findTaskInComplexityReport,
+	formatTaskId,
+	log,
+	readComplexityReport,
+	readJSON,
+	sanitizePrompt,
+	taskExists,
+	toKebabCase,
+	truncate,
+	writeJSON
 } from '../../scripts/modules/utils.js';
 
 // Import the mocked modules for use in tests

@@ -1,26 +1,26 @@
-import chalk from 'chalk';
-import boxen from 'boxen';
-import readline from 'readline';
 import fs from 'fs';
+import readline from 'readline';
+import boxen from 'boxen';
+import chalk from 'chalk';
 
-import { log, readJSON, writeJSON, isSilentMode } from '../utils.js';
+import { isSilentMode, log, readJSON, writeJSON } from '../utils.js';
 
 import {
+	displayAiUsageSummary,
 	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayAiUsageSummary
+	stopLoadingIndicator
 } from '../ui.js';
 
 import { generateTextService } from '../ai-services-unified.js';
 
-import { getDebugFlag, getProjectName } from '../config-manager.js';
 import {
 	COMPLEXITY_REPORT_FILE,
 	LEGACY_TASKS_FILE
 } from '../../../src/constants/paths.js';
+import { getDebugFlag, getProjectName } from '../config-manager.js';
+import { flattenTasksWithSubtasks } from '../utils.js';
 import { ContextGatherer } from '../utils/contextGatherer.js';
 import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
-import { flattenTasksWithSubtasks } from '../utils.js';
 
 /**
  * Generates the prompt for complexity analysis.

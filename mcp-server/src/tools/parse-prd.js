@@ -5,16 +5,16 @@
 
 import { z } from 'zod';
 import {
-	handleApiResult,
-	withNormalizedProjectRoot,
-	createErrorResponse
-} from './utils.js';
-import { parsePRDDirect } from '../core/task-master-core.js';
-import {
 	PRD_FILE,
 	TASKMASTER_DOCS_DIR,
 	TASKMASTER_TASKS_FILE
 } from '../../../src/constants/paths.js';
+import { parsePRDDirect } from '../core/task-master-core.js';
+import {
+	createErrorResponse,
+	handleApiResult,
+	withNormalizedProjectRoot
+} from './utils.js';
 
 /**
  * Register the parse_prd tool

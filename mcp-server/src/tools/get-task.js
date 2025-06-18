@@ -4,16 +4,16 @@
  */
 
 import { z } from 'zod';
-import {
-	handleApiResult,
-	createErrorResponse,
-	withNormalizedProjectRoot
-} from './utils.js';
 import { showTaskDirect } from '../core/task-master-core.js';
 import {
-	findTasksPath,
-	findComplexityReportPath
+	findComplexityReportPath,
+	findTasksPath
 } from '../core/utils/path-utils.js';
+import {
+	createErrorResponse,
+	handleApiResult,
+	withNormalizedProjectRoot
+} from './utils.js';
 
 /**
  * Custom processor function that removes allTasks from the response

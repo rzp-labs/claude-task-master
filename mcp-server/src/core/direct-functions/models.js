@@ -4,13 +4,13 @@
  */
 
 import {
-	getModelConfiguration,
 	getAvailableModelsList,
+	getModelConfiguration,
 	setModel
 } from '../../../../scripts/modules/task-manager/models.js';
 import {
-	enableSilentMode,
-	disableSilentMode
+	disableSilentMode,
+	enableSilentMode
 } from '../../../../scripts/modules/utils.js';
 import { createLogWrapper } from '../../tools/utils.js';
 

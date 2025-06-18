@@ -4,17 +4,17 @@
  */
 
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 
 import {
+	findCycles,
+	formatTaskId,
+	isSilentMode,
 	log,
 	readJSON,
-	writeJSON,
 	taskExists,
-	formatTaskId,
-	findCycles,
-	isSilentMode
+	writeJSON
 } from './utils.js';
 
 import { displayBanner } from './ui.js';

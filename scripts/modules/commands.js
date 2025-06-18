@@ -3,113 +3,113 @@
  * Command-line interface for the Task Master CLI
  */
 
-import { program } from 'commander';
-import path from 'path';
-import chalk from 'chalk';
-import boxen from 'boxen';
 import fs from 'fs';
-import https from 'https';
 import http from 'http';
+import https from 'https';
+import path from 'path';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import { program } from 'commander';
 import inquirer from 'inquirer';
 import ora from 'ora'; // Import ora
 
 import {
-	log,
-	readJSON,
-	writeJSON,
+	addSubtask,
+	addTask,
+	analyzeTaskComplexity,
+	clearSubtasks,
+	expandAllTasks,
+	expandTask,
+	findTaskById,
+	generateTaskFiles,
+	listTasks,
+	migrateProject,
+	moveTask,
+	parsePRD,
+	removeSubtask,
+	removeTask,
+	setTaskStatus,
+	taskExists,
+	updateSubtaskById,
+	updateTaskById,
+	updateTasks
+} from './task-manager.js';
+import {
+	detectCamelCaseFlags,
 	findProjectRoot,
 	getCurrentTag,
-	detectCamelCaseFlags,
-	toKebabCase
+	log,
+	readJSON,
+	toKebabCase,
+	writeJSON
 } from './utils.js';
-import {
-	parsePRD,
-	updateTasks,
-	generateTaskFiles,
-	setTaskStatus,
-	listTasks,
-	expandTask,
-	expandAllTasks,
-	clearSubtasks,
-	addTask,
-	addSubtask,
-	removeSubtask,
-	analyzeTaskComplexity,
-	updateTaskById,
-	updateSubtaskById,
-	removeTask,
-	findTaskById,
-	taskExists,
-	moveTask,
-	migrateProject
-} from './task-manager.js';
 
 import {
+	copyTag,
 	createTag,
 	deleteTag,
-	tags,
-	useTag,
 	renameTag,
-	copyTag
+	tags,
+	useTag
 } from './task-manager/tag-management.js';
 
 import {
 	addDependency,
+	fixDependenciesCommand,
 	removeDependency,
-	validateDependenciesCommand,
-	fixDependenciesCommand
+	validateDependenciesCommand
 } from './dependency-manager.js';
 
 import {
-	isApiKeySet,
-	getDebugFlag,
-	getConfig,
-	writeConfig,
 	ConfigurationError,
-	isConfigFilePresent,
 	getAvailableModels,
-	getBaseUrlForRole
+	getBaseUrlForRole,
+	getConfig,
+	getDebugFlag,
+	isApiKeySet,
+	isConfigFilePresent,
+	writeConfig
 } from './config-manager.js';
 
 import {
 	COMPLEXITY_REPORT_FILE,
 	PRD_FILE,
-	TASKMASTER_TASKS_FILE,
-	TASKMASTER_CONFIG_FILE
+	TASKMASTER_CONFIG_FILE,
+	TASKMASTER_TASKS_FILE
 } from '../../src/constants/paths.js';
 
 import {
-	displayBanner,
-	displayHelp,
-	displayNextTask,
-	displayTaskById,
-	displayComplexityReport,
-	getStatusWithColor,
 	confirmTaskOverwrite,
-	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayModelConfiguration,
-	displayAvailableModels,
-	displayApiKeyStatus,
 	displayAiUsageSummary,
+	displayApiKeyStatus,
+	displayAvailableModels,
+	displayBanner,
+	displayComplexityReport,
+	displayCurrentTagIndicator,
+	displayHelp,
+	displayModelConfiguration,
 	displayMultipleTasksSummary,
+	displayNextTask,
 	displayTaggedTasksFYI,
-	displayCurrentTagIndicator
+	displayTaskById,
+	getStatusWithColor,
+	startLoadingIndicator,
+	stopLoadingIndicator
 } from './ui.js';
 
-import { initializeProject } from '../init.js';
 import {
-	getModelConfiguration,
-	getAvailableModelsList,
-	setModel,
-	getApiKeyStatusReport
-} from './task-manager/models.js';
-import {
-	isValidTaskStatus,
-	TASK_STATUS_OPTIONS
+	TASK_STATUS_OPTIONS,
+	isValidTaskStatus
 } from '../../src/constants/task-status.js';
 import { getTaskMasterVersion } from '../../src/utils/getVersion.js';
+import { initializeProject } from '../init.js';
 import { syncTasksToReadme } from './sync-readme.js';
+import {
+	getApiKeyStatusReport,
+	getAvailableModelsList,
+	getModelConfiguration,
+	setModel
+} from './task-manager/models.js';
 
 /**
  * Runs the interactive setup process for model configuration.

@@ -1,10 +1,10 @@
 import { z } from 'zod';
+import { initializeProjectDirect } from '../core/task-master-core.js';
 import {
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { initializeProjectDirect } from '../core/task-master-core.js';
 
 export function registerInitializeProjectTool(server) {
 	server.addTool({

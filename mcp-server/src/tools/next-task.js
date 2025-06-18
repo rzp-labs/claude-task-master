@@ -4,16 +4,16 @@
  */
 
 import { z } from 'zod';
+import { nextTaskDirect } from '../core/task-master-core.js';
+import {
+	resolveComplexityReportPath,
+	resolveTasksPath
+} from '../core/utils/path-utils.js';
 import {
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { nextTaskDirect } from '../core/task-master-core.js';
-import {
-	resolveTasksPath,
-	resolveComplexityReportPath
-} from '../core/utils/path-utils.js';
 
 /**
  * Register the nextTask tool with the MCP server

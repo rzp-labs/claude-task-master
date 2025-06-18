@@ -1,26 +1,26 @@
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import Table from 'cli-table3';
 import { z } from 'zod'; // Keep Zod for post-parse validation
 
 import {
 	log as consoleLog,
-	readJSON,
-	writeJSON,
-	truncate,
-	isSilentMode,
-	flattenTasksWithSubtasks,
 	findProjectRoot,
-	getCurrentTag
+	flattenTasksWithSubtasks,
+	getCurrentTag,
+	isSilentMode,
+	readJSON,
+	truncate,
+	writeJSON
 } from '../utils.js';
 
 import {
+	displayAiUsageSummary,
 	getStatusWithColor,
 	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayAiUsageSummary
+	stopLoadingIndicator
 } from '../ui.js';
 
 import { generateTextService } from '../ai-services-unified.js';

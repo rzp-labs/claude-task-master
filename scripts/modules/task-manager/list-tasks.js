@@ -1,22 +1,22 @@
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import Table from 'cli-table3';
 
 import {
+	addComplexityToTask,
 	log,
-	readJSON,
-	truncate,
 	readComplexityReport,
-	addComplexityToTask
+	readJSON,
+	truncate
 } from '../utils.js';
 import findNextTask from './find-next-task.js';
 
 import {
+	createProgressBar,
 	displayBanner,
-	getStatusWithColor,
 	formatDependenciesWithStatus,
 	getComplexityWithColor,
-	createProgressBar
+	getStatusWithColor
 } from '../ui.js';
 
 /**

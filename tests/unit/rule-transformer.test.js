@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { convertCursorRuleToRooRule } from '../../scripts/modules/rule-transformer.js';
 
 const __filename = fileURLToPath(import.meta.url);

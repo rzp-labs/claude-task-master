@@ -3,32 +3,32 @@
  * User interface functions for the Task Master CLI
  */
 
-import chalk from 'chalk';
-import figlet from 'figlet';
-import boxen from 'boxen';
-import ora from 'ora';
-import Table from 'cli-table3';
-import gradient from 'gradient-string';
-import {
-	log,
-	findTaskById,
-	readJSON,
-	truncate,
-	isSilentMode
-} from './utils.js';
 import fs from 'fs';
-import {
-	findNextTask,
-	analyzeTaskComplexity,
-	readComplexityReport
-} from './task-manager.js';
-import { getProjectName, getDefaultSubtasks } from './config-manager.js';
-import { TASK_STATUS_OPTIONS } from '../../src/constants/task-status.js';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import Table from 'cli-table3';
+import figlet from 'figlet';
+import gradient from 'gradient-string';
+import ora from 'ora';
 import {
 	TASKMASTER_CONFIG_FILE,
 	TASKMASTER_TASKS_FILE
 } from '../../src/constants/paths.js';
+import { TASK_STATUS_OPTIONS } from '../../src/constants/task-status.js';
 import { getTaskMasterVersion } from '../../src/utils/getVersion.js';
+import { getDefaultSubtasks, getProjectName } from './config-manager.js';
+import {
+	analyzeTaskComplexity,
+	findNextTask,
+	readComplexityReport
+} from './task-manager.js';
+import {
+	findTaskById,
+	isSilentMode,
+	log,
+	readJSON,
+	truncate
+} from './utils.js';
 
 // Create a color gradient for the banner
 const coolGradient = gradient(['#00b4d8', '#0077b6', '#03045e']);

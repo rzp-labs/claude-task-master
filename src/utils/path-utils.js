@@ -3,16 +3,16 @@
  * Provides centralized path resolution logic for both CLI and MCP use cases
  */
 
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import {
-	TASKMASTER_TASKS_FILE,
+	COMPLEXITY_REPORT_FILE,
+	LEGACY_CONFIG_FILE,
 	LEGACY_TASKS_FILE,
+	TASKMASTER_CONFIG_FILE,
 	TASKMASTER_DOCS_DIR,
 	TASKMASTER_REPORTS_DIR,
-	COMPLEXITY_REPORT_FILE,
-	TASKMASTER_CONFIG_FILE,
-	LEGACY_CONFIG_FILE
+	TASKMASTER_TASKS_FILE
 } from '../constants/paths.js';
 import { getLoggerOrDefault } from './logger-utils.js';
 

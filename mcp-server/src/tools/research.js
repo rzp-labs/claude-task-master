@@ -4,12 +4,12 @@
  */
 
 import { z } from 'zod';
+import { researchDirect } from '../core/task-master-core.js';
 import {
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { researchDirect } from '../core/task-master-core.js';
 
 /**
  * Register the research tool with the MCP server

@@ -20,15 +20,15 @@
  * Main entry point for globally installed package
  */
 
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { createRequire } from 'module';
 import { spawn } from 'child_process';
-import { Command } from 'commander';
-import { displayHelp, displayBanner } from '../scripts/modules/ui.js';
-import { registerCommands } from '../scripts/modules/commands.js';
-import { detectCamelCaseFlags } from '../scripts/modules/utils.js';
+import { createRequire } from 'module';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import chalk from 'chalk';
+import { Command } from 'commander';
+import { registerCommands } from '../scripts/modules/commands.js';
+import { displayBanner, displayHelp } from '../scripts/modules/ui.js';
+import { detectCamelCaseFlags } from '../scripts/modules/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

@@ -1,34 +1,34 @@
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import Table from 'cli-table3';
-import { z } from 'zod';
 import Fuse from 'fuse.js'; // Import Fuse.js for advanced fuzzy search
+import { z } from 'zod';
 
+import { generateObjectService } from '../ai-services-unified.js';
+import { getDefaultPriority } from '../config-manager.js';
 import {
+	displayAiUsageSummary,
 	displayBanner,
+	displayContextAnalysis,
+	failLoadingIndicator,
 	getStatusWithColor,
 	startLoadingIndicator,
 	stopLoadingIndicator,
-	succeedLoadingIndicator,
-	failLoadingIndicator,
-	displayAiUsageSummary,
-	displayContextAnalysis
+	succeedLoadingIndicator
 } from '../ui.js';
 import {
-	readJSON,
-	writeJSON,
 	log as consoleLog,
-	truncate,
 	ensureTagMetadata,
-	performCompleteTagMigration,
+	getCurrentTag,
 	markMigrationForNotice,
-	getCurrentTag
+	performCompleteTagMigration,
+	readJSON,
+	truncate,
+	writeJSON
 } from '../utils.js';
-import { generateObjectService } from '../ai-services-unified.js';
-import { getDefaultPriority } from '../config-manager.js';
-import generateTaskFiles from './generate-task-files.js';
 import ContextGatherer from '../utils/contextGatherer.js';
+import generateTaskFiles from './generate-task-files.js';
 
 // Define Zod schema for the expected AI output object
 const AiTaskDataSchema = z.object({

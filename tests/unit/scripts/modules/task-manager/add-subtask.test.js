@@ -1,8 +1,8 @@
+import path from 'path';
 /**
  * Tests for the addSubtask function
  */
 import { jest } from '@jest/globals';
-import path from 'path';
 
 // Mock dependencies
 const mockReadJSON = jest.fn();

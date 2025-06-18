@@ -4,13 +4,13 @@
  */
 
 import { z } from 'zod';
+import { renameTagDirect } from '../core/task-master-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import {
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { renameTagDirect } from '../core/task-master-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the renameTag tool with the MCP server

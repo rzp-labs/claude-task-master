@@ -1,12 +1,12 @@
 import path from 'path';
+import { PROJECT_MARKERS } from '../../../../src/constants/paths.js';
 import {
-	findTasksPath as coreFindTasksPath,
-	findPRDPath as coreFindPrdPath,
 	findComplexityReportPath as coreFindComplexityReportPath,
+	findPRDPath as coreFindPrdPath,
 	findProjectRoot as coreFindProjectRoot,
+	findTasksPath as coreFindTasksPath,
 	normalizeProjectRoot
 } from '../../../../src/utils/path-utils.js';
-import { PROJECT_MARKERS } from '../../../../src/constants/paths.js';
 
 /**
  * MCP-specific path utilities that extend core path utilities with session support

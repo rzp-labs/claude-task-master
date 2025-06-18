@@ -1,30 +1,30 @@
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import Table from 'cli-table3';
 
+import { generateTextService } from '../ai-services-unified.js';
+import { getDebugFlag } from '../config-manager.js';
 import {
+	displayAiUsageSummary,
 	getStatusWithColor,
 	startLoadingIndicator,
-	stopLoadingIndicator,
-	displayAiUsageSummary
+	stopLoadingIndicator
 } from '../ui.js';
 import {
 	log as consoleLog,
-	readJSON,
-	writeJSON,
-	truncate,
-	isSilentMode,
 	findProjectRoot,
 	flattenTasksWithSubtasks,
-	getCurrentTag
+	getCurrentTag,
+	isSilentMode,
+	readJSON,
+	truncate,
+	writeJSON
 } from '../utils.js';
-import { generateTextService } from '../ai-services-unified.js';
-import { getDebugFlag } from '../config-manager.js';
-import generateTaskFiles from './generate-task-files.js';
 import { ContextGatherer } from '../utils/contextGatherer.js';
 import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
+import generateTaskFiles from './generate-task-files.js';
 
 /**
  * Update a subtask by appending additional timestamped information using the unified AI service.
