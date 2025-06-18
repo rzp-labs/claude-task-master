@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import { fileURLToPath } from 'url';
-import { log, findProjectRoot, resolveEnvVariable } from './utils.js';
+import chalk from 'chalk';
 import { LEGACY_CONFIG_FILE } from '../../src/constants/paths.js';
 import { findConfigPath } from '../../src/utils/path-utils.js';
+import { findProjectRoot, log, resolveEnvVariable } from './utils.js';
 
 // Calculate __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -63,6 +63,9 @@ const DEFAULTS = {
 		projectName: 'Task Master',
 		ollamaBaseURL: 'http://localhost:11434/api',
 		bedrockBaseURL: 'https://bedrock.us-east-1.amazonaws.com'
+	},
+	features: {
+		worktrees: false
 	}
 };
 
@@ -124,7 +127,8 @@ function _loadAndValidateConfig(explicitRoot = null) {
 							? { ...defaults.models.fallback, ...parsedConfig.models.fallback }
 							: { ...defaults.models.fallback }
 				},
-				global: { ...defaults.global, ...parsedConfig?.global }
+				global: { ...defaults.global, ...parsedConfig?.global },
+				features: { ...defaults.features, ...parsedConfig?.features }
 			};
 			configSource = `file (${configPath})`; // Update source info
 
@@ -406,6 +410,18 @@ function getVertexProjectId(explicitRoot = null) {
 function getVertexLocation(explicitRoot = null) {
 	// Return value from config or default
 	return getGlobalConfig(explicitRoot).vertexLocation || 'us-central1';
+}
+
+// --- Feature Settings Getters ---
+
+function getFeaturesConfig(explicitRoot = null) {
+	const config = getConfig(explicitRoot);
+	// Ensure features defaults are applied if features section is missing
+	return { ...DEFAULTS.features, ...(config?.features || {}) };
+}
+
+function isWorktreesEnabled(explicitRoot = null) {
+	return getFeaturesConfig(explicitRoot).worktrees === true;
 }
 
 /**
@@ -805,6 +821,9 @@ export {
 	getBedrockBaseURL,
 	getParametersForRole,
 	getUserId,
+	// Feature setting getters
+	getFeaturesConfig,
+	isWorktreesEnabled,
 	// API Key Checkers (still relevant)
 	isApiKeySet,
 	getMcpApiKeyStatus,

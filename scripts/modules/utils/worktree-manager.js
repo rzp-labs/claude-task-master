@@ -9,6 +9,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
+import { isWorktreesEnabled } from '../config-manager.js';
 import { addToRegistry, removeFromRegistry } from './worktree-registry.js';
 
 const execAsync = promisify(exec);
@@ -33,6 +34,13 @@ async function createWorktree(
 	}
 	if (!taskId) {
 		throw new Error('taskId is required for createWorktree');
+	}
+
+	// Check if worktrees feature is enabled
+	if (!isWorktreesEnabled(projectRoot)) {
+		throw new Error(
+			'Worktrees are disabled. Enable in config with features.worktrees: true'
+		);
 	}
 
 	const { mcpLog } = options;
@@ -119,6 +127,13 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 		throw new Error('taskId is required for removeWorktree');
 	}
 
+	// Check if worktrees feature is enabled
+	if (!isWorktreesEnabled(projectRoot)) {
+		throw new Error(
+			'Worktrees are disabled. Enable in config with features.worktrees: true'
+		);
+	}
+
 	const { mcpLog } = options;
 	const worktreePath = path.join(projectRoot, 'worktrees', `task-${taskId}`);
 
@@ -179,6 +194,13 @@ async function removeWorktree(projectRoot, taskId, options = {}) {
 async function listWorktrees(projectRoot, options = {}) {
 	if (!projectRoot) {
 		throw new Error('projectRoot is required for listWorktrees');
+	}
+
+	// Check if worktrees feature is enabled
+	if (!isWorktreesEnabled(projectRoot)) {
+		throw new Error(
+			'Worktrees are disabled. Enable in config with features.worktrees: true'
+		);
 	}
 
 	const { mcpLog } = options;
