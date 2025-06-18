@@ -32,7 +32,24 @@ async function testWorktreeE2E() {
 		);
 		const gitUtils = await import('./modules/utils/git-utils.js');
 		const configManager = await import('./modules/config-manager.js');
-		console.log('✓ All modules imported successfully\n');
+
+		// Setup event emission tracking (Task 8)
+		const { worktreeEvents } = worktreeManager;
+		const eventsReceived = [];
+
+		// Register event listeners
+		const createdListener = (data) => {
+			eventsReceived.push({ type: 'created', data, timestamp: Date.now() });
+		};
+		const removedListener = (data) => {
+			eventsReceived.push({ type: 'removed', data, timestamp: Date.now() });
+		};
+
+		worktreeEvents.on('worktree.created', createdListener);
+		worktreeEvents.on('worktree.removed', removedListener);
+
+		console.log('✓ All modules imported successfully');
+		console.log('✓ Event listeners registered for worktree operations\n');
 
 		// Cleanup any existing test artifacts
 		if (fs.existsSync(statePath)) {
@@ -126,8 +143,10 @@ async function testWorktreeE2E() {
 		await gitUtils.validateGitVersion(projectRoot);
 		console.log('✓ Git version is compatible with worktrees\n');
 
-		// Test 4: Create first worktree (Task 2 + Task 3)
+		// Test 4: Create first worktree (Task 2 + Task 3 + Task 8 events)
 		console.log('5. Creating first worktree (task-101)...');
+		const initialEventCount = eventsReceived.length;
+
 		const worktree1 = await worktreeManager.createWorktree(
 			projectRoot,
 			'101',
@@ -135,12 +154,48 @@ async function testWorktreeE2E() {
 		);
 		console.log('✓ Worktree created:', worktree1.worktreePath);
 
+		// Allow small delay for event processing
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
 		// Verify filesystem creation
 		const worktree1Path = path.join(projectRoot, 'worktrees', 'task-101');
 		if (!fs.existsSync(worktree1Path)) {
 			throw new Error('Worktree directory not created on filesystem');
 		}
 		console.log('✓ Worktree directory exists on filesystem');
+
+		// Test 4.1: Verify worktree.created event emission (Task 8)
+		const createdEvents = eventsReceived.filter((e) => e.type === 'created');
+		if (createdEvents.length === 0) {
+			throw new Error('No worktree.created event emitted during creation');
+		}
+
+		const latestCreatedEvent = createdEvents[createdEvents.length - 1];
+		const eventData = latestCreatedEvent.data;
+
+		if (eventData.taskId !== '101') {
+			throw new Error(`Expected event taskId '101', got '${eventData.taskId}'`);
+		}
+		if (eventData.branch !== 'task-101') {
+			throw new Error(
+				`Expected event branch 'task-101', got '${eventData.branch}'`
+			);
+		}
+		if (eventData.baseBranch !== 'main') {
+			throw new Error(
+				`Expected event baseBranch 'main', got '${eventData.baseBranch}'`
+			);
+		}
+		if (!eventData.path.includes('task-101')) {
+			throw new Error(
+				`Event path does not contain 'task-101': ${eventData.path}`
+			);
+		}
+
+		console.log('✓ worktree.created event emitted with correct data structure');
+		console.log(
+			`✓ Event data verified: taskId=${eventData.taskId}, branch=${eventData.branch}`
+		);
 
 		// Test 3: Verify worktree detection (Task 4)
 		console.log('✓ Testing worktree detection...');
@@ -186,14 +241,41 @@ async function testWorktreeE2E() {
 		}
 		console.log('✓ State integration working correctly');
 
-		// Test 6: Create second worktree to test multiple entries
+		// Test 6: Create second worktree to test multiple entries and event emission
 		console.log('✓ Creating second worktree (task-102)...');
+		const preSecondCreationEventCount = eventsReceived.filter(
+			(e) => e.type === 'created'
+		).length;
+
 		const worktree2 = await worktreeManager.createWorktree(
 			projectRoot,
 			'102',
 			'main'
 		);
 		console.log('✓ Second worktree created:', worktree2.worktreePath);
+
+		// Allow small delay for event processing
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		// Test 6.1: Verify second worktree.created event (Task 8)
+		const allCreatedEvents = eventsReceived.filter((e) => e.type === 'created');
+		if (allCreatedEvents.length !== preSecondCreationEventCount + 1) {
+			throw new Error(
+				`Expected ${preSecondCreationEventCount + 1} created events, got ${allCreatedEvents.length}`
+			);
+		}
+
+		const secondCreatedEvent = allCreatedEvents[allCreatedEvents.length - 1];
+		if (secondCreatedEvent.data.taskId !== '102') {
+			throw new Error(
+				`Expected second event taskId '102', got '${secondCreatedEvent.data.taskId}'`
+			);
+		}
+
+		console.log('✓ Second worktree.created event emitted correctly');
+		console.log(
+			`✓ Multiple worktree events tracked: ${allCreatedEvents.length} creation events total`
+		);
 
 		// Test 7: List worktrees (Task 2)
 		console.log('✓ Testing worktree listing...');
@@ -223,19 +305,63 @@ async function testWorktreeE2E() {
 		}
 		console.log('✓ State find function working correctly');
 
-		// Test 9: Remove first worktree (Task 2 + Task 3)
-		console.log('✓ Testing worktree removal...');
+		// Test 9: Remove first worktree (Task 2 + Task 3 + Task 8 events)
+		console.log('✓ Testing worktree removal with event emission...');
+		const preRemovalEventCount = eventsReceived.filter(
+			(e) => e.type === 'removed'
+		).length;
+
 		const removeResult = await worktreeManager.removeWorktree(
 			projectRoot,
 			'task-101'
 		);
 		console.log('✓ First worktree removed successfully');
 
+		// Allow small delay for event processing
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
 		// Verify filesystem removal
 		if (fs.existsSync(worktree1Path)) {
 			throw new Error('Worktree directory still exists after removal');
 		}
 		console.log('✓ Worktree directory removed from filesystem');
+
+		// Test 9.1: Verify worktree.removed event emission (Task 8)
+		const removedEvents = eventsReceived.filter((e) => e.type === 'removed');
+		if (removedEvents.length !== preRemovalEventCount + 1) {
+			throw new Error(
+				`Expected ${preRemovalEventCount + 1} removed events, got ${removedEvents.length}`
+			);
+		}
+
+		const latestRemovedEvent = removedEvents[removedEvents.length - 1];
+		const removeEventData = latestRemovedEvent.data;
+
+		if (removeEventData.taskId !== '101') {
+			throw new Error(
+				`Expected removal event taskId '101', got '${removeEventData.taskId}'`
+			);
+		}
+		if (removeEventData.branch !== 'task-101') {
+			throw new Error(
+				`Expected removal event branch 'task-101', got '${removeEventData.branch}'`
+			);
+		}
+		if (removeEventData.branchRemoved !== false) {
+			throw new Error(
+				`Expected branchRemoved false for worktree-only removal, got ${removeEventData.branchRemoved}`
+			);
+		}
+		if (!removeEventData.path.includes('task-101')) {
+			throw new Error(
+				`Removal event path does not contain 'task-101': ${removeEventData.path}`
+			);
+		}
+
+		console.log('✓ worktree.removed event emitted with correct data structure');
+		console.log(
+			`✓ Removal event data verified: taskId=${removeEventData.taskId}, branchRemoved=${removeEventData.branchRemoved}`
+		);
 
 		// Verify state removal
 		const updatedWorktrees =
@@ -413,9 +539,83 @@ async function testWorktreeE2E() {
 			'✓ MCP tools integration verified (wraps CLI functions successfully)'
 		);
 
+		// Test 13: Event System Integration Summary (Task 8)
+		console.log('✓ Testing event system integration summary...');
+
+		// Verify event timing and order
+		const sortedEvents = eventsReceived.sort(
+			(a, b) => a.timestamp - b.timestamp
+		);
+		const allCreatedEventsCount = sortedEvents.filter(
+			(e) => e.type === 'created'
+		).length;
+		const allRemovedEventsCount = sortedEvents.filter(
+			(e) => e.type === 'removed'
+		).length;
+
+		if (allCreatedEventsCount < 2) {
+			throw new Error(
+				`Expected at least 2 created events during e2e test, got ${allCreatedEventsCount}`
+			);
+		}
+		if (allRemovedEventsCount < 1) {
+			throw new Error(
+				`Expected at least 1 removed event during e2e test, got ${allRemovedEventsCount}`
+			);
+		}
+
+		// Verify created events come before removed events in chronological order
+		const firstCreatedEvent = sortedEvents.find((e) => e.type === 'created');
+		const firstRemovedEvent = sortedEvents.find((e) => e.type === 'removed');
+
+		if (
+			firstCreatedEvent &&
+			firstRemovedEvent &&
+			firstCreatedEvent.timestamp > firstRemovedEvent.timestamp
+		) {
+			throw new Error(
+				'Event timing error: removed event occurred before any created events'
+			);
+		}
+
+		console.log(
+			`✓ Event system captured ${eventsReceived.length} total events during e2e workflow`
+		);
+		console.log(
+			`✓ Event timing validated: ${allCreatedEventsCount} created, ${allRemovedEventsCount} removed`
+		);
+		console.log(
+			'✓ Events fire correctly in integrated scenarios without interfering with functionality'
+		);
+
 		// Cleanup
 		console.log('\n6. Cleaning up test artifacts...');
+
+		// Final worktree removal will trigger one more removed event
+		const finalRemovalEventCount = eventsReceived.filter(
+			(e) => e.type === 'removed'
+		).length;
 		await worktreeManager.removeWorktree(projectRoot, 'task-102');
+
+		// Allow small delay for final event processing
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		// Verify final removal event
+		const finalRemovedEvents = eventsReceived.filter(
+			(e) => e.type === 'removed'
+		);
+		if (finalRemovedEvents.length !== finalRemovalEventCount + 1) {
+			console.log(
+				'⚠️ Warning: Final removal event may not have fired during cleanup'
+			);
+		} else {
+			console.log('✓ Final removal event captured during cleanup');
+		}
+
+		// Remove event listeners
+		worktreeEvents.off('worktree.created', createdListener);
+		worktreeEvents.off('worktree.removed', removedListener);
+		console.log('✓ Event listeners removed');
 		// Reset state back to clean state
 		if (fs.existsSync(statePath)) {
 			const currentState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
@@ -447,7 +647,12 @@ async function testWorktreeE2E() {
 		console.log(
 			'✓ Task 7 (MCP-tools): MCP tools wrap CLI functions and are accessible via JSON-RPC'
 		);
-		console.log('✓ Integration: All components work together seamlessly');
+		console.log(
+			'✓ Task 8 (event-emission): Events fire correctly during all worktree operations'
+		);
+		console.log(
+			'✓ Integration: All components work together seamlessly with event system'
+		);
 	} catch (error) {
 		testFailed = true;
 		console.error('💥 E2E TEST FAILED:', error.message);

@@ -6,6 +6,7 @@
  */
 
 import { exec } from 'child_process';
+import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
@@ -22,6 +23,9 @@ import {
 } from './worktree-state-manager.js';
 
 const execAsync = promisify(exec);
+
+// Event emitter for worktree operations
+const worktreeEvents = new EventEmitter();
 
 /**
  * Generate worktree title from task ID
@@ -134,6 +138,15 @@ async function createWorktree(
 				`Failed to add worktree to registry: ${registryError.message}`
 			);
 		}
+
+		// Emit worktree.created event
+		worktreeEvents.emit('worktree.created', {
+			taskId,
+			path: worktreePath,
+			branch: branchName,
+			baseBranch,
+			worktreeTitle
+		});
 
 		return {
 			success: true,
@@ -294,6 +307,15 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 
 		// Note: Branch removal is handled by delegation to removeWorktreeAndBranch above
 
+		// Emit worktree.removed event
+		worktreeEvents.emit('worktree.removed', {
+			taskId: worktreeTitle.replace(WORKTREE_PREFIX, ''),
+			path: worktreePath,
+			branch: branchName,
+			worktreeTitle,
+			branchRemoved: false
+		});
+
 		return {
 			success: true,
 			worktreeTitle,
@@ -437,6 +459,15 @@ async function removeWorktreeAndBranch(
 		// THEN remove the worktree AND remove the branch AND confirm removal
 		report('info', `✅ Worktree and branch ${branchName} removed successfully`);
 
+		// Emit worktree.removed event (with branch removal)
+		worktreeEvents.emit('worktree.removed', {
+			taskId: worktreeTitle.replace(WORKTREE_PREFIX, ''),
+			path: worktreePath,
+			branch: branchName,
+			worktreeTitle,
+			branchRemoved: true
+		});
+
 		return {
 			success: true,
 			worktreeTitle,
@@ -554,11 +585,12 @@ async function listWorktrees(projectRoot, options = {}) {
 	}
 }
 
-// Export functions
+// Export functions and event emitter
 export {
 	getWorktreeTitle,
 	createWorktree,
 	removeWorktree,
 	removeWorktreeAndBranch,
-	listWorktrees
+	listWorktrees,
+	worktreeEvents
 };
