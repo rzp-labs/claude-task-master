@@ -3,12 +3,12 @@
  * Utility functions for the Task Master CLI
  */
 
+import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import {
 	COMPLEXITY_REPORT_FILE,
 	LEGACY_COMPLEXITY_REPORT_FILE,

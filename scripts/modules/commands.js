@@ -36,8 +36,8 @@ import {
 } from './task-manager.js';
 import {
 	detectCamelCaseFlags,
-	findProjectRoot,
 	findMainProjectRoot,
+	findProjectRoot,
 	getCurrentTag,
 	log,
 	readJSON,

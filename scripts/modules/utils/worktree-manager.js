@@ -16,10 +16,10 @@ import {
 import { isWorktreesEnabled } from '../config-manager.js';
 import { findMainProjectRoot } from '../utils.js';
 import {
-	addToRegistry,
-	removeFromRegistry,
-	syncWorktreeRegistry
-} from './worktree-registry.js';
+	addWorktreeToState,
+	removeWorktreeFromState,
+	syncWorktreeState
+} from './worktree-state-manager.js';
 
 const execAsync = promisify(exec);
 
@@ -120,11 +120,11 @@ async function createWorktree(
 
 		// Add to registry after successful Git operation
 		try {
-			addToRegistry(projectRoot, {
-				worktreeId: worktreeTitle,
+			addWorktreeToState(projectRoot, {
+				worktreeTitle,
 				taskId,
-				branch: branchName,
-				path: worktreePath
+				branchName,
+				worktreePath
 			});
 			report('info', `Added worktree to registry: ${worktreeTitle}`);
 		} catch (registryError) {
@@ -204,7 +204,7 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 
 	// Sync registry with reality before removal (clean up stale entries)
 	try {
-		await syncWorktreeRegistry(projectRoot, { mcpLog });
+		await syncWorktreeState(projectRoot, { mcpLog });
 	} catch (syncError) {
 		// Don't fail the operation if sync fails, just log it
 		report('warn', `Registry sync failed: ${syncError.message}`);
@@ -282,7 +282,7 @@ async function removeWorktree(projectRoot, worktreeTitle, options = {}) {
 
 		// Remove from registry after successful Git operation
 		try {
-			removeFromRegistry(projectRoot, worktreeTitle);
+			removeWorktreeFromState(projectRoot, worktreeTitle);
 			report('info', `Removed ${worktreeTitle} from registry`);
 		} catch (registryError) {
 			// Log registry error but don't fail the operation
@@ -421,7 +421,7 @@ async function removeWorktreeAndBranch(
 
 		// Remove from registry
 		try {
-			removeFromRegistry(projectRoot, worktreeTitle);
+			removeWorktreeFromState(projectRoot, worktreeTitle);
 			report('info', `Removed ${worktreeTitle} from registry`);
 		} catch (registryError) {
 			// Log registry error but don't fail the operation
@@ -483,7 +483,7 @@ async function listWorktrees(projectRoot, options = {}) {
 
 	// Sync registry with reality before listing (clean up stale entries)
 	try {
-		await syncWorktreeRegistry(projectRoot, { mcpLog });
+		await syncWorktreeState(projectRoot, { mcpLog });
 	} catch (syncError) {
 		// Don't fail the operation if sync fails, just log it
 		report('warn', `Registry sync failed: ${syncError.message}`);
