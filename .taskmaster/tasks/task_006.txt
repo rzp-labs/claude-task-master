@@ -1,0 +1,60 @@
+# Task ID: 6
+# Title: Create CLI Commands
+# Status: pending
+# Dependencies: 2, 3, 4, 5
+# Priority: medium
+# Description: Add worktree commands to Task Master CLI
+# Details:
+Basic CLI commands - no sync or complex operations in MVP. Manual operations only.
+
+# Test Strategy:
+CLI integration tests with mocked functions
+
+# Subtasks:
+## 1. Add worktree create command [pending]
+### Dependencies: None
+### Description: Implement 'tm worktree create --task <id>' command
+### Details:
+Add command that:
+- Accepts task ID parameter
+- Calls createWorktree from worktree-manager
+- Shows success message with worktree path
+- Handles errors gracefully
+
+## 2. Add worktree list command [pending]
+### Dependencies: None
+### Description: Implement 'tm worktree list' command
+### Details:
+Add command that:
+- Calls listWorktrees
+- Formats output as simple table
+- Shows path, branch, and associated task
+
+## 3. Add worktree remove command [pending]
+### Dependencies: None
+### Description: Implement 'tm worktree remove' command
+### Details:
+Add command that:
+- Accepts worktree path or uses current directory
+- Calls removeWorktree
+- Confirms before removal
+- Shows success message
+
+## 4. Add basic worktree status command [pending]
+### Dependencies: None
+### Description: Implement 'tm worktree status' command
+### Details:
+Add command that:
+- Shows if in a worktree
+- Displays current branch and task info
+- Simple output, no complex checks
+
+## 5. Update .gitignore automatically [pending]
+### Dependencies: 6.1
+### Description: Add worktrees/ to .gitignore when first worktree created
+### Details:
+When creating first worktree:
+- Check if worktrees/ is in .gitignore
+- If not, append it
+- Simple implementation, no complex logic
+

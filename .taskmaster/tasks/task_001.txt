@@ -1,28 +1,39 @@
 # Task ID: 1
-# Title: Create a simple hello world function in TypeScript
+# Title: Research Git Worktree Basic Requirements
 # Status: pending
 # Dependencies: None
-# Priority: medium
-# Description: Implement a basic TypeScript function that returns a 'Hello, World!' greeting message.
+# Priority: high
+# Description: Research Git worktree commands and understand basic usage patterns. Focus on practical implementation needs for MVP.
 # Details:
-Create a TypeScript function named `helloWorld` that:
-- Takes no parameters
-- Returns the string 'Hello, World!'
-- Should be properly typed with TypeScript syntax
-- Export the function for use in other modules
-
-Example implementation:
-```typescript
-export function helloWorld(): string {
-  return 'Hello, World!';
-}
-```
-
-File location: Create the function in a new file at `src/hello.ts` or add to an existing TypeScript file if appropriate.
+Focus on understanding the basics needed for implementation. No performance testing or complex scenarios - just what we need to build the MVP.
 
 # Test Strategy:
-1. Verify the function is properly exported and can be imported in another module
-2. Check that calling `helloWorld()` returns exactly 'Hello, World!'
-3. Ensure TypeScript compilation succeeds without errors
-4. Confirm the return type is properly inferred or explicitly typed as string
-5. If a test framework is available, write a unit test that asserts the function returns the expected string
+Manual testing with a sample repository
+
+# Subtasks:
+## 1. Test basic Git worktree commands [pending]
+### Dependencies: None
+### Description: Manually test git worktree add, remove, list, and prune to understand their behavior
+### Details:
+Create a test repository and run through basic worktree operations:
+- git worktree add ./test-worktree
+- git worktree list
+- git worktree remove ./test-worktree
+- Document command outputs and any errors encountered
+
+## 2. Verify Git version requirements [pending]
+### Dependencies: None
+### Description: Check that Git 2.5+ is available and test worktree features
+### Details:
+Run git --version and verify it's 2.5 or higher. Test that worktree commands are available. Document the exact version being used for development.
+
+## 3. Document worktree limitations [pending]
+### Dependencies: 1.1
+### Description: Note key limitations like one branch per worktree and submodule handling
+### Details:
+Create a simple notes file documenting:
+- One branch per worktree restriction
+- How worktrees handle submodules
+- Any platform-specific issues encountered
+- Keep it practical, not theoretical
+

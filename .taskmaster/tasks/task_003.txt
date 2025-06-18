@@ -1,0 +1,41 @@
+# Task ID: 3
+# Title: Implement Simple Worktree Registry
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Create a simple JSON file to track active worktrees at .taskmaster/worktree-registry.json
+# Details:
+Simple JSON file storage - no schema validation or complex operations. Follow Task Master's existing JSON patterns.
+
+# Test Strategy:
+Test with mock filesystem operations
+
+# Subtasks:
+## 1. Create basic registry read/write functions [pending]
+### Dependencies: None
+### Description: Implement simple functions to read and write the registry JSON file
+### Details:
+Create registry functions:
+- readRegistry() - read JSON file, return empty object if missing
+- writeRegistry(data) - write JSON file with pretty formatting
+- Use fs.readFileSync/writeFileSync for simplicity
+
+## 2. Add registry entry management [pending]
+### Dependencies: 3.1
+### Description: Implement functions to add and remove registry entries
+### Details:
+Add functions:
+- addToRegistry(entry) - add worktree info to registry
+- removeFromRegistry(worktreeId) - remove entry
+- findByTaskId(taskId) - find worktree for a task
+- Entry format: {worktreeId, taskId, branch, path, createdAt}
+
+## 3. Integrate registry with worktree operations [pending]
+### Dependencies: 3.2
+### Description: Update worktree create/remove to use registry
+### Details:
+Modify worktree-manager.js:
+- createWorktree should add to registry after success
+- removeWorktree should remove from registry
+- Handle registry errors gracefully (log but don't fail operation)
+
