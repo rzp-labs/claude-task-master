@@ -6,18 +6,18 @@
  * Tests integration of worktree-manager, worktree-registry, git-utils, and feature toggles
  */
 
+import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 async function testWorktreeE2E() {
 	console.log('=== WORKTREE END-TO-END INTEGRATION TEST ===\n');
 
 	const projectRoot = process.cwd();
-	const registryPath = path.join(
-		projectRoot,
-		'.taskmaster',
-		'worktree-registry.json'
-	);
+	const statePath = path.join(projectRoot, '.taskmaster', 'state.json');
 	const configPath = path.join(projectRoot, '.taskmaster', 'config.json');
 	const backupConfigPath = `${configPath}.e2e-backup`;
 
@@ -27,26 +27,32 @@ async function testWorktreeE2E() {
 		// Import all modules
 		console.log('1. Importing modules...');
 		const worktreeManager = await import('./modules/utils/worktree-manager.js');
-		const worktreeRegistry = await import(
-			'./modules/utils/worktree-registry.js'
+		const worktreeStateManager = await import(
+			'./modules/utils/worktree-state-manager.js'
 		);
 		const gitUtils = await import('./modules/utils/git-utils.js');
 		const configManager = await import('./modules/config-manager.js');
 		console.log('✓ All modules imported successfully\n');
 
 		// Cleanup any existing test artifacts
-		if (fs.existsSync(registryPath)) {
-			fs.unlinkSync(registryPath);
+		if (fs.existsSync(statePath)) {
+			// Reset state to clean state for testing
+			const currentState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+			const cleanState = {
+				...currentState,
+				worktrees: {}
+			};
+			fs.writeFileSync(statePath, JSON.stringify(cleanState, null, 2));
 		}
 		if (fs.existsSync(path.join(projectRoot, 'worktrees'))) {
 			// Remove any existing test worktrees
 			try {
-				await worktreeManager.removeWorktree(projectRoot, '101');
+				await worktreeManager.removeWorktree(projectRoot, 'task-101');
 			} catch (e) {
 				// Ignore if doesn't exist
 			}
 			try {
-				await worktreeManager.removeWorktree(projectRoot, '102');
+				await worktreeManager.removeWorktree(projectRoot, 'task-102');
 			} catch (e) {
 				// Ignore if doesn't exist
 			}
@@ -164,21 +170,21 @@ async function testWorktreeE2E() {
 		}
 		console.log('✓ Worktree info extraction working correctly');
 
-		// Test 5: Verify registry integration (Task 3)
-		console.log('✓ Testing registry integration...');
-		const registryData = worktreeRegistry.readRegistry(projectRoot);
-		const worktree1Entry = registryData.worktrees['task-101'];
+		// Test 5: Verify state integration (Task 3)
+		console.log('✓ Testing state integration...');
+		const worktreesData = worktreeStateManager.readWorktreeState(projectRoot);
+		const worktree1Entry = worktreesData['task-101'];
 
 		if (!worktree1Entry) {
-			throw new Error('Worktree not found in registry');
+			throw new Error('Worktree not found in state');
 		}
 		if (worktree1Entry.taskId !== '101') {
-			throw new Error('Registry entry has incorrect taskId');
+			throw new Error('State entry has incorrect taskId');
 		}
-		if (worktree1Entry.branch !== 'task-101') {
-			throw new Error('Registry entry has incorrect branch');
+		if (worktree1Entry.branchName !== 'task-101') {
+			throw new Error('State entry has incorrect branchName');
 		}
-		console.log('✓ Registry integration working correctly');
+		console.log('✓ State integration working correctly');
 
 		// Test 6: Create second worktree to test multiple entries
 		console.log('✓ Creating second worktree (task-102)...');
@@ -207,19 +213,21 @@ async function testWorktreeE2E() {
 		}
 		console.log('✓ Worktree listing working correctly');
 
-		// Test 8: Registry find function (Task 3)
-		console.log('✓ Testing registry find function...');
-		const foundWorktree = worktreeRegistry.findByTaskId(projectRoot, '101');
+		// Test 8: State find function (Task 3)
+		console.log('✓ Testing state find function...');
+		const currentWorktreesData =
+			worktreeStateManager.readWorktreeState(projectRoot);
+		const foundWorktree = currentWorktreesData['task-101'];
 		if (!foundWorktree || foundWorktree.taskId !== '101') {
-			throw new Error('findByTaskId not working correctly');
+			throw new Error('State lookup not working correctly');
 		}
-		console.log('✓ Registry find function working correctly');
+		console.log('✓ State find function working correctly');
 
 		// Test 9: Remove first worktree (Task 2 + Task 3)
 		console.log('✓ Testing worktree removal...');
 		const removeResult = await worktreeManager.removeWorktree(
 			projectRoot,
-			'101'
+			'task-101'
 		);
 		console.log('✓ First worktree removed successfully');
 
@@ -229,25 +237,86 @@ async function testWorktreeE2E() {
 		}
 		console.log('✓ Worktree directory removed from filesystem');
 
-		// Verify registry removal
-		const updatedRegistry = worktreeRegistry.readRegistry(projectRoot);
-		if (updatedRegistry.worktrees['task-101']) {
-			throw new Error('Worktree still exists in registry after removal');
+		// Verify state removal
+		const updatedWorktrees =
+			worktreeStateManager.readWorktreeState(projectRoot);
+		if (updatedWorktrees['task-101']) {
+			throw new Error('Worktree still exists in state after removal');
 		}
-		console.log('✓ Worktree removed from registry');
+		console.log('✓ Worktree removed from state');
 
 		// Test 10: Verify second worktree still exists
-		const remainingWorktree = worktreeRegistry.findByTaskId(projectRoot, '102');
+		const finalWorktrees = worktreeStateManager.readWorktreeState(projectRoot);
+		const remainingWorktree = finalWorktrees['task-102'];
 		if (!remainingWorktree) {
-			throw new Error('Second worktree incorrectly removed from registry');
+			throw new Error('Second worktree incorrectly removed from state');
 		}
 		console.log('✓ Second worktree correctly preserved');
 
+		// Test 11: CLI Command Integration (Task 6)
+		console.log('✓ Testing CLI command integration...');
+		const cliCmd = 'node scripts/dev.js';
+
+		// Test CLI commands work with feature toggle enabled
+		const { stdout: cliStatusOutput } = await execAsync(
+			`${cliCmd} worktree-status`,
+			{
+				cwd: projectRoot
+			}
+		);
+		if (!cliStatusOutput.includes('Not in a worktree')) {
+			throw new Error('CLI worktree-status should detect main repo context');
+		}
+
+		const { stdout: cliListOutput } = await execAsync(
+			`${cliCmd} worktree-list`,
+			{
+				cwd: projectRoot
+			}
+		);
+		if (!cliListOutput.includes('task-102')) {
+			throw new Error('CLI worktree-list should show existing worktree');
+		}
+
+		// Test CLI integrates with feature toggle disabled state
+		const cliDisabledConfig = {
+			...currentConfig,
+			features: { worktrees: false }
+		};
+		configManager.writeConfig(cliDisabledConfig, projectRoot);
+
+		try {
+			await execAsync(`${cliCmd} worktree-create --task 103`, {
+				cwd: projectRoot,
+				timeout: 10000
+			});
+			throw new Error('CLI commands should be blocked when feature disabled');
+		} catch (error) {
+			if (
+				!error.stderr?.includes('disabled') &&
+				!error.stdout?.includes('disabled')
+			) {
+				throw new Error('CLI should show feature disabled error');
+			}
+		}
+
+		// Re-enable for cleanup
+		configManager.writeConfig(enabledConfig, projectRoot);
+		console.log(
+			'✓ CLI commands integrate correctly with feature toggles and core functions'
+		);
+
 		// Cleanup
 		console.log('\n6. Cleaning up test artifacts...');
-		await worktreeManager.removeWorktree(projectRoot, '102');
-		if (fs.existsSync(registryPath)) {
-			fs.unlinkSync(registryPath);
+		await worktreeManager.removeWorktree(projectRoot, 'task-102');
+		// Reset state back to clean state
+		if (fs.existsSync(statePath)) {
+			const currentState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+			const cleanState = {
+				...currentState,
+				worktrees: {}
+			};
+			fs.writeFileSync(statePath, JSON.stringify(cleanState, null, 2));
 		}
 
 		// Restore original config
@@ -260,12 +329,13 @@ async function testWorktreeE2E() {
 
 		console.log('🎉 ALL END-TO-END TESTS PASSED!');
 		console.log('✓ Task 2 (worktree-manager): create, remove, list functions');
-		console.log(
-			'✓ Task 3 (worktree-registry): CRUD operations and integration'
-		);
+		console.log('✓ Task 3 (worktree-state): State management and integration');
 		console.log('✓ Task 4 (git-utils): worktree detection and info extraction');
 		console.log(
 			'✓ Task 5 (feature-toggle): disabled/enabled state enforcement'
+		);
+		console.log(
+			'✓ Task 6 (CLI-commands): CLI integration with core functions and feature toggles'
 		);
 		console.log('✓ Integration: All components work together seamlessly');
 	} catch (error) {
@@ -275,7 +345,7 @@ async function testWorktreeE2E() {
 
 		// Leave artifacts for investigation
 		console.error('\n📋 Test artifacts preserved for debugging:');
-		console.error('- Registry file:', registryPath);
+		console.error('- State file:', statePath);
 		console.error(
 			'- Worktrees directory:',
 			path.join(projectRoot, 'worktrees')
