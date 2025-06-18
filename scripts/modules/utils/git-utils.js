@@ -349,6 +349,119 @@ function getCurrentBranchSync(projectRoot) {
 	}
 }
 
+/**
+ * Check if the current directory is a Git worktree
+ * @param {string} projectRoot - Directory to check (required)
+ * @returns {Promise<boolean>} True if directory is a worktree, false otherwise
+ */
+async function isWorktree(projectRoot) {
+	if (!projectRoot) {
+		throw new Error('projectRoot is required for isWorktree');
+	}
+
+	try {
+		const gitPath = path.join(projectRoot, '.git');
+
+		// Check if .git exists
+		if (!fs.existsSync(gitPath)) {
+			return false;
+		}
+
+		// Check if .git is a file (worktree) vs directory (main repo)
+		const stats = fs.statSync(gitPath);
+		return stats.isFile();
+	} catch (error) {
+		return false;
+	}
+}
+
+/**
+ * Get basic information about the current worktree
+ * @param {string} projectRoot - Directory to check (required)
+ * @returns {Promise<Object|null>} Worktree info object or null if not in a worktree
+ */
+async function getWorktreeInfo(projectRoot) {
+	if (!projectRoot) {
+		throw new Error('projectRoot is required for getWorktreeInfo');
+	}
+
+	try {
+		// First check if we're in a worktree
+		const inWorktree = await isWorktree(projectRoot);
+		if (!inWorktree) {
+			return null;
+		}
+
+		// Get current branch name
+		const currentBranch = await getCurrentBranch(projectRoot);
+
+		// Get main worktree path using git rev-parse --git-common-dir
+		const { stdout } = await execAsync('git rev-parse --git-common-dir', {
+			cwd: projectRoot
+		});
+		const commonDir = stdout.trim();
+
+		// The main worktree is the parent of the common git directory
+		const mainWorktreePath = path.dirname(commonDir);
+
+		return {
+			branch: currentBranch,
+			mainWorktreePath: path.resolve(mainWorktreePath),
+			currentPath: path.resolve(projectRoot)
+		};
+	} catch (error) {
+		return null;
+	}
+}
+
+/**
+ * Validate that Git version meets minimum requirement for worktrees (2.5+)
+ * @param {string} [projectRoot] - Directory context (optional for this check)
+ * @returns {Promise<void>} Throws error if version is too old
+ */
+async function validateGitVersion(projectRoot = null) {
+	try {
+		const options = projectRoot ? { cwd: projectRoot } : {};
+		const { stdout } = await execAsync('git --version', options);
+
+		// Parse version from output like "git version 2.39.5"
+		const versionMatch = stdout.match(/git version (\d+)\.(\d+)\.(\d+)/);
+		if (!versionMatch) {
+			throw new Error(
+				'Could not parse Git version from output: ' + stdout.trim()
+			);
+		}
+
+		const major = parseInt(versionMatch[1], 10);
+		const minor = parseInt(versionMatch[2], 10);
+		const patch = parseInt(versionMatch[3], 10);
+
+		// Check if version is 2.5.0 or higher
+		if (major < 2 || (major === 2 && minor < 5)) {
+			throw new Error(
+				`Git version ${major}.${minor}.${patch} is too old. ` +
+					'Git worktrees require Git 2.5.0 or higher. ' +
+					'Please upgrade your Git installation.'
+			);
+		}
+
+		// Version is acceptable
+		return;
+	} catch (error) {
+		if (
+			error.message.includes('Git version') ||
+			error.message.includes('Could not parse')
+		) {
+			// Re-throw our custom error messages
+			throw error;
+		}
+		// Handle case where git command fails
+		throw new Error(
+			'Git is not available or not installed. Git 2.5.0+ is required for worktree functionality.'
+		);
+	}
+}
+
 // Export all functions
 export {
 	isGitRepository,
@@ -366,5 +479,8 @@ export {
 	checkAndAutoSwitchGitTag,
 	checkAndAutoSwitchGitTagSync,
 	isGitRepositorySync,
-	getCurrentBranchSync
+	getCurrentBranchSync,
+	isWorktree,
+	getWorktreeInfo,
+	validateGitVersion
 };
