@@ -31,7 +31,7 @@ tasks.json
 tasks/
 prd.txt
 scripts/prd.txt
-.env 
+.env
 
 # Temporary files
 .tmp
@@ -43,4 +43,4 @@ scripts/prd.txt
 node_modules/
 
 # Debug files
-*.debug 
+*.debug

@@ -1,16 +1,4 @@
-# Task Master [![GitHub stars](https://img.shields.io/github/stars/eyaltoledano/claude-task-master?style=social)](https://github.com/eyaltoledano/claude-task-master/stargazers)
-
-[![CI](https://github.com/eyaltoledano/claude-task-master/actions/workflows/ci.yml/badge.svg)](https://github.com/eyaltoledano/claude-task-master/actions/workflows/ci.yml) [![npm version](https://badge.fury.io/js/task-master-ai.svg)](https://badge.fury.io/js/task-master-ai) [![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/taskmasterai?style=flat)](https://discord.gg/taskmasterai) [![License: MIT with Commons Clause](https://img.shields.io/badge/license-MIT%20with%20Commons%20Clause-blue.svg)](LICENSE)
-
-[![NPM Downloads](https://img.shields.io/npm/d18m/task-master-ai?style=flat)](https://www.npmjs.com/package/task-master-ai) [![NPM Downloads](https://img.shields.io/npm/dm/task-master-ai?style=flat)](https://www.npmjs.com/package/task-master-ai) [![NPM Downloads](https://img.shields.io/npm/dw/task-master-ai?style=flat)](https://www.npmjs.com/package/task-master-ai)
-
-## By [@eyaltoledano](https://x.com/eyaltoledano), [@RalphEcom](https://x.com/RalphEcom) & [@jasonzhou1993](https://x.com/jasonzhou1993)
-
-[![Twitter Follow](https://img.shields.io/twitter/follow/eyaltoledano)](https://x.com/eyaltoledano)
-[![Twitter Follow](https://img.shields.io/twitter/follow/RalphEcom)](https://x.com/RalphEcom)
-[![Twitter Follow](https://img.shields.io/twitter/follow/jasonzhou1993)](https://x.com/jasonzhou1993)
-
-A task management system for AI-driven development with Claude, designed to work seamlessly with Cursor AI.
+Task Master AI is task management system for AI-driven development designed to work seamlessly with AI agents.
 
 ## Development Philosophy
 
@@ -49,7 +37,7 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=taskmaster-ai&config=eyJjb21
 
 ## Requirements
 
-Taskmaster utilizes AI across several commands, and those require a separate API key. You can use a variety of models from different AI providers provided you add your API keys. For example, if you want to use Claude 3.7, you'll need an Anthropic API key.
+Task Master utilizes AI across several commands, and those require a separate API key. You can use a variety of models from different AI providers provided you add your API keys. For example, if you want to use Claude 3.7, you'll need an Anthropic API key.
 
 You can define 3 types of models to be used: the main model, the research model, and the fallback model (in case either the main or research fail). Whatever model you use, its provider API key must be present in either mcp.json or .env.
 
@@ -147,6 +135,7 @@ Change the main, research and fallback models to <model_name>, <model_name> and 
 ```
 
 For example, to use Claude Code (no API key required):
+
 ```txt
 Change the main model to claude-code/sonnet
 ```
@@ -163,7 +152,7 @@ Initialize taskmaster-ai in my project
 
 #### 5. Make sure you have a PRD (Recommended)
 
-For **new projects**: Create your PRD at `.taskmaster/docs/prd.txt`  
+For **new projects**: Create your PRD at `.taskmaster/docs/prd.txt`
 For **existing projects**: You can use `scripts/prd.txt` or migrate with `task-master migrate`
 
 An example PRD template is available after initialization in `.taskmaster/templates/example_prd.txt`.
@@ -237,6 +226,92 @@ task-master research "What are the latest best practices for JWT authentication?
 # Generate task files
 task-master generate
 ```
+
+## Git Worktrees Support
+
+Task Master includes experimental support for Git worktrees, allowing you to work on multiple tasks in parallel using isolated development environments.
+
+### What are Git Worktrees?
+
+Git worktrees let you have multiple working copies of your repository checked out to different branches simultaneously. Task Master integrates with this Git feature to create task-specific worktrees, making it easy to:
+
+- Work on multiple tasks in parallel without branch switching
+- Keep uncommitted changes isolated between tasks
+- Run tests or builds in one worktree while coding in another
+- Quickly switch between task contexts
+
+### Requirements
+
+- Git 2.5 or later
+- Feature must be enabled in your configuration
+
+### Enabling Worktree Support
+
+Add the following to your `.taskmaster/config.json`:
+
+```json
+{
+  "features": {
+    "worktrees": true
+  }
+}
+```
+
+### Worktree Commands
+
+All worktree commands are available through the CLI:
+
+```bash
+# Create a worktree for a specific task
+task-master worktree-create --task 123
+task-master worktree-create --task 123 --base-branch develop
+
+# List all worktrees
+task-master worktree-list
+
+# Remove a worktree
+task-master worktree-remove task-123
+task-master worktree-remove task-123 --force  # Force removal with uncommitted changes
+task-master worktree-remove task-123 --remove-branch  # Also remove the branch
+
+# Check current worktree status
+task-master worktree-status
+```
+
+### How It Works
+
+1. **Creating a Worktree**: When you run `worktree-create --task 123`, Task Master:
+
+   - Creates a new branch named `task-123`
+   - Creates a worktree at `./worktrees/task-123/`
+   - Sets up the worktree with the task branch checked out
+   - Registers the worktree in Task Master's state management
+
+2. **Working in Worktrees**: Each worktree is a complete copy of your repository:
+
+   - Navigate to `./worktrees/task-123/` to work on task 123
+   - All Git operations work normally within the worktree
+   - Changes are isolated to that specific branch
+
+3. **Removing Worktrees**: The `worktree-remove` command safely cleans up:
+   - Removes the worktree directory
+   - Optionally removes the associated branch
+   - Updates Task Master's state tracking
+   - Prevents accidental removal while inside a worktree
+
+### Best Practices
+
+1. **One Task, One Worktree**: Create a dedicated worktree for each task you're actively working on
+2. **Clean Up Regularly**: Remove worktrees after merging tasks to keep your workspace organized
+3. **Commit Before Removing**: Always commit or stash changes before removing a worktree
+4. **Use Base Branches**: Specify the appropriate base branch when creating worktrees for feature work
+
+### Safety Features
+
+- **Prevents Self-Deletion**: Cannot remove a worktree while your terminal is inside it
+- **Uncommitted Changes Protection**: Requires `--force` flag to remove worktrees with uncommitted changes
+- **Branch Protection**: Separate `--remove-branch` flag required to delete branches
+- **Feature Flag**: Worktree commands only work when explicitly enabled in configuration
 
 ## Claude Code Support
 

@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-19T18:51:15.991Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Initialize Langfuse Integration Module",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the Langfuse tracer module creation into: environment variable handling, singleton pattern implementation, client initialization, and export function creation",
+			"reasoning": "Medium-high complexity due to singleton pattern, environment detection, and multiple export functions requiring careful error handling"
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Add Langfuse SDK Dependency and Configuration",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into: SDK installation and package.json updates, configuration schema extension in config-manager.js, and backward compatibility validation",
+			"reasoning": "Medium complexity involving dependency management, configuration schema changes, and ensuring backward compatibility"
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Base Trace Creation Utilities",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: createAITrace function, extractTaskContext function, calculateTokenCost integration, sanitizeData implementation, and async error handling setup",
+			"reasoning": "High complexity with multiple utility functions, integration with existing cost logic, and async handling requirements"
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Instrument BaseAIProvider generateText Method",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break into: Langfuse enablement check, pre-call trace creation, response capture implementation, async trace submission, error handling wrapper, and metadata correlation",
+			"reasoning": "High complexity requiring careful integration with existing AI provider logic, error handling, and performance considerations"
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Add Task Master Context Enrichment",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Split into: task ID extraction, command identification, tag and role capture, and context propagation implementation",
+			"reasoning": "Medium-high complexity due to context extraction across different execution environments (CLI vs MCP)"
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Implement streamText Method Tracing",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide into: initial trace creation, StreamTraceWrapper class, token counting for chunks, trace updates on completion, stream error handling, and performance optimization",
+			"reasoning": "Very high complexity due to streaming nature, state management across async operations, and real-time token counting"
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Add generateObject Method Instrumentation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break into: schema capture and serialization, validation tracking, structured response token counting, error context enhancement, and metadata storage",
+			"reasoning": "High complexity involving schema handling, validation tracking, and structured data processing"
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Implement Performance Monitoring and Metrics",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Split into: retry attempt tracking, queue time measurement, latency breakdowns, sampling implementation, MetricsAggregator class, and trace submission optimization",
+			"reasoning": "High complexity with multiple performance metrics, sampling logic, and load handling requirements"
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Create Debugging Utilities and Trace Correlation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: logger trace ID injection, debug command implementation, trace search functionality, URL generation, and TraceDebugger class creation",
+			"reasoning": "High complexity involving CLI command creation, data correlation, and replay functionality"
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Add Documentation and Integration Examples",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break into: comprehensive documentation writing, code examples and dashboard configuration, and troubleshooting guide creation",
+			"reasoning": "Medium-low complexity as primarily documentation work, but requires thorough understanding of all previous implementations"
+		}
+	]
+}

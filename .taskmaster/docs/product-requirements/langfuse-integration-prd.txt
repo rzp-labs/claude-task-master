@@ -1,0 +1,148 @@
+<context>
+# Overview
+This PRD outlines the integration of Langfuse observability into Task Master AI to provide comprehensive monitoring and debugging capabilities for all LLM interactions. Langfuse will enable tracking of AI calls, costs, performance metrics, and debugging information across all supported AI providers in the Task Master ecosystem.
+
+# Core Features
+1. **Automatic LLM Call Tracing**
+   - Captures all AI provider interactions (generateText, streamText, generateObject)
+   - Records prompts, responses, model metadata, and token usage
+   - Works transparently across all 11+ supported providers
+
+2. **Cost Tracking and Analytics**
+   - Tracks token usage and associated costs per AI call
+   - Aggregates costs by task, command, and session
+   - Provides detailed cost breakdowns for budget monitoring
+
+3. **Performance Monitoring**
+   - Measures latency for each AI provider and model
+   - Tracks retry attempts and failure rates
+   - Identifies performance bottlenecks in AI operations
+
+4. **Contextual Metadata Enrichment**
+   - Associates traces with Task Master specific context (task IDs, commands, tags)
+   - Tracks which role (main/fallback/research) was used
+   - Links traces to specific development tasks and subtasks
+
+5. **Development Debugging Tools**
+   - Correlation of trace IDs with application logs
+   - Error tracking with full context
+   - Ability to replay and analyze specific AI interactions
+
+# User Experience
+The integration operates transparently for Task Master developers:
+- Zero configuration required for end users (opt-in for developers)
+- Traces are automatically captured when Langfuse credentials are present
+- No performance impact on Task Master operations
+- Graceful fallback when Langfuse is not configured
+</context>
+<PRD>
+# Technical Architecture
+
+## System Components
+1. **Langfuse Tracer Module** (`src/observability/langfuse-tracer.js`)
+   - Singleton pattern for Langfuse client management
+   - Lazy initialization with environment variable detection
+   - Async fire-and-forget trace submission
+
+2. **BaseAIProvider Integration**
+   - Instrumentation of generateText(), streamText(), and generateObject() methods
+   - Minimal code changes using wrapper pattern
+   - Preservation of existing error handling
+
+3. **Configuration Management**
+   - Environment variable support (LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST)
+   - Optional configuration through config-manager.js
+   - Graceful degradation when not configured
+
+## Data Models
+- Trace data includes: provider, model, messages, tokens, latency, cost, metadata
+- Task context: taskId, commandName, tag, role (main/fallback/research)
+- Error context: error messages, retry count, stack traces
+
+## APIs and Integrations
+- Langfuse JavaScript SDK for trace submission
+- Existing Task Master AI provider infrastructure
+- No new external dependencies beyond Langfuse
+
+# Development Roadmap
+
+## Phase 1: Core Infrastructure (MVP)
+- Create Langfuse tracer module with basic initialization
+- Implement environment variable detection and client setup
+- Add graceful fallback for missing configuration
+- Create utility functions for trace creation
+
+## Phase 2: BaseAIProvider Integration
+- Instrument generateText() method with basic tracing
+- Capture model, provider, token usage, and latency
+- Add error handling for trace submission failures
+- Implement async trace submission to avoid blocking
+
+## Phase 3: Enhanced Metadata and Context
+- Add Task Master specific metadata (task IDs, commands)
+- Implement role tracking (main/fallback/research)
+- Add cost calculation using existing _getCostForModel function
+- Include tag context from getCurrentTag
+
+## Phase 4: Streaming and Object Generation Support
+- Extend tracing to streamText() method
+- Handle streaming response token counting
+- Add support for generateObject() tracing
+- Include schema information in object generation traces
+
+## Phase 5: Advanced Features
+- Add trace correlation with application logs
+- Implement trace sampling for high-volume scenarios
+- Add performance metrics aggregation
+- Create debugging utilities for trace analysis
+
+# Logical Dependency Chain
+1. **Foundation**: Environment setup and Langfuse client initialization must be completed first
+2. **Basic Tracing**: Simple generateText tracing provides immediate value and validates the approach
+3. **Context Enrichment**: Adding Task Master metadata makes traces actionable for debugging
+4. **Full Coverage**: Extending to all AI methods ensures complete observability
+5. **Advanced Features**: Performance optimization and debugging tools built on stable foundation
+
+# Risks and Mitigations
+
+## Technical Challenges
+- **Risk**: Performance impact from synchronous trace submission
+- **Mitigation**: Implement async fire-and-forget pattern with queuing
+
+## Integration Complexity
+- **Risk**: Breaking existing AI provider functionality
+- **Mitigation**: Minimal invasive changes, comprehensive error handling, feature flag for disabling
+
+## Data Privacy
+- **Risk**: Sensitive information in prompts/responses
+- **Mitigation**: Optional prompt/response logging, configurable data sanitization
+
+## Dependency Management
+- **Risk**: Langfuse SDK compatibility issues
+- **Mitigation**: Pin specific version, graceful degradation if SDK fails
+
+# Appendix
+
+## Configuration Examples
+```
+# .env file example
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com # optional for self-hosted
+
+# Optional config.json addition
+"observability": {
+  "langfuse": {
+    "enabled": true,
+    "sampleRate": 1.0,
+    "logPrompts": true
+  }
+}
+```
+
+## Expected Benefits
+- Reduce debugging time for AI-related issues by 80%
+- Identify cost optimization opportunities across providers
+- Improve reliability through retry pattern analysis
+- Enable data-driven provider/model selection
+</PRD>
