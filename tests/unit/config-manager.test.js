@@ -141,6 +141,9 @@ const DEFAULT_CONFIG = {
 		projectName: 'Task Master',
 		ollamaBaseURL: 'http://localhost:11434/api',
 		bedrockBaseURL: 'https://bedrock.us-east-1.amazonaws.com'
+	},
+	features: {
+		worktrees: false
 	}
 };
 
@@ -170,6 +173,9 @@ const VALID_CUSTOM_CONFIG = {
 		logLevel: 'debug',
 		defaultPriority: 'high',
 		projectName: 'My Custom Project'
+	},
+	features: {
+		worktrees: true
 	}
 };
 
@@ -179,7 +185,8 @@ const PARTIAL_CONFIG = {
 	},
 	global: {
 		projectName: 'Partial Project'
-	}
+	},
+	features: {}
 };
 
 const INVALID_PROVIDER_CONFIG = {
@@ -192,7 +199,8 @@ const INVALID_PROVIDER_CONFIG = {
 	},
 	global: {
 		logLevel: 'warn'
-	}
+	},
+	features: {}
 };
 
 // Define spies globally to be restored in afterAll
@@ -408,7 +416,8 @@ describe('getConfig Tests', () => {
 					...VALID_CUSTOM_CONFIG.models.fallback
 				}
 			},
-			global: { ...DEFAULT_CONFIG.global, ...VALID_CUSTOM_CONFIG.global }
+			global: { ...DEFAULT_CONFIG.global, ...VALID_CUSTOM_CONFIG.global },
+			features: { ...DEFAULT_CONFIG.features, ...VALID_CUSTOM_CONFIG.features }
 		};
 		expect(config).toEqual(expectedMergedConfig);
 		expect(fsExistsSyncSpy).toHaveBeenCalledWith(MOCK_CONFIG_PATH);
@@ -446,7 +455,8 @@ describe('getConfig Tests', () => {
 				research: { ...DEFAULT_CONFIG.models.research },
 				fallback: { ...DEFAULT_CONFIG.models.fallback }
 			},
-			global: { ...DEFAULT_CONFIG.global, ...PARTIAL_CONFIG.global }
+			global: { ...DEFAULT_CONFIG.global, ...PARTIAL_CONFIG.global },
+			features: { ...DEFAULT_CONFIG.features, ...PARTIAL_CONFIG.features }
 		};
 		expect(config).toEqual(expectedMergedConfig);
 		expect(fsReadFileSyncSpy).toHaveBeenCalledWith(MOCK_CONFIG_PATH, 'utf-8');
@@ -550,7 +560,11 @@ describe('getConfig Tests', () => {
 				},
 				fallback: { ...DEFAULT_CONFIG.models.fallback }
 			},
-			global: { ...DEFAULT_CONFIG.global, ...INVALID_PROVIDER_CONFIG.global }
+			global: { ...DEFAULT_CONFIG.global, ...INVALID_PROVIDER_CONFIG.global },
+			features: {
+				...DEFAULT_CONFIG.features,
+				...INVALID_PROVIDER_CONFIG.features
+			}
 		};
 		expect(config).toEqual(expectedMergedConfig);
 	});
