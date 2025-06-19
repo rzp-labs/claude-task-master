@@ -1,22 +1,223 @@
 {
-  "master": {
+  "feat-langfuse-integration": {
     "tasks": [
       {
         "id": 1,
-        "title": "Review and align test cases with simplified task enhancement approach",
-        "description": "Review all test cases for the task enhancement feature to ensure alignment with the revised, simplified approach that has limited configuration options and defaults. Document test cases that need revision or removal to match the new streamlined implementation.",
-        "details": "## Test Review Objectives\n\n1. **Identify Over-Engineered Test Cases**\n   - Look for tests that verify complex configuration scenarios that no longer exist\n   - Find tests checking for edge cases in removed features\n   - Locate tests for error patterns that have been simplified\n\n2. **Compare with Expand Task Implementation**\n   - Review how expand-task.test.js handles similar functionality\n   - Ensure enhancement tests follow similar patterns for:\n     - Mock setup and AI provider interactions\n     - Success/failure scenarios\n     - Progress reporting and user feedback\n\n3. **Test Categories to Review**\n   - Configuration validation tests (ensure they match new limited options)\n   - Error handling tests (avoid creating new error patterns)\n   - Integration tests (should be minimal and focused)\n   - Mode behavior tests (if modes have been simplified)\n   - Timeout tests (verify against new 15s minimum)\n\n4. **Documentation Requirements**\n   - Create a list of tests to be removed\n   - Create a list of tests needing modification\n   - Note any missing tests for core functionality\n   - Ensure test names and descriptions match actual behavior\n\n5. **Key Files to Review**\n   - tests/unit/scripts/modules/task-manager/enhance-task-details*.test.js\n   - tests/integration/task-enhancement-workflow.test.js\n   - Compare with: tests/unit/scripts/modules/task-manager/expand-task.test.js\n\n6. **Simplification Guidelines**\n   - Remove tests for features that no longer exist\n   - Consolidate redundant test scenarios\n   - Ensure error handling follows existing patterns (no new error types)\n   - Verify mocks are minimal and match actual usage",
-        "testStrategy": "1. Run all enhancement-related tests and categorize failures by type\n2. Cross-reference test assertions with actual implementation in enhance-task-details.js\n3. Compare test complexity with expand-task.test.js as a baseline\n4. Create a markdown document listing:\n   - Tests to remove (with rationale)\n   - Tests to modify (with specific changes needed)\n   - Tests that are properly aligned (can stay as-is)\n5. Verify that remaining tests cover:\n   - Basic enhancement trigger on status change\n   - Timeout handling (15s minimum)\n   - Success and failure paths\n   - Integration with AI providers\n6. Ensure no tests are creating new patterns for error handling or configuration that don't exist in other parts of the codebase",
-        "status": "pending",
-        "dependencies": [],
+        "title": "Initialize Langfuse Integration Module",
+        "description": "Create the foundational Langfuse tracer module with environment detection and client initialization",
+        "details": "Create src/observability/langfuse-tracer.js implementing a singleton pattern for Langfuse client management. Use the Langfuse JavaScript SDK v3.x (@langfuse/langfuse-js). Implement lazy initialization that checks for LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and optional LANGFUSE_HOST environment variables. The module should export: 1) isEnabled() to check if Langfuse is configured, 2) getClient() for lazy client initialization, 3) createTrace() for starting new traces. Use process.env for environment variable access and implement proper error handling if initialization fails. Include debug logging for initialization status.",
+        "testStrategy": "Unit test the module initialization with mocked environment variables. Test cases: 1) Successful initialization with all required env vars, 2) Graceful handling when env vars are missing, 3) Singleton behavior verification, 4) Error handling during client creation. Use Jest with environment variable mocking.",
         "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define environment variable configuration",
+            "description": "Set up environment variable handling for Langfuse configuration including API keys, host, and other required settings",
+            "dependencies": [],
+            "details": "Create constants and configuration object for LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASEURL, and other environment variables with validation",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Implement singleton pattern structure",
+            "description": "Create the basic singleton pattern structure for the Langfuse tracer instance",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement singleton class or module pattern to ensure only one Langfuse client instance exists throughout the application lifecycle",
+            "status": "pending"
+          },
+          {
+            "id": 3,
+            "title": "Add environment detection logic",
+            "description": "Implement logic to detect if Langfuse is enabled and properly configured",
+            "dependencies": [
+              1
+            ],
+            "details": "Create function to check if required environment variables are present and valid, determine if Langfuse should be initialized",
+            "status": "pending"
+          },
+          {
+            "id": 4,
+            "title": "Initialize Langfuse client with error handling",
+            "description": "Implement the Langfuse client initialization with comprehensive error handling",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create client initialization function that handles connection errors, invalid credentials, and network issues gracefully",
+            "status": "pending"
+          },
+          {
+            "id": 5,
+            "title": "Create trace creation export function",
+            "description": "Implement the main trace creation function for export",
+            "dependencies": [
+              4
+            ],
+            "details": "Create function to start new traces with proper error handling and fallback behavior when Langfuse is disabled",
+            "status": "pending"
+          },
+          {
+            "id": 6,
+            "title": "Implement span and event logging functions",
+            "description": "Create functions for adding spans and events to existing traces",
+            "dependencies": [
+              5
+            ],
+            "details": "Implement functions for creating spans, logging events, and updating trace metadata with proper error boundaries",
+            "status": "pending"
+          },
+          {
+            "id": 7,
+            "title": "Add trace finalization and flushing",
+            "description": "Implement functions to properly close traces and flush data to Langfuse",
+            "dependencies": [
+              6
+            ],
+            "details": "Create functions to end traces, ensure data is sent to Langfuse, and handle cleanup with timeout handling",
+            "status": "pending"
+          },
+          {
+            "id": 8,
+            "title": "Create unified module exports",
+            "description": "Set up the final module exports with all tracer functions and proper TypeScript types",
+            "dependencies": [
+              7
+            ],
+            "details": "Export all tracer functions in a clean interface, add TypeScript definitions, and ensure backward compatibility",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Add Langfuse SDK Dependency and Configuration",
+        "description": "Install Langfuse SDK and update configuration management to support observability settings",
+        "details": "Install @langfuse/langfuse-js (latest v3.x) as a production dependency. Update scripts/modules/config-manager.js to add optional observability configuration section with schema: { observability: { langfuse: { enabled: boolean, sampleRate: number (0-1), logPrompts: boolean, logResponses: boolean } } }. Ensure backward compatibility - the configuration should work without any observability section. Add config validation for the new schema. Update the default config template to include commented-out observability section as an example.",
+        "testStrategy": "Test configuration loading with and without observability section. Verify schema validation for invalid values (sampleRate > 1, non-boolean flags). Test that existing configurations continue to work without modification. Ensure environment variables take precedence over config file settings.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement Base Trace Creation Utilities",
+        "description": "Create utility functions for standardized trace creation and metadata management",
+        "details": "In the langfuse-tracer.js module, implement utility functions: 1) createAITrace(metadata) that creates a new trace with standard Task Master metadata structure, 2) extractTaskContext() that gathers current task ID, command name, tag from the execution context, 3) calculateTokenCost(model, tokens) that leverages existing _getCostForModel logic, 4) sanitizeData(data, options) for optional prompt/response sanitization based on config. Use the Langfuse SDK's trace.generation() method for creating generations. Implement proper async handling with fire-and-forget pattern using Promise.catch() to prevent blocking.",
+        "testStrategy": "Unit test each utility function in isolation. Mock the Langfuse client to verify correct API calls. Test sanitization with various data types and edge cases. Verify async error handling doesn't throw to caller. Test cost calculation accuracy against known model prices.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Instrument BaseAIProvider generateText Method",
+        "description": "Add Langfuse tracing to the core generateText method in BaseAIProvider class",
+        "details": "Modify src/ai-providers/base-ai-provider.js to wrap the generateText method with Langfuse tracing. Implementation: 1) Check if Langfuse is enabled at the start, 2) Create a trace before the AI call with provider name, model, and input messages, 3) Capture the response, token usage, and latency, 4) Submit trace asynchronously after the call completes, 5) Include error information if the call fails. Use try-catch to ensure tracing failures don't break AI functionality. Add trace ID to the response metadata for correlation. Preserve all existing error handling and retry logic.",
+        "testStrategy": "Integration test with mocked AI provider and Langfuse client. Test successful traces, error traces, and trace submission failures. Verify no performance regression using benchmarks. Test that AI functionality works normally when Langfuse is disabled. Validate trace data structure matches Langfuse schema.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Add Task Master Context Enrichment",
+        "description": "Enhance traces with Task Master specific metadata including task IDs, commands, and execution context",
+        "details": "Extend the tracing in BaseAIProvider to capture Task Master context: 1) Extract current task ID from the active task context (if available), 2) Identify the command being executed (from process.argv or MCP context), 3) Capture the current tag using getCurrentTag(), 4) Determine the role (main/fallback/research) from the provider configuration, 5) Add session ID for grouping related traces. Store this metadata in the Langfuse trace metadata field. Consider using AsyncLocalStorage or similar for context propagation in the MCP server environment.",
+        "testStrategy": "Test context extraction in various scenarios: CLI command execution, MCP tool invocation, with/without active tasks. Verify metadata is correctly attached to traces. Test that missing context doesn't cause errors. Validate context propagation across async boundaries.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement streamText Method Tracing",
+        "description": "Add comprehensive tracing support for streaming AI responses",
+        "details": "Instrument the streamText method in BaseAIProvider to handle streaming responses: 1) Create initial trace when stream starts, 2) Implement token counting for streamed chunks using the AI SDK's token counting utilities, 3) Update trace with final token count and completion time when stream ends, 4) Handle stream errors and partial responses gracefully, 5) Use Langfuse's generation.update() API to update the trace after stream completion. Implement a StreamTraceWrapper class that tracks state across the stream lifecycle.",
+        "testStrategy": "Test with simulated streaming responses of various lengths. Verify accurate token counting for partial and complete streams. Test error handling mid-stream. Ensure trace updates are atomic and don't lose data. Benchmark streaming performance impact.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Add generateObject Method Instrumentation",
+        "description": "Implement tracing for structured output generation including schema information",
+        "details": "Add Langfuse tracing to the generateObject method: 1) Capture the Zod schema or type information provided for structured generation, 2) Include the schema in trace metadata for debugging, 3) Track validation success/failure if the AI response doesn't match schema, 4) Calculate tokens for both prompt and structured response, 5) Add specific error context for schema validation failures. Use Langfuse's metadata field to store schema information as JSON.",
+        "testStrategy": "Test with various Zod schemas from simple to complex. Verify schema is correctly serialized in traces. Test both successful and failed validations. Ensure sensitive schema information can be redacted based on config. Validate token counting for JSON responses.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Performance Monitoring and Metrics",
+        "description": "Add performance tracking, retry monitoring, and aggregated metrics collection",
+        "details": "Enhance tracing with performance metrics: 1) Track retry attempts and link them as related traces, 2) Measure queue time if requests are queued, 3) Add provider-specific latency breakdowns (network vs processing), 4) Implement trace sampling based on config.sampleRate to handle high volume, 5) Create a MetricsAggregator class that collects timing stats in-memory for local debugging. Use Langfuse's score API to add performance scores to traces. Implement exponential backoff for trace submission under high load.",
+        "testStrategy": "Load test with high volume of AI calls to verify sampling works correctly. Test retry tracking across multiple attempts. Verify metrics aggregation accuracy. Test graceful degradation under Langfuse API failures. Validate performance overhead stays under 5%.",
+        "priority": "low",
+        "dependencies": [
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Create Debugging Utilities and Trace Correlation",
+        "description": "Build developer tools for trace analysis and correlation with application logs",
+        "details": "Implement debugging utilities: 1) Add trace ID injection into Task Master's logger for correlation, 2) Create a debug command 'tm debug-trace <trace-id>' that fetches and displays trace details, 3) Implement trace search by task ID or command name, 4) Add automatic trace URL generation for quick access to Langfuse UI, 5) Create a TraceDebugger class that can replay AI interactions locally using saved trace data. Store recent trace IDs in .taskmaster/debug/traces.json for quick access.",
+        "testStrategy": "Test trace ID correlation between logs and Langfuse. Verify debug command handles various trace ID formats. Test trace replay with different AI provider responses. Ensure debugging tools work without active Langfuse connection. Validate trace URL generation for cloud and self-hosted instances.",
+        "priority": "low",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Add Documentation and Integration Examples",
+        "description": "Create comprehensive documentation for Langfuse integration setup and usage",
+        "details": "Create documentation in docs/observability.md covering: 1) Setup instructions with environment variables and configuration options, 2) Example traces for common Task Master operations, 3) Debugging guide using trace IDs and correlation, 4) Performance tuning recommendations for high-volume usage, 5) Privacy and security best practices for sensitive data. Add inline code comments explaining the tracing architecture. Create a sample Langfuse dashboard configuration optimized for Task Master. Include troubleshooting section for common issues.",
+        "testStrategy": "Review documentation for accuracy and completeness. Test all code examples in documentation. Verify setup instructions work on fresh installations. Have a developer unfamiliar with Langfuse follow the guide. Validate that security recommendations align with best practices.",
+        "priority": "low",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
-      "created": "2025-06-16T16:49:20.997Z",
-      "description": "Default tasks context",
-      "updated": "2025-06-16T16:49:53.854Z"
+      "created": "2025-06-19T18:48:29.918Z",
+      "updated": "2025-06-19T20:18:11.931Z",
+      "description": "Tasks for feat-langfuse-integration context"
     }
   }
 }
