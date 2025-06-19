@@ -1,5 +1,5 @@
 /**
- * tools/update.js
+ * tools/update-tasks.js
  * Tool to update tasks based on new context/prompt
  */
 
@@ -13,12 +13,12 @@ import {
 } from './utils.js';
 
 /**
- * Register the update tool with the MCP server
+ * Register the update_tasks tool with the MCP server
  * @param {Object} server - FastMCP server instance
  */
-export function registerUpdateTool(server) {
+export function registerUpdateTasksTool(server) {
 	server.addTool({
-		name: 'update',
+		name: 'update_tasks',
 		description:
 			"Update multiple upcoming tasks (with ID >= 'from' ID) based on new context or changes provided in the prompt. Use 'update_task' instead for a single specific task or 'update_subtask' for subtasks.",
 		parameters: z.object({
@@ -46,7 +46,7 @@ export function registerUpdateTool(server) {
 				)
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
-			const toolName = 'update';
+			const toolName = 'update_tasks';
 			const { from, prompt, research, file, projectRoot } = args;
 
 			try {

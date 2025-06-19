@@ -33,7 +33,7 @@ import { registerResearchTool } from './research.js';
 import { registerSetTaskStatusTool } from './set-task-status.js';
 import { registerUpdateSubtaskTool } from './update-subtask.js';
 import { registerUpdateTaskTool } from './update-task.js';
-import { registerUpdateTool } from './update.js';
+import { registerUpdateTasksTool } from './update-tasks.js';
 import { registerUseTagTool } from './use-tag.js';
 import { registerValidateDependenciesTool } from './validate-dependencies.js';
 
@@ -73,7 +73,7 @@ export function registerTaskMasterTools(server) {
 		// Group 5: Task Creation & Modification
 		registerAddTaskTool(server);
 		registerAddSubtaskTool(server);
-		registerUpdateTool(server);
+		registerUpdateTasksTool(server);
 		registerUpdateTaskTool(server);
 		registerUpdateSubtaskTool(server);
 		registerRemoveTaskTool(server);
