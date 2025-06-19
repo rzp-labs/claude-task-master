@@ -198,8 +198,12 @@ async function addTask(
 	}
 
 	try {
-		// Read the existing tasks - IMPORTANT: Read the raw data without tag resolution
-		let rawData = readJSON(tasksPath, projectRoot); // No tag parameter
+		// Resolve the target tag first to prevent readJSON fallback corruption
+		const targetTag =
+			tag || context.tag || getCurrentTag(projectRoot) || 'master';
+
+		// Read the existing tasks with resolved tag to prevent fallback to 'master'
+		let rawData = readJSON(tasksPath, projectRoot, targetTag);
 
 		// Handle the case where readJSON returns resolved data with _rawTaggedData
 		if (rawData && rawData._rawTaggedData) {
@@ -214,11 +218,11 @@ async function addTask(
 				'info'
 			);
 			rawData = {
-				master: {
+				[targetTag]: {
 					tasks: [],
 					metadata: {
 						created: new Date().toISOString(),
-						description: 'Default tasks context'
+						description: `Default tasks context for ${targetTag}`
 					}
 				}
 			};
@@ -231,18 +235,18 @@ async function addTask(
 
 			// This is legacy format - migrate it to tagged format
 			rawData = {
-				master: {
+				[targetTag]: {
 					tasks: rawData.tasks,
 					metadata: rawData.metadata || {
 						created: new Date().toISOString(),
 						updated: new Date().toISOString(),
-						description: 'Tasks for master context'
+						description: `Tasks for ${targetTag} context`
 					}
 				}
 			};
 			// Ensure proper metadata using utility
-			ensureTagMetadata(rawData.master, {
-				description: 'Tasks for master context'
+			ensureTagMetadata(rawData[targetTag], {
+				description: `Tasks for ${targetTag} context`
 			});
 			// Do not write the file here; it will be written later with the new task.
 
@@ -252,10 +256,6 @@ async function addTask(
 
 			report('Successfully migrated to tagged format.', 'success');
 		}
-
-		// Use the provided tag, or the current active tag, or default to 'master'
-		const targetTag =
-			tag || context.tag || getCurrentTag(projectRoot) || 'master';
 
 		// Ensure the target tag exists
 		if (!rawData[targetTag]) {

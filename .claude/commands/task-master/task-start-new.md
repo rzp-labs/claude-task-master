@@ -66,16 +66,14 @@ The goal of the task start phase is to ensure that the code agent has all the ne
 
 ## Pre-Task Actions
 
-### Initialize Task Tracking
-
-Update the task status to `in-progress`
-Record the task start time and initial assessment
+> **ALL PRE-TASK ACTIONS ARE REQUIRED PRIOR TO STARTING**
 
 ### Environment Setup
 
 Use `task master worktree-list` to check if a worktree for the task already exists
 If an active worktree exists, move to the next prioritized task via `next`
-Use `task master worktree-create` tool to create a dedicated worktree within the `${pwd}` for the task
+Update the task status to `in-progress`
+Use `task master worktree-create` tool to create a dedicated worktree for the task
 Navigate (`cd`) into the worktree directory
 Verify the environment is properly configured and dependencies are available
 
@@ -83,7 +81,7 @@ Verify the environment is properly configured and dependencies are available
 
 > **focus only on your specific task, not the all tasks**
 
-Use `sequential-thinking` to document 20 key assumptions about the task, requirements, and implementation approach that **must** be validated
+Use `sequential-thinking` for 20 thought to document key assumptions about the task, requirements, and implementation approach that **must** be validated
 Use `repomix` to gather and analyze relevant repository information vital for the task
 Review any existing task complexity scores and assessments located in `.taskmaster/reports/task-complexity-report_{current_tag}`
 Identify and document any unclear requirements or potential blockers
@@ -91,7 +89,7 @@ Identify and document any unclear requirements or potential blockers
 ### Planning and Design
 
 Use `code-reasoning: feature planning` to develop a comprehensive execution plan for the task
-Use `add_subtask` to create sub-tasks based on the `complexity-report` and information gathered from `repomix`
+Use `add_subtask` to create sub-tasks based on the `complexity-report` and information gathered from `repomix` directly to `.taskmaster/tasks/tasks.json`
 Define clear success criteria and validation approaches for each sub-task
 Identify dependencies, risks, and mitigation strategies
 
@@ -101,9 +99,9 @@ Update the first sub-task status to `in-progress`
 Validate that all necessary resources and information are available
 Confirm the implementation approach aligns with project standards and requirements
 
-### Begin Implementation
+### Prepare to Begin Implementation
 
-Start working on the first sub-task according to the established plan
-When the entire task is completed, inform the user with a summary of accomplishments and pause for additional guidance
+Create a summary of your research and plan for implementation
+Request approval to begin and wait for the user's response
 
 > Note: If any pre-task action fails or reveals blocking issues, pause implementation and seek guidance before proceeding.
