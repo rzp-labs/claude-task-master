@@ -443,8 +443,7 @@ async function expandTask(
 	try {
 		// --- Task Loading/Filtering (Unchanged) ---
 		logger.info(`Reading tasks from ${tasksPath}`);
-		const currentTag = getCurrentTag(projectRoot);
-		const data = readJSON(tasksPath, projectRoot, currentTag);
+		const data = readJSON(tasksPath, projectRoot);
 		if (!data || !data.tasks)
 			throw new Error(`Invalid tasks data in ${tasksPath}`);
 		const taskIndex = data.tasks.findIndex(
@@ -502,10 +501,10 @@ async function expandTask(
 		let systemPrompt; // Declare systemPrompt here
 
 		// Tag-aware complexity report path
-		const tagForReport = currentTag || 'master';
+		const currentTag = getCurrentTag(projectRoot) || 'master';
 		const complexityReportFile =
-			tagForReport !== 'master'
-				? COMPLEXITY_REPORT_FILE.replace('.json', `_${tagForReport}.json`)
+			currentTag !== 'master'
+				? COMPLEXITY_REPORT_FILE.replace('.json', `_${currentTag}.json`)
 				: COMPLEXITY_REPORT_FILE;
 		const complexityReportPath = path.join(projectRoot, complexityReportFile);
 		let taskAnalysis = null;
@@ -679,7 +678,7 @@ async function expandTask(
 		// --- End Change: Append instead of replace ---
 
 		data.tasks[taskIndex] = task; // Assign the modified task back
-		writeJSON(tasksPath, data, projectRoot, currentTag);
+		writeJSON(tasksPath, data);
 		// await generateTaskFiles(tasksPath, path.dirname(tasksPath));
 
 		// Display AI Usage Summary for CLI

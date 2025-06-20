@@ -554,7 +554,7 @@ async function addTask(
 		report('DEBUG: Writing tasks.json...', 'debug');
 		// Write the updated raw data back to the file
 		// The writeJSON function will automatically filter out _rawTaggedData
-		writeJSON(tasksPath, rawData, projectRoot, targetTag);
+		writeJSON(tasksPath, rawData);
 		report('DEBUG: tasks.json written.', 'debug');
 
 		// Generate markdown task files
