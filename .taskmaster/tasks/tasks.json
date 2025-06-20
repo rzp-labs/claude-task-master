@@ -224,7 +224,7 @@
         "dependencies": [
           4
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -291,7 +291,7 @@
             "title": "Handle Edge Cases and Testing",
             "description": "Handle custom models without pricing data, provider response format variations, Langfuse unavailability. Ensure zero performance impact when cost tracking disabled. Create comprehensive test suite: unit tests for cost calculation, integration tests for Langfuse metadata, performance tests, edge case tests.",
             "details": "",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "testStrategy": "",
             "parentTaskId": 5
@@ -429,7 +429,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T08:31:39.939Z",
+      "updated": "2025-06-20T08:50:13.265Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }
