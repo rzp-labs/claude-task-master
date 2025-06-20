@@ -48,6 +48,9 @@ import {
 	XAIProvider
 } from '../../src/ai-providers/index.js';
 
+// Import Task Master context extractor
+import { extractContext } from '../../src/observability/task-master-context-extractor.js';
+
 // Create provider instances
 const PROVIDERS = {
 	anthropic: new AnthropicAIProvider(),
@@ -384,6 +387,15 @@ async function _unifiedServiceRunner(serviceType, params) {
 	const effectiveProjectRoot = projectRoot || findProjectRoot();
 	const userId = getUserId(effectiveProjectRoot);
 
+	// Extract Task Master context for tracing
+	const taskMasterContext = extractContext({
+		projectRoot: effectiveProjectRoot,
+		role: initialRole,
+		commandName: commandName,
+		processArgs: process.argv,
+		mcpContext: params.mcpContext // Pass through MCP context if available
+	});
+
 	let sequence;
 	if (initialRole === 'main') {
 		sequence = ['main', 'fallback', 'research'];
@@ -586,7 +598,12 @@ async function _unifiedServiceRunner(serviceType, params) {
 				...(baseURL && { baseURL }),
 				...(serviceType === 'generateObject' && { schema, objectName }),
 				...providerSpecificParams,
-				...restApiParams
+				...restApiParams,
+				// Add Task Master context for tracing
+				taskMasterContext: {
+					...taskMasterContext,
+					role: currentRole // Update with the actual role being used (main/fallback/research)
+				}
 			};
 
 			providerResponse = await _attemptProviderCallWithRetries(
