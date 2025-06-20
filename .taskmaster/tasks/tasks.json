@@ -237,7 +237,7 @@
         "dependencies": [
           3
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -294,7 +294,7 @@
             "title": "Create comprehensive test suite and performance optimization",
             "description": "Implement testing strategy with mock streams and performance optimization",
             "details": "Create comprehensive test suite with mock streaming responses of various sizes, token counting accuracy verification, performance impact measurement, and stream interruption testing. Implement performance optimizations including batched Langfuse updates, memory management for long streams, and ensure <5ms overhead per chunk. Add integration tests with real AI providers.",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "testStrategy": "",
             "parentTaskId": 6
@@ -358,7 +358,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T07:28:54.081Z",
+      "updated": "2025-06-20T07:32:09.582Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

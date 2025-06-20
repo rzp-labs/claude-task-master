@@ -1,6 +1,7 @@
 import { generateObject, generateText, streamText } from 'ai';
 import { log } from '../../scripts/init.js';
 import { createTrace, isEnabled } from '../observability/langfuse-tracer.js';
+import { StreamTraceWrapper } from '../observability/stream-trace-wrapper.js';
 
 /**
  * Base class for all AI providers
@@ -386,6 +387,99 @@ export class BaseAIProvider {
 	}
 
 	/**
+	 * Instrumented version of streamText with Langfuse tracing
+	 * @private
+	 * @param {object} params - Parameters for streaming text generation
+	 * @returns {Promise<StreamTraceWrapper>} Instrumented stream with tracing capabilities
+	 */
+	async _instrumentedStreamText(params) {
+		// Double-check that instrumentation is still enabled (defensive programming)
+		if (!this._instrumentationEnabled || !isEnabled()) {
+			// Fall back to original method if instrumentation was disabled
+			return await this._originalStreamText(params);
+		}
+
+		let trace = null;
+		let originalStream = null;
+
+		try {
+			// Create Langfuse trace for this streaming session (never throw on failure)
+			try {
+				trace = await createTrace({
+					name: `${this.name} streamText`,
+					metadata: {
+						provider: this.name,
+						model: params.modelId,
+						temperature: params.temperature,
+						maxTokens: params.maxTokens,
+						streaming: true
+					},
+					tags: ['ai-generation', 'streamText', this.name.toLowerCase()]
+				});
+			} catch (traceError) {
+				// Log but never propagate Langfuse trace creation errors
+				log(
+					'debug',
+					`${this.name} Langfuse streaming trace creation failed: ${traceError.message}`
+				);
+				trace = null;
+			}
+
+			// Call original streamText method (this is the critical operation)
+			originalStream = await this._originalStreamText(params);
+
+			// Return instrumented stream wrapper if trace was created successfully
+			if (trace) {
+				try {
+					log(
+						'debug',
+						`${this.name} streamText trace created - returning instrumented stream`
+					);
+					return new StreamTraceWrapper(
+						originalStream,
+						trace,
+						this.name,
+						params
+					);
+				} catch (wrapperError) {
+					// If wrapper creation fails, log error and return original stream
+					log(
+						'debug',
+						`${this.name} StreamTraceWrapper creation failed: ${wrapperError.message}`
+					);
+					return originalStream;
+				}
+			}
+
+			// Return original stream if tracing setup failed
+			return originalStream;
+		} catch (streamError) {
+			// Record error in trace if available (never throw on failure)
+			if (trace) {
+				try {
+					trace.update({
+						level: 'ERROR',
+						statusMessage: streamError.message,
+						metadata: {
+							error: streamError.message,
+							failedAt: new Date().toISOString()
+						}
+					});
+				} catch (traceUpdateError) {
+					// Log but never propagate Langfuse trace update errors
+					log(
+						'debug',
+						`${this.name} Langfuse error trace update failed: ${traceUpdateError.message}`
+					);
+				}
+			}
+
+			// Re-throw the original error to preserve exact error handling behavior
+			throw streamError;
+		}
+	}
+
+	/**
 	 * Initialize Langfuse instrumentation if enabled
 	 * Feature flag integration: Uses isEnabled() check to conditionally activate instrumentation.
 	 * When disabled, provides zero overhead by not wrapping the original method.
@@ -412,6 +506,12 @@ export class BaseAIProvider {
 
 		// Replace generateText with instrumented version
 		this.generateText = this._instrumentedGenerateText.bind(this);
+
+		// Store reference to original streamText method and replace with instrumented version
+		if (this.streamText) {
+			this._originalStreamText = this.streamText.bind(this);
+			this.streamText = this._instrumentedStreamText.bind(this);
+		}
 
 		// Set flag to indicate instrumentation is active
 		this._instrumentationEnabled = true;

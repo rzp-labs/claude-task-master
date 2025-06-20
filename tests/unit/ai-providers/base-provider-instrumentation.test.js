@@ -1,6 +1,6 @@
 /**
  * Integration tests for BaseAIProvider Langfuse instrumentation wrapper
- * 
+ *
  * Tests verify:
  * - Tracing doesn't alter response structure
  * - Error propagation works correctly
@@ -21,16 +21,18 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 		originalEnv = process.env;
 
 		// Clear all Langfuse environment variables for clean testing
-		delete process.env.LANGFUSE_SECRET_KEY;
-		delete process.env.LANGFUSE_PUBLIC_KEY;
-		delete process.env.LANGFUSE_BASEURL;
-		delete process.env.LANGFUSE_DEBUG;
+		process.env.LANGFUSE_SECRET_KEY = undefined;
+		process.env.LANGFUSE_PUBLIC_KEY = undefined;
+		process.env.LANGFUSE_BASEURL = undefined;
+		process.env.LANGFUSE_DEBUG = undefined;
 
 		// Clear module cache to ensure fresh imports
 		jest.resetModules();
 
 		// Import fresh BaseAIProvider module
-		const baseProviderModule = await import('../../../src/ai-providers/base-provider.js');
+		const baseProviderModule = await import(
+			'../../../src/ai-providers/base-provider.js'
+		);
 		BaseAIProvider = baseProviderModule.BaseAIProvider;
 
 		// Define mock provider class
@@ -47,8 +49,8 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			// Override the original generateText for testing
 			async generateText(params) {
 				// Simulate AI provider behavior
-				await new Promise(resolve => setTimeout(resolve, 1)); // 1ms simulated latency
-				
+				await new Promise((resolve) => setTimeout(resolve, 1)); // 1ms simulated latency
+
 				if (params.shouldError) {
 					throw new Error('Mock AI Provider Error');
 				}
@@ -74,7 +76,7 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 		it('should not wrap method when Langfuse is disabled', () => {
 			// Langfuse disabled by default (no env vars set)
 			const provider = new MockAIProvider();
-			
+
 			// Verify instrumentation is disabled
 			expect(provider._instrumentationEnabled).toBe(false);
 			expect(provider._originalGenerateText).toBeUndefined();
@@ -84,10 +86,10 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			// Enable Langfuse via environment variables
 			process.env.LANGFUSE_SECRET_KEY = 'test-secret';
 			process.env.LANGFUSE_PUBLIC_KEY = 'test-public';
-			
+
 			// Create provider (triggers initialization)
 			const provider = new MockAIProvider();
-			
+
 			// Verify instrumentation is enabled
 			expect(provider._instrumentationEnabled).toBe(true);
 			expect(typeof provider._originalGenerateText).toBe('function');
@@ -98,7 +100,7 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 		it('should preserve exact response structure when disabled', async () => {
 			// Langfuse disabled by default
 			const provider = new MockAIProvider();
-			
+
 			const params = {
 				modelId: 'test-model',
 				messages: [{ role: 'user', content: 'test message' }],
@@ -123,7 +125,7 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			// Enable Langfuse but expect same response structure
 			process.env.LANGFUSE_SECRET_KEY = 'test-secret';
 			process.env.LANGFUSE_PUBLIC_KEY = 'test-public';
-			
+
 			// Create instrumented provider
 			const instrumentedProvider = new MockAIProvider();
 
@@ -157,16 +159,16 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 				shouldError: true
 			};
 
-			await expect(provider.generateText(params))
-				.rejects
-				.toThrow('Mock AI Provider Error');
+			await expect(provider.generateText(params)).rejects.toThrow(
+				'Mock AI Provider Error'
+			);
 		});
 
 		it('should propagate original errors unchanged when enabled', async () => {
 			// Enable Langfuse
 			process.env.LANGFUSE_SECRET_KEY = 'test-secret';
 			process.env.LANGFUSE_PUBLIC_KEY = 'test-public';
-			
+
 			const instrumentedProvider = new MockAIProvider();
 			const params = {
 				modelId: 'test-model',
@@ -175,9 +177,9 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			};
 
 			// Verify exact same error is thrown
-			await expect(instrumentedProvider.generateText(params))
-				.rejects
-				.toThrow('Mock AI Provider Error');
+			await expect(instrumentedProvider.generateText(params)).rejects.toThrow(
+				'Mock AI Provider Error'
+			);
 		});
 	});
 
@@ -192,9 +194,9 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			const startTime = performance.now();
 			await provider.generateText(params);
 			const endTime = performance.now();
-			
+
 			const totalTime = endTime - startTime;
-			
+
 			// Total time should be reasonable (simulated latency + minimal overhead)
 			expect(totalTime).toBeLessThan(10); // 1ms simulated + overhead should be < 10ms
 		});
@@ -203,7 +205,7 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			// Enable Langfuse
 			process.env.LANGFUSE_SECRET_KEY = 'test-secret';
 			process.env.LANGFUSE_PUBLIC_KEY = 'test-public';
-			
+
 			const instrumentedProvider = new MockAIProvider();
 			const params = {
 				modelId: 'test-model',
@@ -213,9 +215,9 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			const startTime = performance.now();
 			await instrumentedProvider.generateText(params);
 			const endTime = performance.now();
-			
+
 			const totalTime = endTime - startTime;
-			
+
 			// Should still be reasonable with instrumentation
 			expect(totalTime).toBeLessThan(15); // Allow for tracing overhead
 		});
@@ -226,7 +228,7 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 			const provider = new MockAIProvider();
 			const originalParamCount = MockAIProvider.prototype.generateText.length;
 			const currentParamCount = provider.generateText.length;
-			
+
 			expect(currentParamCount).toBe(originalParamCount);
 		});
 	});

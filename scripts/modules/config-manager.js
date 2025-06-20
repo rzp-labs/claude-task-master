@@ -131,8 +131,8 @@ function _loadAndValidateConfig(explicitRoot = null) {
 				features: { ...defaults.features, ...parsedConfig?.features },
 				// Include any additional top-level sections from the config file
 				...Object.fromEntries(
-					Object.entries(parsedConfig || {}).filter(([key]) => 
-						!['models', 'global', 'features'].includes(key)
+					Object.entries(parsedConfig || {}).filter(
+						([key]) => !['models', 'global', 'features'].includes(key)
 					)
 				)
 			};
