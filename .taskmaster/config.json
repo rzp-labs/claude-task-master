@@ -35,3 +35,8 @@
 		"worktrees": true
 	}
 }
+
+
+Examine ALL MCP tools
+Check EACH one to see if it calls CLI or implements own logic
+Create complete accurate report
