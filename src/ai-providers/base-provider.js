@@ -3,6 +3,10 @@ import { log } from '../../scripts/init.js';
 import { createTrace, isEnabled } from '../observability/langfuse-tracer.js';
 import { StreamTraceWrapper } from '../observability/stream-trace-wrapper.js';
 import { calculateAiCost } from '../utils/cost-calculator.js';
+import {
+	checkCostThresholds,
+	shouldSkipCostTracking
+} from '../utils/cost-monitor.js';
 
 /**
  * Base class for all AI providers
@@ -333,6 +337,25 @@ export class BaseAIProvider {
 							'debug',
 							`${this.name} Cost calculation failed: ${costError.message}`
 						);
+					}
+
+					// Check cost thresholds and log alerts if needed
+					if (costData && !shouldSkipCostTracking()) {
+						try {
+							const taskId = params.taskMasterContext?.taskId;
+							const projectRoot = params.taskMasterContext?.projectRoot;
+							checkCostThresholds(
+								costData,
+								taskId,
+								this.name.toLowerCase(),
+								projectRoot
+							);
+						} catch (thresholdError) {
+							log(
+								'debug',
+								`${this.name} Cost threshold check failed: ${thresholdError.message}`
+							);
+						}
 					}
 
 					// Prepare generation end data with cost information

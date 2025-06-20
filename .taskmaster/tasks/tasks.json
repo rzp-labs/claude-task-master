@@ -224,8 +224,79 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Core Cost Calculation Module",
+            "description": "Extract cost calculation logic from logAiUsage() into reusable src/utils/cost-calculator.js module. Function: calculateAiCost(providerName, modelId, inputTokens, outputTokens). Returns: {inputCost, outputCost, totalCost, currency, metadata}. Handle edge cases: missing tokens, unknown models, custom providers.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 2,
+            "title": "Integrate Cost Metadata into Langfuse Traces",
+            "description": "Modify BaseAIProvider._generateTextInstrumented() to add cost metadata to traces after successful generation. Use updateTraceMetadata() function. Ensure metadata format is consistent and queryable. Handle Langfuse errors gracefully without breaking AI calls.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 3,
+            "title": "Add Streaming Cost Support",
+            "description": "Modify StreamTraceWrapper to calculate costs on completion. Ensure tokens are available when streaming finishes. Add cost metadata to streaming traces. Handle interrupted streams gracefully.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 4,
+            "title": "Create Cost Aggregation Helpers",
+            "description": "Create src/utils/cost-aggregator.js with functions to query Langfuse traces by task/session/time. Implement getCostsByTask(), getCostsBySession(), getCostsByTimeRange(), getCurrentSessionCosts(). Sum cost metadata from multiple traces. Handle missing or incomplete cost data gracefully.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 5,
+            "title": "Implement Cost Alerting Configuration",
+            "description": "Extend config.json schema with cost alerting options. Add default configuration in config-manager.js. Structure: costTracking: {enabled: true, alerts: {enabled: true, thresholds: {sessionLimit: 1.0, taskLimit: 0.5, dailyLimit: 5.0}}}. Follow existing configuration patterns.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 6,
+            "title": "Add Cost Threshold Monitoring",
+            "description": "Create cost threshold checking function. Integrate with BaseAIProvider after cost calculation. Log appropriate warnings when thresholds exceeded. Track cumulative costs for alerting. Ensure minimal performance impact.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          },
+          {
+            "id": 7,
+            "title": "Handle Edge Cases and Testing",
+            "description": "Handle custom models without pricing data, provider response format variations, Langfuse unavailability. Ensure zero performance impact when cost tracking disabled. Create comprehensive test suite: unit tests for cost calculation, integration tests for Langfuse metadata, performance tests, edge case tests.",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 5
+          }
+        ]
       },
       {
         "id": 6,
@@ -324,7 +395,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -358,7 +429,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T07:32:09.582Z",
+      "updated": "2025-06-20T08:31:39.939Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

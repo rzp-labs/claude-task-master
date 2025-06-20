@@ -71,13 +71,14 @@ The goal of the task start phase is to ensure that the code agent has all the ne
 ### Environment Setup
 
 Use `task master next` to find the next prioritized task
+
+> **IF A TASK I MARKED AS IN-PROGRESS, SKIP AND MOVE TO THE NEXT TASK - IT IS ACTIVELY BEING WORKED ON**
+
 Use `task master worktree-list` to check if a worktree for the task already exists
-**If a worktree exists, DO NOT ENTER IT. Move to the next prioritized task via `next`.**
+
+> **If a worktree exists, DO NOT ENTER IT. Move to the next prioritized task via `next`.**
+
 Update the task status to `in-progress`
-Use `task master worktree-create` tool to create a dedicated worktree for the task
-Navigate (`cd`) into the worktree directory
-Run `npm install` to install project dependencies
-Verify the environment is properly configured and dependencies are available
 
 ### Requirements Analysis
 
@@ -93,16 +94,19 @@ Identify and document any unclear requirements or potential blockers
 Use `code-reasoning: feature planning` to develop a comprehensive execution plan for the task
 Execute `task master add-subtask` to create sub-tasks based on the `complexity-report` and information gathered from `repomix`.
 
-> **do not use the add_subtask tool. There is a a bug that will flatten the tasks.json structure and delete the tag**
+> **Do not use the add_subtask tool. There is a a bug that will flatten the tasks.json structure and delete the tag**
 
 Define clear success criteria and validation approaches for each sub-task
 Identify dependencies, risks, and mitigation strategies
+Confirm the implementation approach aligns with project standards and requirements
 
 ### Implementation Preparation
 
-Update the first sub-task status to `in-progress`
+Use `task master worktree-create` tool to create a dedicated worktree for the task
+Navigate (`cd`) into the worktree directory
+Run `npm install` to install project dependencies
+Verify the environment is properly configured and dependencies are available
 Validate that all necessary resources and information are available
-Confirm the implementation approach aligns with project standards and requirements
 
 ### Prepare to Begin Implementation
 

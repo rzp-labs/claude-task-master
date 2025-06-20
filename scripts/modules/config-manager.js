@@ -66,6 +66,17 @@ const DEFAULTS = {
 	},
 	features: {
 		worktrees: false
+	},
+	costTracking: {
+		enabled: true,
+		alerts: {
+			enabled: true,
+			thresholds: {
+				sessionLimit: 1.0,
+				taskLimit: 0.5,
+				dailyLimit: 5.0
+			}
+		}
 	}
 };
 
@@ -789,6 +800,48 @@ function getBaseUrlForRole(role, explicitRoot = null) {
 		: undefined;
 }
 
+/**
+ * Get cost tracking configuration.
+ * @param {string|null} explicitRoot - Optional explicit path to the project root.
+ * @returns {object} Cost tracking configuration.
+ */
+function getCostTrackingConfig(explicitRoot = null) {
+	const config = getConfig(explicitRoot);
+	return config.costTracking || DEFAULTS.costTracking;
+}
+
+/**
+ * Check if cost tracking is enabled.
+ * @param {string|null} explicitRoot - Optional explicit path to the project root.
+ * @returns {boolean} True if cost tracking is enabled.
+ */
+function isCostTrackingEnabled(explicitRoot = null) {
+	const costConfig = getCostTrackingConfig(explicitRoot);
+	return costConfig.enabled === true;
+}
+
+/**
+ * Check if cost alerts are enabled.
+ * @param {string|null} explicitRoot - Optional explicit path to the project root.
+ * @returns {boolean} True if cost alerts are enabled.
+ */
+function isCostAlertsEnabled(explicitRoot = null) {
+	const costConfig = getCostTrackingConfig(explicitRoot);
+	return costConfig.enabled === true && costConfig.alerts?.enabled === true;
+}
+
+/**
+ * Get cost alert thresholds.
+ * @param {string|null} explicitRoot - Optional explicit path to the project root.
+ * @returns {object} Cost alert thresholds.
+ */
+function getCostAlertThresholds(explicitRoot = null) {
+	const costConfig = getCostTrackingConfig(explicitRoot);
+	return (
+		costConfig.alerts?.thresholds || DEFAULTS.costTracking.alerts.thresholds
+	);
+}
+
 export {
 	// Core config access
 	getConfig,
@@ -830,6 +883,11 @@ export {
 	// Feature setting getters
 	getFeaturesConfig,
 	isWorktreesEnabled,
+	// Cost tracking getters
+	getCostTrackingConfig,
+	isCostTrackingEnabled,
+	isCostAlertsEnabled,
+	getCostAlertThresholds,
 	// API Key Checkers (still relevant)
 	isApiKeySet,
 	getMcpApiKeyStatus,

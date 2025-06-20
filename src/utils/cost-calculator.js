@@ -48,9 +48,14 @@ export function calculateAiCost(
 			MODEL_MAP
 		);
 
+		// Normalize token counts (handle negative, null, undefined, non-numeric values)
+		const normalizedInputTokens = Math.max(0, Number(inputTokens) || 0);
+		const normalizedOutputTokens = Math.max(0, Number(outputTokens) || 0);
+
 		// Calculate costs (convert tokens to millions for pricing)
-		const calculatedInputCost = (inputTokens / 1_000_000) * inputCost;
-		const calculatedOutputCost = (outputTokens / 1_000_000) * outputCost;
+		const calculatedInputCost = (normalizedInputTokens / 1_000_000) * inputCost;
+		const calculatedOutputCost =
+			(normalizedOutputTokens / 1_000_000) * outputCost;
 		const totalCost = calculatedInputCost + calculatedOutputCost;
 
 		// Return comprehensive cost information
@@ -62,9 +67,9 @@ export function calculateAiCost(
 			metadata: {
 				providerName,
 				modelId,
-				inputTokens,
-				outputTokens,
-				totalTokens: inputTokens + outputTokens,
+				inputTokens: normalizedInputTokens,
+				outputTokens: normalizedOutputTokens,
+				totalTokens: normalizedInputTokens + normalizedOutputTokens,
 				pricingRates: {
 					inputCostPer1M: inputCost,
 					outputCostPer1M: outputCost,

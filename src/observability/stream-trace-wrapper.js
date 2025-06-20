@@ -9,6 +9,10 @@
 
 import { createStandardLogger } from '../utils/logger-utils.js';
 import { calculateAiCost } from '../utils/cost-calculator.js';
+import {
+	checkCostThresholds,
+	shouldSkipCostTracking
+} from '../utils/cost-monitor.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();
@@ -270,6 +274,24 @@ export class StreamTraceWrapper {
 				logger.debug(
 					`Cost calculation failed for ${this.providerName}: ${costError.message}`
 				);
+			}
+
+			// Check cost thresholds and log alerts if needed
+			if (costData && !shouldSkipCostTracking()) {
+				try {
+					const taskId = this.inputParams?.taskMasterContext?.taskId;
+					const projectRoot = this.inputParams?.taskMasterContext?.projectRoot;
+					checkCostThresholds(
+						costData,
+						taskId,
+						this.providerName?.toLowerCase(),
+						projectRoot
+					);
+				} catch (thresholdError) {
+					logger.debug(
+						`Cost threshold check failed for ${this.providerName}: ${thresholdError.message}`
+					);
+				}
 			}
 
 			// Prepare span end data with cost information
