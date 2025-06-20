@@ -40,7 +40,11 @@
 			"secretKey": "op://rzp-labs/langfuseIntegration/secretKey",
 			"publicKey": "op://rzp-labs/langfuseIntegration/publicKey",
 			"baseUrl": "op://rzp-labs/langfuseIntegration/baseURL",
-			"debug": false
+			"debug": false,
+			"samplingRate": false,
+			"promptResponseLogging": false,
+			"batchSize": 0,
+			"redactionPatterns": []
 		}
 	}
 }

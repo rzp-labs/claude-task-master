@@ -395,8 +395,69 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Extend Configuration Schema",
+            "description": "Add new configuration options to config-manager.js DEFAULTS including samplingRate, promptResponseLogging, redactionPatterns, and batchSize",
+            "details": "Update the DEFAULTS object in config-manager.js to include the new observability.langfuse configuration options: samplingRate (0.0-1.0), promptResponseLogging (boolean), redactionPatterns (array of regex), batchSize (integer). Ensure backward compatibility with existing configuration structure.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 2,
+            "title": "Add Configuration Validation",
+            "description": "Implement validation functions for new Langfuse configuration options with proper error handling",
+            "details": "Create validateLangfuseConfig() function that validates: samplingRate is between 0.0-1.0, redactionPatterns are valid regex, batchSize is positive integer, enabled/promptResponseLogging are booleans. Add clear error messages and fallback to defaults for invalid values.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 3,
+            "title": "Add Configuration Getters",
+            "description": "Create getter functions for new Langfuse configuration values following existing patterns",
+            "details": "Add getter functions: getLangfuseSamplingRate(), isLangfusePromptLoggingEnabled(), getLangfuseRedactionPatterns(), getLangfuseBatchSize(). Update getLangfuseConfig() to handle new environment variables with proper precedence (env > config > defaults). Follow existing getter patterns in config-manager.js.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 4,
+            "title": "Implement Runtime Configuration Updates",
+            "description": "Add mechanism for configuration changes to take effect without restart",
+            "details": "Create reloadLangfuseConfig() function in config-manager.js that forces config reload and notifies langfuse-tracer.js. Add updateConfiguration() function to langfuse-tracer.js that clears cached client and reloads configuration. Ensure thread-safe configuration updates and proper error handling.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 5,
+            "title": "Add CLI Commands",
+            "description": "Implement CLI commands for Langfuse configuration management",
+            "details": "Add 'langfuse' command group to commands.js with subcommands: enable, disable, config, setup. Follow existing command patterns from models commands. Implement handlers for each command that read/write configuration, validate settings, trigger runtime reloads, and provide user feedback. Include help text and error handling.",
+            "status": "pending",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 6,
+            "title": "Update Langfuse Integration",
+            "description": "Modify langfuse-tracer.js to use new configuration options for sampling, redaction, and batching",
+            "details": "Update createTrace() to implement sampling logic using samplingRate. Add redaction functionality with applyRedaction() function that uses redactionPatterns. Implement basic batching consideration using batchSize. Ensure all new features are optional and maintain backward compatibility with existing Langfuse functionality.",
+            "status": "pending",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          }
+        ]
       },
       {
         "id": 9,
@@ -429,7 +490,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T08:50:13.265Z",
+      "updated": "2025-06-20T08:52:39.336Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }
