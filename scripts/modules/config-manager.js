@@ -77,6 +77,19 @@ const DEFAULTS = {
 				dailyLimit: 5.0
 			}
 		}
+	},
+	observability: {
+		langfuse: {
+			enabled: false,
+			secretKey: undefined,
+			publicKey: undefined,
+			baseUrl: 'https://cloud.langfuse.com',
+			debug: false,
+			samplingRate: false,
+			promptResponseLogging: false,
+			batchSize: 0,
+			redactionPatterns: []
+		}
 	}
 };
 
@@ -140,10 +153,17 @@ function _loadAndValidateConfig(explicitRoot = null) {
 				},
 				global: { ...defaults.global, ...parsedConfig?.global },
 				features: { ...defaults.features, ...parsedConfig?.features },
+				observability: {
+					langfuse: {
+						...defaults.observability.langfuse,
+						...parsedConfig?.observability?.langfuse
+					}
+				},
 				// Include any additional top-level sections from the config file
 				...Object.fromEntries(
 					Object.entries(parsedConfig || {}).filter(
-						([key]) => !['models', 'global', 'features'].includes(key)
+						([key]) =>
+							!['models', 'global', 'features', 'observability'].includes(key)
 					)
 				)
 			};
@@ -187,6 +207,55 @@ function _loadAndValidateConfig(explicitRoot = null) {
 				);
 				config.models.fallback.provider = undefined;
 				config.models.fallback.modelId = undefined;
+			}
+
+			// --- Validate Langfuse configuration ---
+			if (
+				!validateLangfuseSamplingRate(
+					config.observability.langfuse.samplingRate
+				)
+			) {
+				console.warn(
+					chalk.yellow(
+						`Warning: Invalid Langfuse samplingRate "${config.observability.langfuse.samplingRate}" in ${configPath}. Falling back to default.`
+					)
+				);
+				config.observability.langfuse.samplingRate =
+					defaults.observability.langfuse.samplingRate;
+			}
+			if (
+				config.observability.langfuse.promptResponseLogging !== undefined &&
+				typeof config.observability.langfuse.promptResponseLogging !== 'boolean'
+			) {
+				console.warn(
+					chalk.yellow(
+						`Warning: Invalid Langfuse promptResponseLogging "${config.observability.langfuse.promptResponseLogging}" in ${configPath}. Falling back to default.`
+					)
+				);
+				config.observability.langfuse.promptResponseLogging =
+					defaults.observability.langfuse.promptResponseLogging;
+			}
+			if (!validateLangfuseBatchSize(config.observability.langfuse.batchSize)) {
+				console.warn(
+					chalk.yellow(
+						`Warning: Invalid Langfuse batchSize "${config.observability.langfuse.batchSize}" in ${configPath}. Falling back to default.`
+					)
+				);
+				config.observability.langfuse.batchSize =
+					defaults.observability.langfuse.batchSize;
+			}
+			if (
+				!validateLangfuseRedactionPatterns(
+					config.observability.langfuse.redactionPatterns
+				)
+			) {
+				console.warn(
+					chalk.yellow(
+						`Warning: Invalid Langfuse redactionPatterns in ${configPath}. Falling back to default.`
+					)
+				);
+				config.observability.langfuse.redactionPatterns =
+					defaults.observability.langfuse.redactionPatterns;
 			}
 		} catch (error) {
 			// Use console.error for actual errors during parsing
@@ -280,6 +349,49 @@ function validateProviderModelCombination(providerName, modelId) {
 		// Use .some() to check the 'id' property of objects in the array
 		MODEL_MAP[providerName].some((modelObj) => modelObj.id === modelId)
 	);
+}
+
+/**
+ * Validates if a Langfuse sampling rate is valid
+ * @param {*} samplingRate The sampling rate value
+ * @returns {boolean} True if valid, false otherwise
+ */
+function validateLangfuseSamplingRate(samplingRate) {
+	return (
+		samplingRate === false ||
+		(typeof samplingRate === 'number' && samplingRate >= 0 && samplingRate <= 1)
+	);
+}
+
+/**
+ * Validates if a Langfuse batch size is valid
+ * @param {*} batchSize The batch size value
+ * @returns {boolean} True if valid, false otherwise
+ */
+function validateLangfuseBatchSize(batchSize) {
+	return (
+		typeof batchSize === 'number' &&
+		batchSize >= 0 &&
+		Number.isInteger(batchSize)
+	);
+}
+
+/**
+ * Validates if redaction patterns array is valid
+ * @param {*} patterns The redaction patterns array
+ * @returns {boolean} True if valid, false otherwise
+ */
+function validateLangfuseRedactionPatterns(patterns) {
+	if (!Array.isArray(patterns)) return false;
+	return patterns.every((pattern) => {
+		if (typeof pattern !== 'string') return false;
+		try {
+			new RegExp(pattern);
+			return true;
+		} catch (e) {
+			return false;
+		}
+	});
 }
 
 // --- Role-Specific Getters ---
@@ -439,6 +551,75 @@ function getFeaturesConfig(explicitRoot = null) {
 
 function isWorktreesEnabled(explicitRoot = null) {
 	return getFeaturesConfig(explicitRoot).worktrees === true;
+}
+
+// --- Observability Settings Getters ---
+
+function getObservabilityConfig(explicitRoot = null) {
+	const config = getConfig(explicitRoot);
+	// Ensure observability defaults are applied if observability section is missing
+	return {
+		langfuse: {
+			...DEFAULTS.observability.langfuse,
+			...(config?.observability?.langfuse || {})
+		}
+	};
+}
+
+function getLangfuseConfig(explicitRoot = null) {
+	return getObservabilityConfig(explicitRoot).langfuse;
+}
+
+function getLangfuseSamplingRate(explicitRoot = null) {
+	return getLangfuseConfig(explicitRoot).samplingRate;
+}
+
+function isLangfusePromptLoggingEnabled(explicitRoot = null) {
+	return getLangfuseConfig(explicitRoot).promptResponseLogging === true;
+}
+
+function getLangfuseRedactionPatterns(explicitRoot = null) {
+	return getLangfuseConfig(explicitRoot).redactionPatterns;
+}
+
+function getLangfuseBatchSize(explicitRoot = null) {
+	return getLangfuseConfig(explicitRoot).batchSize;
+}
+
+/**
+ * Reload Langfuse configuration and notify tracer
+ * Forces config reload and clears cached Langfuse client
+ * @param {string|null} explicitRoot - Optional explicit path to the project root
+ * @returns {boolean} True if reload was successful, false otherwise
+ */
+function reloadLangfuseConfig(explicitRoot = null) {
+	try {
+		// Force reload the configuration
+		const newConfig = getConfig(explicitRoot, true);
+
+		// Notify langfuse-tracer to update its configuration
+		// Use dynamic import to avoid circular dependencies
+		import('../../src/observability/langfuse-tracer.js')
+			.then((langfuseTracer) => {
+				if (typeof langfuseTracer.updateConfiguration === 'function') {
+					langfuseTracer.updateConfiguration();
+				}
+			})
+			.catch((error) => {
+				console.warn(
+					chalk.yellow(
+						`Warning: Could not notify langfuse-tracer of configuration update: ${error.message}`
+					)
+				);
+			});
+
+		return true;
+	} catch (error) {
+		console.error(
+			chalk.red(`Error reloading Langfuse configuration: ${error.message}`)
+		);
+		return false;
+	}
 }
 
 /**
@@ -851,6 +1032,9 @@ export {
 	// Validation
 	validateProvider,
 	validateProviderModelCombination,
+	validateLangfuseSamplingRate,
+	validateLangfuseBatchSize,
+	validateLangfuseRedactionPatterns,
 	VALID_PROVIDERS,
 	MODEL_MAP,
 	getAvailableModels,
@@ -888,6 +1072,14 @@ export {
 	isCostTrackingEnabled,
 	isCostAlertsEnabled,
 	getCostAlertThresholds,
+	// Observability setting getters
+	getObservabilityConfig,
+	getLangfuseConfig,
+	getLangfuseSamplingRate,
+	isLangfusePromptLoggingEnabled,
+	getLangfuseRedactionPatterns,
+	getLangfuseBatchSize,
+	reloadLangfuseConfig,
 	// API Key Checkers (still relevant)
 	isApiKeySet,
 	getMcpApiKeyStatus,

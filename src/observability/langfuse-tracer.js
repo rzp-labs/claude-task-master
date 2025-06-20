@@ -14,6 +14,7 @@
  * - createSpan(trace, options): Create span within trace
  * - logEvent(trace, options): Log event to trace
  * - updateTraceMetadata(trace, metadata): Update trace metadata
+ * - updateConfiguration(): Update configuration and reset client
  * - flush(): Flush pending traces
  * - shutdown(): Shutdown client and cleanup
  *
@@ -336,6 +337,35 @@ export async function flush() {
 		} catch (error) {
 			logger.error('Failed to flush Langfuse traces', error);
 		}
+	}
+}
+
+/**
+ * Update configuration and reset client
+ * Called when configuration changes at runtime
+ * @returns {Promise<void>}
+ */
+export async function updateConfiguration() {
+	try {
+		logger.debug('Updating Langfuse configuration...');
+
+		// Shutdown existing client if present
+		if (langfuseClient && typeof langfuseClient.shutdown === 'function') {
+			try {
+				await langfuseClient.shutdown();
+			} catch (error) {
+				logger.warn('Error shutting down existing Langfuse client', error);
+			}
+		}
+
+		// Reset state to allow re-initialization with new config
+		langfuseClient = null;
+		initializationAttempted = false;
+		initializationError = null;
+
+		logger.debug('Langfuse configuration updated and client reset');
+	} catch (error) {
+		logger.error('Failed to update Langfuse configuration', error);
 	}
 }
 
