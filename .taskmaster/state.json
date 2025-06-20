@@ -1,23 +1,17 @@
 {
-	"currentTag": "feat-langfuse-integration",
-	"lastSwitched": "2025-06-19T20:30:42.223Z",
-	"branchTagMapping": {
-		"v017-adds": "v017-adds",
-		"next": "next"
-	},
-	"migrationNoticeShown": true,
-	"worktrees": {
-		"task-5": {
-			"taskId": "5",
-			"branchName": "task-5",
-			"worktreePath": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-5",
-			"createdAt": "2025-06-20T08:09:56.055Z"
-		},
-		"task-8": {
-			"taskId": "8",
-			"branchName": "task-8",
-			"worktreePath": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-8",
-			"createdAt": "2025-06-20T08:15:41.170Z"
-		}
-	}
+  "currentTag": "feat-langfuse-integration",
+  "lastSwitched": "2025-06-19T20:30:42.223Z",
+  "branchTagMapping": {
+    "v017-adds": "v017-adds",
+    "next": "next"
+  },
+  "migrationNoticeShown": true,
+  "worktrees": {
+    "task-8": {
+      "taskId": "8",
+      "branchName": "task-8",
+      "worktreePath": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-8",
+      "createdAt": "2025-06-20T08:15:41.170Z"
+    }
+  }
 }
