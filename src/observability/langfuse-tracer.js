@@ -21,12 +21,12 @@
  * 1. Environment Variables:
  *    - LANGFUSE_SECRET_KEY: Required secret key
  *    - LANGFUSE_PUBLIC_KEY: Required public key
- *    - LANGFUSE_HOST: Optional host URL (defaults to cloud.langfuse.com)
+ *    - LANGFUSE_BASEURL: Optional base URL (defaults to cloud.langfuse.com)
  *    - LANGFUSE_DEBUG: Optional debug flag
  * 2. Task Master config.json:
  *    - observability.langfuse.secretKey
  *    - observability.langfuse.publicKey
- *    - observability.langfuse.host
+ *    - observability.langfuse.baseUrl
  *    - observability.langfuse.debug
  *    - observability.langfuse.enabled
  */
@@ -51,7 +51,7 @@ function getLangfuseConfig() {
 	// Try environment variables first (highest precedence)
 	const envSecretKey = process.env.LANGFUSE_SECRET_KEY;
 	const envPublicKey = process.env.LANGFUSE_PUBLIC_KEY;
-	const envHost = process.env.LANGFUSE_HOST;
+	const envBaseUrl = process.env.LANGFUSE_BASEURL;
 	const envDebug = process.env.LANGFUSE_DEBUG;
 
 	// Try config.json as fallback
@@ -62,7 +62,7 @@ function getLangfuseConfig() {
 		configValues = {
 			secretKey: langfuseConfig.secretKey,
 			publicKey: langfuseConfig.publicKey,
-			host: langfuseConfig.host,
+			baseUrl: langfuseConfig.baseUrl,
 			debug: langfuseConfig.debug,
 			enabled: langfuseConfig.enabled
 		};
@@ -75,7 +75,7 @@ function getLangfuseConfig() {
 	return {
 		secretKey: envSecretKey || configValues.secretKey,
 		publicKey: envPublicKey || configValues.publicKey,
-		host: envHost || configValues.host || 'https://cloud.langfuse.com',
+		baseUrl: envBaseUrl || configValues.baseUrl || 'https://cloud.langfuse.com',
 		debug: envDebug ? envDebug.toLowerCase() === 'true' : configValues.debug || false,
 		enabled: configValues.enabled !== false // Default to true unless explicitly disabled in config
 	};
@@ -275,7 +275,7 @@ async function initializeLangfuseClient() {
 		langfuseClient = new Langfuse({
 			secretKey: config.secretKey,
 			publicKey: config.publicKey,
-			baseUrl: config.host,
+			baseUrl: config.baseUrl,
 			flushAt: 20,
 			flushInterval: 10000,
 			requestTimeout: 30000,
@@ -283,7 +283,7 @@ async function initializeLangfuseClient() {
 		});
 
 		logger.info('Langfuse client initialized successfully', {
-			baseUrl: config.host,
+			baseUrl: config.baseUrl,
 			debug: config.debug
 		});
 
