@@ -214,7 +214,7 @@ async function initializeLangfuseClient() {
 		logger.debug('Initializing Langfuse client...');
 
 		// Dynamic import to avoid requiring Langfuse when not needed
-		const { Langfuse } = await import('@langfuse/langfuse-js');
+		const { Langfuse } = await import('langfuse');
 
 		const secretKey = process.env.LANGFUSE_SECRET_KEY;
 		const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
@@ -243,7 +243,7 @@ async function initializeLangfuseClient() {
 		// Check for common errors and provide helpful messages
 		if (error.code === 'MODULE_NOT_FOUND') {
 			logger.error(
-				'Langfuse SDK not installed. Run: npm install @langfuse/langfuse-js'
+				'Langfuse SDK not installed. Run: npm install langfuse'
 			);
 		} else if (error.message?.includes('Invalid API key')) {
 			logger.error(
