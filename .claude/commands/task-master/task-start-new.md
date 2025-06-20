@@ -90,7 +90,10 @@ Identify and document any unclear requirements or potential blockers
 ### Planning and Design
 
 Use `code-reasoning: feature planning` to develop a comprehensive execution plan for the task
-Use `add_subtask` to create sub-tasks based on the `complexity-report` and information gathered from `repomix` directly to `.taskmaster/tasks/tasks.json`
+Execute `task master add-subtask` to create sub-tasks based on the `complexity-report` and information gathered from `repomix`.
+
+> **do not use the add_subtasks tool. There is a a bug that will flatten the tasks.json structure and delete the tag**
+
 Define clear success criteria and validation approaches for each sub-task
 Identify dependencies, risks, and mitigation strategies
 
