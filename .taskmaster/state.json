@@ -1,10 +1,17 @@
 {
-	"currentTag": "feat-langfuse-integration",
-	"lastSwitched": "2025-06-19T20:30:42.223Z",
-	"branchTagMapping": {
-		"v017-adds": "v017-adds",
-		"next": "next"
-	},
-	"migrationNoticeShown": true,
-	"worktrees": {}
+  "currentTag": "feat-langfuse-integration",
+  "lastSwitched": "2025-06-19T20:30:42.223Z",
+  "branchTagMapping": {
+    "v017-adds": "v017-adds",
+    "next": "next"
+  },
+  "migrationNoticeShown": true,
+  "worktrees": {
+    "task-1": {
+      "taskId": "1",
+      "branchName": "task-1",
+      "worktreePath": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-1",
+      "createdAt": "2025-06-20T05:30:42.942Z"
+    }
+  }
 }

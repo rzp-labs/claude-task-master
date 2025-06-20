@@ -75,6 +75,7 @@ If an active worktree exists, move to the next prioritized task via `next`
 Update the task status to `in-progress`
 Use `task master worktree-create` tool to create a dedicated worktree for the task
 Navigate (`cd`) into the worktree directory
+Run `npm install` to install project dependencies
 Verify the environment is properly configured and dependencies are available
 
 ### Requirements Analysis
