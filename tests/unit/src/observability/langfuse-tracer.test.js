@@ -1,6 +1,6 @@
 /**
  * Unit tests for Langfuse tracer module
- * 
+ *
  * Tests environment variable loading, graceful degradation, and cloud/self-hosted configurations
  * as specified in the task strategy.
  */
@@ -14,7 +14,7 @@ describe('Langfuse Tracer', () => {
 	beforeEach(async () => {
 		// Save original environment
 		originalEnv = process.env;
-		
+
 		// Clear all Langfuse environment variables for clean testing
 		delete process.env.LANGFUSE_SECRET_KEY;
 		delete process.env.LANGFUSE_PUBLIC_KEY;
@@ -23,7 +23,7 @@ describe('Langfuse Tracer', () => {
 
 		// Clear module cache to ensure fresh imports
 		jest.resetModules();
-		
+
 		// Import fresh module
 		tracer = await import('../../../../src/observability/langfuse-tracer.js');
 	});
@@ -90,9 +90,9 @@ describe('Langfuse Tracer', () => {
 		});
 
 		it('should handle updateTraceMetadata with null trace gracefully', async () => {
-			await expect(tracer.updateTraceMetadata(null, { test: 'metadata' }))
-				.resolves
-				.toBeUndefined();
+			await expect(
+				tracer.updateTraceMetadata(null, { test: 'metadata' })
+			).resolves.toBeUndefined();
 		});
 
 		it('should handle flush gracefully when no client exists', async () => {
@@ -125,7 +125,7 @@ describe('Langfuse Tracer', () => {
 			}
 
 			const results = await Promise.all(promises);
-			expect(results.every(result => result === null)).toBe(true);
+			expect(results.every((result) => result === null)).toBe(true);
 		});
 
 		it('should handle rapid sequential calls without errors', async () => {
@@ -184,7 +184,7 @@ describe('Langfuse Tracer', () => {
 				'https://langfuse.internal:8080'
 			];
 
-			hosts.forEach(host => {
+			hosts.forEach((host) => {
 				process.env.LANGFUSE_HOST = host;
 				expect(tracer.isEnabled()).toBe(true);
 			});
@@ -281,9 +281,9 @@ describe('Langfuse Tracer', () => {
 			];
 
 			for (const metadata of testCases) {
-				await expect(tracer.updateTraceMetadata(null, metadata))
-					.resolves
-					.toBeUndefined();
+				await expect(
+					tracer.updateTraceMetadata(null, metadata)
+				).resolves.toBeUndefined();
 			}
 		});
 	});
@@ -314,9 +314,9 @@ describe('Langfuse Tracer', () => {
 				largeMetadata[`key${i}`] = `value${i}`.repeat(100);
 			}
 
-			await expect(tracer.updateTraceMetadata(null, largeMetadata))
-				.resolves
-				.toBeUndefined();
+			await expect(
+				tracer.updateTraceMetadata(null, largeMetadata)
+			).resolves.toBeUndefined();
 		});
 	});
 

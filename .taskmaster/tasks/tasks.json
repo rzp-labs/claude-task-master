@@ -9,7 +9,7 @@
         "testStrategy": "Write unit tests to verify environment variable loading, validate graceful degradation when Langfuse credentials are missing, and ensure no runtime errors occur when Langfuse is not configured. Test both cloud and self-hosted Langfuse configurations.",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -46,7 +46,7 @@
             "title": "Write Unit Tests for Langfuse Tracer",
             "description": "Create comprehensive unit tests covering environment variable loading, graceful degradation, and cloud/self-hosted configurations",
             "details": "Write unit tests to verify environment variable loading works correctly, validate graceful degradation when Langfuse credentials are missing, ensure no runtime errors occur when Langfuse is not configured, and test both cloud and self-hosted Langfuse configurations as specified in the task strategy.",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "testStrategy": "",
             "parentTaskId": 1
@@ -175,7 +175,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T05:45:30.031Z",
+      "updated": "2025-06-20T06:02:58.567Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

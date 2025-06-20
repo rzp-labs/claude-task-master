@@ -242,9 +242,7 @@ async function initializeLangfuseClient() {
 
 		// Check for common errors and provide helpful messages
 		if (error.code === 'MODULE_NOT_FOUND') {
-			logger.error(
-				'Langfuse SDK not installed. Run: npm install langfuse'
-			);
+			logger.error('Langfuse SDK not installed. Run: npm install langfuse');
 		} else if (error.message?.includes('Invalid API key')) {
 			logger.error(
 				'Invalid Langfuse API credentials. Check LANGFUSE_SECRET_KEY and LANGFUSE_PUBLIC_KEY'
