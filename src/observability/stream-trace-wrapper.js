@@ -8,6 +8,7 @@
  */
 
 import { createStandardLogger } from '../utils/logger-utils.js';
+import { calculateAiCost } from '../utils/cost-calculator.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();
@@ -256,8 +257,23 @@ export class StreamTraceWrapper {
 				this.textAccumulator
 			);
 
-			// Complete the span with final metrics
-			await this.span.end({
+			// Calculate cost for this streaming generation
+			let costData = null;
+			try {
+				costData = calculateAiCost(
+					this.providerName?.toLowerCase(),
+					this.inputParams?.modelId,
+					0, // Input tokens not available in streaming context
+					finalTokenCount
+				);
+			} catch (costError) {
+				logger.debug(
+					`Cost calculation failed for ${this.providerName}: ${costError.message}`
+				);
+			}
+
+			// Prepare span end data with cost information
+			const spanEndData = {
 				output: this.textAccumulator,
 				usage: {
 					completionTokens: finalTokenCount,
@@ -274,7 +290,22 @@ export class StreamTraceWrapper {
 							? finalTokenCount / this.estimatedTokens
 							: 1
 				}
-			});
+			};
+
+			// Add cost metadata if calculation was successful
+			if (costData && costData.totalCost !== undefined) {
+				spanEndData.metadata.cost = {
+					totalCost: costData.totalCost,
+					inputCost: costData.inputCost,
+					outputCost: costData.outputCost,
+					currency: costData.currency,
+					breakdown: costData.metadata,
+					note: 'Input token costs not included in streaming calculation'
+				};
+			}
+
+			// Complete the span with final metrics
+			await this.span.end(spanEndData);
 
 			this.completed = true;
 			logger.debug(

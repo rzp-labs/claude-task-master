@@ -2,6 +2,7 @@ import { generateObject, generateText, streamText } from 'ai';
 import { log } from '../../scripts/init.js';
 import { createTrace, isEnabled } from '../observability/langfuse-tracer.js';
 import { StreamTraceWrapper } from '../observability/stream-trace-wrapper.js';
+import { calculateAiCost } from '../utils/cost-calculator.js';
 
 /**
  * Base class for all AI providers
@@ -318,7 +319,24 @@ export class BaseAIProvider {
 					const endTime = performance.now();
 					const latencyMs = endTime - startTime;
 
-					generation.end({
+					// Calculate cost for this generation
+					let costData = null;
+					try {
+						costData = calculateAiCost(
+							this.name.toLowerCase(),
+							params.modelId,
+							result.usage?.inputTokens || 0,
+							result.usage?.outputTokens || 0
+						);
+					} catch (costError) {
+						log(
+							'debug',
+							`${this.name} Cost calculation failed: ${costError.message}`
+						);
+					}
+
+					// Prepare generation end data with cost information
+					const generationEndData = {
 						output: result.text,
 						usage: {
 							input: result.usage?.inputTokens || 0,
@@ -329,7 +347,20 @@ export class BaseAIProvider {
 							latencyMs: Math.round(latencyMs * 100) / 100,
 							completedAt: new Date().toISOString()
 						}
-					});
+					};
+
+					// Add cost metadata if calculation was successful
+					if (costData && costData.totalCost !== undefined) {
+						generationEndData.metadata.cost = {
+							totalCost: costData.totalCost,
+							inputCost: costData.inputCost,
+							outputCost: costData.outputCost,
+							currency: costData.currency,
+							breakdown: costData.metadata
+						};
+					}
+
+					generation.end(generationEndData);
 				} catch (endError) {
 					// Log but never propagate Langfuse generation end errors
 					log(
