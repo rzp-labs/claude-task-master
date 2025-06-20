@@ -9,7 +9,8 @@ import {
 	isSilentMode,
 	readJSON,
 	truncate,
-	writeJSON
+	writeJSON,
+	getCurrentTag
 } from '../utils.js';
 
 import {
@@ -256,7 +257,8 @@ async function updateTasks(
 		}
 
 		// --- Task Loading/Filtering (Unchanged) ---
-		const data = readJSON(tasksPath, projectRoot);
+		const currentTag = getCurrentTag(projectRoot);
+		const data = readJSON(tasksPath, projectRoot, currentTag);
 		if (!data || !data.tasks)
 			throw new Error(`No valid tasks found in ${tasksPath}`);
 		const tasksToUpdate = data.tasks.filter(
@@ -467,7 +469,7 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 					`Applied updates to ${actualUpdateCount} tasks in the dataset.`
 				);
 
-			writeJSON(tasksPath, data);
+			writeJSON(tasksPath, data, projectRoot, currentTag);
 			if (isMCP)
 				logFn.info(
 					`Successfully updated ${actualUpdateCount} tasks in ${tasksPath}`

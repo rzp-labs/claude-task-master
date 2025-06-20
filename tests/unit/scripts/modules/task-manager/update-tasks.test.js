@@ -161,7 +161,11 @@ describe('updateTasks', () => {
 
 		// Assert
 		// 1. Read JSON called
-		expect(readJSON).toHaveBeenCalledWith(mockTasksPath, '/mock/path');
+		expect(readJSON).toHaveBeenCalledWith(
+			mockTasksPath,
+			'/mock/path',
+			'master'
+		);
 
 		// 2. AI Service called with correct args
 		expect(generateTextService).toHaveBeenCalledWith(expect.any(Object));
@@ -179,7 +183,9 @@ describe('updateTasks', () => {
 						])
 					})
 				})
-			})
+			}),
+			'/mock/path',
+			'master'
 		);
 
 		// 4. Check return value
@@ -224,7 +230,11 @@ describe('updateTasks', () => {
 		);
 
 		// Assert
-		expect(readJSON).toHaveBeenCalledWith(mockTasksPath, '/mock/path');
+		expect(readJSON).toHaveBeenCalledWith(
+			mockTasksPath,
+			'/mock/path',
+			'master'
+		);
 		expect(generateTextService).not.toHaveBeenCalled();
 		expect(writeJSON).not.toHaveBeenCalled();
 		expect(log).toHaveBeenCalledWith(

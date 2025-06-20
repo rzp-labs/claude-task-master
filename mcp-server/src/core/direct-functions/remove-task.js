@@ -10,6 +10,7 @@ import {
 import {
 	disableSilentMode,
 	enableSilentMode,
+	getCurrentTag,
 	readJSON
 } from '../../../../scripts/modules/utils.js';
 
@@ -25,7 +26,7 @@ import {
  */
 export async function removeTaskDirect(args, log, context = {}) {
 	// Destructure expected args
-	const { tasksJsonPath, id, projectRoot } = args;
+	const { tasksJsonPath, id, projectRoot, tag } = args;
 	const { session } = context;
 	try {
 		// Check if tasksJsonPath was provided
@@ -59,8 +60,11 @@ export async function removeTaskDirect(args, log, context = {}) {
 			`Removing ${taskIdArray.length} task(s) with ID(s): ${taskIdArray.join(', ')} from ${tasksJsonPath}`
 		);
 
+		// Determine the tag to use
+		const currentTag = tag || getCurrentTag(projectRoot) || 'master';
+
 		// Validate all task IDs exist before proceeding
-		const data = readJSON(tasksJsonPath, projectRoot);
+		const data = readJSON(tasksJsonPath, projectRoot, currentTag);
 		if (!data || !data.tasks) {
 			return {
 				success: false,

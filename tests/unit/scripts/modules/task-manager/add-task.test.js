@@ -241,7 +241,8 @@ describe('addTask', () => {
 		// Assert
 		expect(readJSON).toHaveBeenCalledWith(
 			'tasks/tasks.json',
-			'/mock/project/root'
+			'/mock/project/root',
+			'master'
 		);
 		expect(generateObjectService).toHaveBeenCalledWith(expect.any(Object));
 		expect(writeJSON).toHaveBeenCalledWith(
@@ -258,7 +259,9 @@ describe('addTask', () => {
 						})
 					])
 				})
-			})
+			}),
+			'/mock/project/root',
+			'master'
 		);
 		expect(result).toEqual(
 			expect.objectContaining({
@@ -299,7 +302,9 @@ describe('addTask', () => {
 						})
 					])
 				})
-			})
+			}),
+			'/mock/project/root',
+			'master'
 		);
 	});
 
@@ -334,7 +339,9 @@ describe('addTask', () => {
 						})
 					])
 				})
-			})
+			}),
+			'/mock/project/root',
+			'master'
 		);
 		expect(context.mcpLog.warn).toHaveBeenCalledWith(
 			expect.stringContaining(
@@ -366,7 +373,9 @@ describe('addTask', () => {
 						})
 					])
 				})
-			})
+			}),
+			'/mock/project/root',
+			'master'
 		);
 	});
 
@@ -401,7 +410,9 @@ describe('addTask', () => {
 						})
 					])
 				})
-			})
+			}),
+			'/mock/project/root',
+			'master'
 		);
 	});
 

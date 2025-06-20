@@ -146,7 +146,7 @@ async function createTag(
 		}
 
 		// Write the clean data back to file
-		writeJSON(tasksPath, cleanData);
+		writeJSON(tasksPath, cleanData, projectRoot);
 
 		logFn.success(`Successfully created tag "${tagName}"`);
 
@@ -366,7 +366,7 @@ async function deleteTag(
 		}
 
 		// Write the clean data back to file
-		writeJSON(tasksPath, cleanData);
+		writeJSON(tasksPath, cleanData, projectRoot);
 
 		logFn.success(`Successfully deleted tag "${tagName}"`);
 
@@ -485,7 +485,7 @@ async function enhanceTagsWithMetadata(tasksPath, rawData, context = {}) {
 					cleanData[key] = value;
 				}
 			}
-			writeJSON(tasksPath, cleanData);
+			writeJSON(tasksPath, cleanData, projectRoot);
 		}
 	} catch (error) {
 		// Don't throw - just log and continue
@@ -906,7 +906,7 @@ async function renameTag(
 		}
 
 		// Write the clean data back to file
-		writeJSON(tasksPath, cleanData);
+		writeJSON(tasksPath, cleanData, projectRoot);
 
 		// Get task count
 		const tasks = getTasksForTag(rawData, newName);
@@ -1063,7 +1063,7 @@ async function copyTag(
 		}
 
 		// Write the clean data back to file
-		writeJSON(tasksPath, cleanData);
+		writeJSON(tasksPath, cleanData, projectRoot);
 
 		logFn.success(
 			`Successfully copied tag from "${sourceName}" to "${targetName}"`

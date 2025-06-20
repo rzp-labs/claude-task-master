@@ -11,7 +11,8 @@ import {
 	enableSilentMode,
 	isSilentMode,
 	readJSON,
-	writeJSON
+	writeJSON,
+	getCurrentTag
 } from '../../../../scripts/modules/utils.js';
 import { createLogWrapper } from '../../tools/utils.js';
 
@@ -89,7 +90,8 @@ export async function expandTaskDirect(args, log, context = {}) {
 
 		// Read tasks data
 		log.info(`[expandTaskDirect] Attempting to read JSON from: ${tasksPath}`);
-		const data = readJSON(tasksPath, projectRoot);
+		const currentTag = getCurrentTag(projectRoot);
+		const data = readJSON(tasksPath, projectRoot, currentTag);
 		log.info(
 			`[expandTaskDirect] Result of readJSON: ${data ? 'Data read successfully' : 'readJSON returned null or undefined'}`
 		);
@@ -164,14 +166,6 @@ export async function expandTaskDirect(args, log, context = {}) {
 		// Tracking subtasks count before expansion
 		const subtasksCountBefore = task.subtasks ? task.subtasks.length : 0;
 
-		// Directly modify the data instead of calling the CLI function
-		if (!task.subtasks) {
-			task.subtasks = [];
-		}
-
-		// Save tasks.json with potentially empty subtasks array
-		writeJSON(tasksPath, data);
-
 		// Create logger wrapper using the utility
 		const mcpLog = createLogWrapper(log);
 
@@ -203,7 +197,7 @@ export async function expandTaskDirect(args, log, context = {}) {
 			if (!wasSilent && isSilentMode()) disableSilentMode();
 
 			// Read the updated data
-			const updatedData = readJSON(tasksPath, projectRoot);
+			const updatedData = readJSON(tasksPath, projectRoot, currentTag);
 			const updatedTask = updatedData.tasks.find((t) => t.id === taskId);
 
 			// Calculate how many subtasks were added

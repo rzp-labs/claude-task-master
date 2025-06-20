@@ -247,7 +247,8 @@ describe('setTaskStatus', () => {
 						expect.objectContaining({ id: 2, status: 'done' })
 					])
 				})
-			})
+			}),
+			undefined
 		);
 		// expect(generateTaskFiles).toHaveBeenCalledWith(
 		// 	tasksPath,
@@ -287,7 +288,8 @@ describe('setTaskStatus', () => {
 						})
 					])
 				})
-			})
+			}),
+			undefined
 		);
 	});
 
@@ -318,7 +320,8 @@ describe('setTaskStatus', () => {
 						expect.objectContaining({ id: 2, status: 'done' })
 					])
 				})
-			})
+			}),
+			undefined
 		);
 	});
 
@@ -354,7 +357,8 @@ describe('setTaskStatus', () => {
 						})
 					])
 				})
-			})
+			}),
+			undefined
 		);
 	});
 
