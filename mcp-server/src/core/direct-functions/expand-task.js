@@ -9,10 +9,10 @@ import expandTask from '../../../../scripts/modules/task-manager/expand-task.js'
 import {
 	disableSilentMode,
 	enableSilentMode,
+	getCurrentTag,
 	isSilentMode,
 	readJSON,
-	writeJSON,
-	getCurrentTag
+	writeJSON
 } from '../../../../scripts/modules/utils.js';
 import { createLogWrapper } from '../../tools/utils.js';
 

@@ -6,11 +6,11 @@ import { z } from 'zod'; // Keep Zod for post-parsing validation
 
 import {
 	log as consoleLog,
+	getCurrentTag,
 	isSilentMode,
 	readJSON,
 	truncate,
-	writeJSON,
-	getCurrentTag
+	writeJSON
 } from '../utils.js';
 
 import {

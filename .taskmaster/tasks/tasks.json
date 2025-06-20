@@ -1,180 +1,182 @@
 {
-  "tasks": [
-    {
-      "id": 1,
-      "title": "Setup Langfuse Environment and Dependencies",
-      "description": "Initialize the project environment with Langfuse SDK integration and configure environment variables for observability tracking",
-      "details": "Install Langfuse JavaScript SDK v3.27.0 or later using npm. Create environment configuration module to handle LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and optional LANGFUSE_HOST variables. Implement validation for required environment variables with graceful fallback when not configured. Update .env.example with Langfuse configuration template. Ensure the SDK is added as an optional dependency to maintain zero-config requirement for end users.",
-      "testStrategy": "Write unit tests to verify environment variable loading, validate graceful degradation when Langfuse credentials are missing, and ensure no runtime errors occur when Langfuse is not configured. Test both cloud and self-hosted Langfuse configurations.",
-      "priority": "high",
-      "dependencies": [],
-      "status": "in-progress",
-      "subtasks": [
-        {
-          "id": 1,
-          "title": "Fix Langfuse Import Statement",
-          "description": "Fix incorrect import in src/observability/langfuse-tracer.js from '@langfuse/langfuse-js' to 'langfuse' to match the installed Node.js SDK package",
-          "details": "The current code imports from '@langfuse/langfuse-js' which is the browser SDK, but we have 'langfuse' (Node.js SDK) installed. Change line 483: `const { Langfuse } = await import('@langfuse/langfuse-js');` to `const { Langfuse } = await import('langfuse');`",
-          "status": "pending",
-          "dependencies": [],
-          "testStrategy": "",
-          "parentTaskId": 1
-        },
-        {
-          "id": 2,
-          "title": "Update .env.example with Langfuse Configuration",
-          "description": "Add Langfuse environment variable template to .env.example file for user guidance",
-          "details": "Add Langfuse configuration section to .env.example with LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST, and LANGFUSE_DEBUG variables with appropriate comments and default values",
-          "status": "pending",
-          "dependencies": [],
-          "testStrategy": "",
-          "parentTaskId": 1
-        },
-        {
-          "id": 3,
-          "title": "Test Langfuse Integration",
-          "description": "Verify the corrected Langfuse implementation works correctly with graceful fallback when not configured",
-          "details": "Test that the module loads without errors, isEnabled() correctly detects configuration, getClient() returns null gracefully when not configured, and no runtime errors occur. Test both configured and unconfigured scenarios.",
-          "status": "pending",
-          "dependencies": [],
-          "testStrategy": "",
-          "parentTaskId": 1
-        },
-        {
-          "id": 4,
-          "title": "Write Unit Tests for Langfuse Tracer",
-          "description": "Create comprehensive unit tests covering environment variable loading, graceful degradation, and cloud/self-hosted configurations",
-          "details": "Write unit tests to verify environment variable loading works correctly, validate graceful degradation when Langfuse credentials are missing, ensure no runtime errors occur when Langfuse is not configured, and test both cloud and self-hosted Langfuse configurations as specified in the task strategy.",
-          "status": "pending",
-          "dependencies": [],
-          "testStrategy": "",
-          "parentTaskId": 1
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "title": "Create Langfuse Tracer Module Core Infrastructure",
-      "description": "Implement the singleton Langfuse tracer module with lazy initialization and async trace submission capabilities",
-      "details": "Create src/observability/langfuse-tracer.js implementing singleton pattern using ES6 modules. Implement lazy initialization that only creates Langfuse client when credentials are present. Use the Langfuse SDK's built-in async methods (trace(), span()) for fire-and-forget submission. Include connection validation, retry logic with exponential backoff, and error boundaries to prevent tracer failures from affecting main application. Implement trace ID generation using crypto.randomUUID() for correlation.",
-      "testStrategy": "Test singleton behavior across multiple imports, verify lazy initialization only occurs with valid credentials, mock Langfuse SDK to test error handling and retry logic, validate async submission doesn't block main thread using performance timers.",
-      "priority": "high",
-      "dependencies": [
-        1
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 3,
-      "title": "Implement BaseAIProvider Instrumentation Wrapper",
-      "description": "Create non-invasive wrapper pattern to instrument generateText method in BaseAIProvider class with Langfuse tracing",
-      "details": "Modify src/ai-providers/base-provider.js to add tracing hooks. Implement wrapper method that captures start time, wraps the original generateText call in try-catch-finally, records completion time and calculates latency. Extract model name, provider name, token usage from response. Use Langfuse's trace.generation() method to record LLM calls with input/output/metadata. Ensure original error handling and response structure remain unchanged. Add feature flag check before instrumentation.",
-      "testStrategy": "Create integration tests with mock AI providers to verify tracing doesn't alter response structure, test error propagation remains intact, measure performance overhead (should be <5ms), validate traces are created with correct metadata structure.",
-      "priority": "high",
-      "dependencies": [
-        2
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 4,
-      "title": "Add Task Master Context Metadata Collection",
-      "description": "Enhance traces with Task Master specific context including task IDs, commands, tags, and role information",
-      "details": "Extend tracer to capture Task Master context from execution environment. Access current task ID from task-manager module, extract command name from process arguments or MCP context, retrieve current tag using getCurrentTag() function. Implement role detection (main/fallback/research) by analyzing the provider selection logic. Add this metadata to Langfuse traces using the metadata field. Create context extraction utilities that safely handle missing context without errors.",
-      "testStrategy": "Test metadata extraction with various Task Master commands, verify correct task ID association for nested subtasks, validate tag context switching, ensure metadata collection handles null/undefined values gracefully.",
-      "priority": "medium",
-      "dependencies": [
-        3
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 5,
-      "title": "Integrate Cost Tracking and Calculation",
-      "description": "Implement cost calculation for AI calls using existing pricing models and add cost metadata to Langfuse traces",
-      "details": "Leverage existing _getCostForModel() function from base-provider.js to calculate costs. Extract input/output token counts from provider responses. Calculate cost in USD and add to trace metadata. Implement cost aggregation helpers that can sum costs by task, session, or time period. Add cost alerts threshold configuration option. Ensure cost calculation handles all 11+ providers including custom models.",
-      "testStrategy": "Verify cost calculations match expected values for each provider/model combination, test edge cases like streaming responses with partial token counts, validate cost aggregation accuracy across multiple traces.",
-      "priority": "medium",
-      "dependencies": [
-        4
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 6,
-      "title": "Implement Streaming Response Tracing Support",
-      "description": "Extend tracing capabilities to handle streamText() method with progressive token counting and latency measurement",
-      "details": "Create streaming-aware wrapper for streamText() method. Implement token accumulator that counts tokens as they arrive using provider-specific tokenization. Track first token time (TTFT) and total streaming duration. Use Langfuse's span concept to represent the streaming session with updates. Handle stream interruptions and errors gracefully. Ensure final token count is accurate by parsing the complete response.",
-      "testStrategy": "Test with mock streaming responses of various sizes, verify token counting accuracy during streaming, measure performance impact on stream processing, test error handling for interrupted streams.",
-      "priority": "medium",
-      "dependencies": [
-        3
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 7,
-      "title": "Add Object Generation Tracing with Schema Capture",
-      "description": "Implement tracing for generateObject() method including schema information and validation metadata",
-      "details": "Extend instrumentation to generateObject() calls. Capture the Zod schema definition and convert to JSON schema for trace metadata. Track object generation success/failure rates and validation errors. Include generated object size metrics. Add schema version tracking for debugging schema evolution. Implement safe schema serialization that handles circular references.",
-      "testStrategy": "Test with various Zod schema complexities, verify schema serialization doesn't fail on complex types, validate object generation success tracking, ensure sensitive data in generated objects can be excluded.",
-      "priority": "low",
-      "dependencies": [
-        3
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 8,
-      "title": "Create Configuration Management Integration",
-      "description": "Integrate Langfuse configuration with Task Master's config-manager.js for advanced settings and feature control",
-      "details": "Extend config-manager.js to support observability configuration section. Implement settings for: enabled flag, sampling rate (0.0-1.0), prompt/response logging toggle, sensitive data redaction patterns, trace batching size. Create configuration validator with sensible defaults. Add CLI commands for enabling/disabling Langfuse integration. Ensure configuration changes take effect without restart.",
-      "testStrategy": "Test configuration loading precedence (env vars > config file), verify sampling rate correctly filters traces, test prompt redaction with regex patterns, validate runtime configuration updates.",
-      "priority": "low",
-      "dependencies": [
-        2
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 9,
-      "title": "Implement Trace Correlation and Debugging Utilities",
-      "description": "Build utilities for correlating Langfuse traces with application logs and debugging specific AI interactions",
-      "details": "Add trace ID injection into Task Master's logger output. Create debug command 'tm debug-trace <trace-id>' that fetches and displays trace details from Langfuse API. Implement trace search by task ID or command. Add performance profiling mode that captures detailed timing for each AI operation phase. Create trace export functionality for offline analysis.",
-      "testStrategy": "Verify trace IDs appear in correlated log entries, test debug command with various trace IDs, validate search functionality returns correct traces, ensure export format is compatible with common analysis tools.",
-      "priority": "low",
-      "dependencies": [
-        4,
-        5
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 10,
-      "title": "Add Performance Monitoring and Optimization Features",
-      "description": "Implement advanced performance monitoring including sampling, batching, and metrics aggregation for high-volume scenarios",
-      "details": "Implement adaptive sampling that increases rate for errors/slow requests. Create trace batching with configurable flush intervals (default 5s) and batch size (default 100). Add local metrics aggregation for latency percentiles (p50, p95, p99). Implement circuit breaker pattern for Langfuse submission failures. Add performance dashboard export format compatible with Grafana/Datadog. Create memory-efficient circular buffer for recent traces.",
-      "testStrategy": "Load test with 1000+ concurrent AI calls to verify sampling effectiveness, test batch submission under various network conditions, validate metrics aggregation accuracy, ensure circuit breaker prevents cascade failures.",
-      "priority": "low",
-      "dependencies": [
-        8,
-        9
-      ],
-      "status": "pending",
-      "subtasks": []
+  "feat-langfuse-integration": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Langfuse Environment and Dependencies",
+        "description": "Initialize the project environment with Langfuse SDK integration and configure environment variables for observability tracking",
+        "details": "Install Langfuse JavaScript SDK v3.27.0 or later using npm. Create environment configuration module to handle LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and optional LANGFUSE_HOST variables. Implement validation for required environment variables with graceful fallback when not configured. Update .env.example with Langfuse configuration template. Ensure the SDK is added as an optional dependency to maintain zero-config requirement for end users.",
+        "testStrategy": "Write unit tests to verify environment variable loading, validate graceful degradation when Langfuse credentials are missing, and ensure no runtime errors occur when Langfuse is not configured. Test both cloud and self-hosted Langfuse configurations.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Fix Langfuse Import Statement",
+            "description": "Fix incorrect import in src/observability/langfuse-tracer.js from '@langfuse/langfuse-js' to 'langfuse' to match the installed Node.js SDK package",
+            "details": "The current code imports from '@langfuse/langfuse-js' which is the browser SDK, but we have 'langfuse' (Node.js SDK) installed. Change line 483: `const { Langfuse } = await import('@langfuse/langfuse-js');` to `const { Langfuse } = await import('langfuse');`",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 1
+          },
+          {
+            "id": 2,
+            "title": "Update .env.example with Langfuse Configuration",
+            "description": "Add Langfuse environment variable template to .env.example file for user guidance",
+            "details": "Add Langfuse configuration section to .env.example with LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST, and LANGFUSE_DEBUG variables with appropriate comments and default values",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 1
+          },
+          {
+            "id": 3,
+            "title": "Test Langfuse Integration",
+            "description": "Verify the corrected Langfuse implementation works correctly with graceful fallback when not configured",
+            "details": "Test that the module loads without errors, isEnabled() correctly detects configuration, getClient() returns null gracefully when not configured, and no runtime errors occur. Test both configured and unconfigured scenarios.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 1
+          },
+          {
+            "id": 4,
+            "title": "Write Unit Tests for Langfuse Tracer",
+            "description": "Create comprehensive unit tests covering environment variable loading, graceful degradation, and cloud/self-hosted configurations",
+            "details": "Write unit tests to verify environment variable loading works correctly, validate graceful degradation when Langfuse credentials are missing, ensure no runtime errors occur when Langfuse is not configured, and test both cloud and self-hosted Langfuse configurations as specified in the task strategy.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 1
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Create Langfuse Tracer Module Core Infrastructure",
+        "description": "Implement the singleton Langfuse tracer module with lazy initialization and async trace submission capabilities",
+        "details": "Create src/observability/langfuse-tracer.js implementing singleton pattern using ES6 modules. Implement lazy initialization that only creates Langfuse client when credentials are present. Use the Langfuse SDK's built-in async methods (trace(), span()) for fire-and-forget submission. Include connection validation, retry logic with exponential backoff, and error boundaries to prevent tracer failures from affecting main application. Implement trace ID generation using crypto.randomUUID() for correlation.",
+        "testStrategy": "Test singleton behavior across multiple imports, verify lazy initialization only occurs with valid credentials, mock Langfuse SDK to test error handling and retry logic, validate async submission doesn't block main thread using performance timers.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement BaseAIProvider Instrumentation Wrapper",
+        "description": "Create non-invasive wrapper pattern to instrument generateText method in BaseAIProvider class with Langfuse tracing",
+        "details": "Modify src/ai-providers/base-provider.js to add tracing hooks. Implement wrapper method that captures start time, wraps the original generateText call in try-catch-finally, records completion time and calculates latency. Extract model name, provider name, token usage from response. Use Langfuse's trace.generation() method to record LLM calls with input/output/metadata. Ensure original error handling and response structure remain unchanged. Add feature flag check before instrumentation.",
+        "testStrategy": "Create integration tests with mock AI providers to verify tracing doesn't alter response structure, test error propagation remains intact, measure performance overhead (should be <5ms), validate traces are created with correct metadata structure.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Add Task Master Context Metadata Collection",
+        "description": "Enhance traces with Task Master specific context including task IDs, commands, tags, and role information",
+        "details": "Extend tracer to capture Task Master context from execution environment. Access current task ID from task-manager module, extract command name from process arguments or MCP context, retrieve current tag using getCurrentTag() function. Implement role detection (main/fallback/research) by analyzing the provider selection logic. Add this metadata to Langfuse traces using the metadata field. Create context extraction utilities that safely handle missing context without errors.",
+        "testStrategy": "Test metadata extraction with various Task Master commands, verify correct task ID association for nested subtasks, validate tag context switching, ensure metadata collection handles null/undefined values gracefully.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Integrate Cost Tracking and Calculation",
+        "description": "Implement cost calculation for AI calls using existing pricing models and add cost metadata to Langfuse traces",
+        "details": "Leverage existing _getCostForModel() function from base-provider.js to calculate costs. Extract input/output token counts from provider responses. Calculate cost in USD and add to trace metadata. Implement cost aggregation helpers that can sum costs by task, session, or time period. Add cost alerts threshold configuration option. Ensure cost calculation handles all 11+ providers including custom models.",
+        "testStrategy": "Verify cost calculations match expected values for each provider/model combination, test edge cases like streaming responses with partial token counts, validate cost aggregation accuracy across multiple traces.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Streaming Response Tracing Support",
+        "description": "Extend tracing capabilities to handle streamText() method with progressive token counting and latency measurement",
+        "details": "Create streaming-aware wrapper for streamText() method. Implement token accumulator that counts tokens as they arrive using provider-specific tokenization. Track first token time (TTFT) and total streaming duration. Use Langfuse's span concept to represent the streaming session with updates. Handle stream interruptions and errors gracefully. Ensure final token count is accurate by parsing the complete response.",
+        "testStrategy": "Test with mock streaming responses of various sizes, verify token counting accuracy during streaming, measure performance impact on stream processing, test error handling for interrupted streams.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Add Object Generation Tracing with Schema Capture",
+        "description": "Implement tracing for generateObject() method including schema information and validation metadata",
+        "details": "Extend instrumentation to generateObject() calls. Capture the Zod schema definition and convert to JSON schema for trace metadata. Track object generation success/failure rates and validation errors. Include generated object size metrics. Add schema version tracking for debugging schema evolution. Implement safe schema serialization that handles circular references.",
+        "testStrategy": "Test with various Zod schema complexities, verify schema serialization doesn't fail on complex types, validate object generation success tracking, ensure sensitive data in generated objects can be excluded.",
+        "priority": "low",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Create Configuration Management Integration",
+        "description": "Integrate Langfuse configuration with Task Master's config-manager.js for advanced settings and feature control",
+        "details": "Extend config-manager.js to support observability configuration section. Implement settings for: enabled flag, sampling rate (0.0-1.0), prompt/response logging toggle, sensitive data redaction patterns, trace batching size. Create configuration validator with sensible defaults. Add CLI commands for enabling/disabling Langfuse integration. Ensure configuration changes take effect without restart.",
+        "testStrategy": "Test configuration loading precedence (env vars > config file), verify sampling rate correctly filters traces, test prompt redaction with regex patterns, validate runtime configuration updates.",
+        "priority": "low",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Trace Correlation and Debugging Utilities",
+        "description": "Build utilities for correlating Langfuse traces with application logs and debugging specific AI interactions",
+        "details": "Add trace ID injection into Task Master's logger output. Create debug command 'tm debug-trace <trace-id>' that fetches and displays trace details from Langfuse API. Implement trace search by task ID or command. Add performance profiling mode that captures detailed timing for each AI operation phase. Create trace export functionality for offline analysis.",
+        "testStrategy": "Verify trace IDs appear in correlated log entries, test debug command with various trace IDs, validate search functionality returns correct traces, ensure export format is compatible with common analysis tools.",
+        "priority": "low",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Add Performance Monitoring and Optimization Features",
+        "description": "Implement advanced performance monitoring including sampling, batching, and metrics aggregation for high-volume scenarios",
+        "details": "Implement adaptive sampling that increases rate for errors/slow requests. Create trace batching with configurable flush intervals (default 5s) and batch size (default 100). Add local metrics aggregation for latency percentiles (p50, p95, p99). Implement circuit breaker pattern for Langfuse submission failures. Add performance dashboard export format compatible with Grafana/Datadog. Create memory-efficient circular buffer for recent traces.",
+        "testStrategy": "Load test with 1000+ concurrent AI calls to verify sampling effectiveness, test batch submission under various network conditions, validate metrics aggregation accuracy, ensure circuit breaker prevents cascade failures.",
+        "priority": "low",
+        "dependencies": [
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-20T05:29:44.844Z",
+      "updated": "2025-06-20T06:02:58.567Z",
+      "description": "Tasks for feat-langfuse-integration context"
     }
-  ],
-  "metadata": {
-    "created": "2025-06-20T05:29:44.844Z",
-    "updated": "2025-06-20T05:30:31.492Z",
-    "description": "Tasks for feat-langfuse-integration context"
   }
 }

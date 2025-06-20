@@ -14,10 +14,9 @@
       "value": "(a|b)"
     },
     {
-      "parameter":/\{a.*\
-      }/,
+      "parameter": "{a.*}",
       "value": "a"
-    },
+    }
   ],
   "cucumberautocomplete.pages": {
     "users": "test/features/page_objects/users.storage.js",
@@ -27,7 +26,7 @@
   "cucumberautocomplete.skipDocStringsFormat": true,
   "cucumberautocomplete.formatConfOverride": {
     "And": 3,
-    "But": "relative",
+    "But": "relative"
   },
   "cucumberautocomplete.onTypeFormat": true,
   "editor.quickSuggestions": {
