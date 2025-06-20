@@ -16,10 +16,10 @@ describe('Langfuse Tracer', () => {
 		originalEnv = process.env;
 
 		// Clear all Langfuse environment variables for clean testing
-		delete process.env.LANGFUSE_SECRET_KEY;
-		delete process.env.LANGFUSE_PUBLIC_KEY;
-		delete process.env.LANGFUSE_HOST;
-		delete process.env.LANGFUSE_DEBUG;
+		process.env.LANGFUSE_SECRET_KEY = undefined;
+		process.env.LANGFUSE_PUBLIC_KEY = undefined;
+		process.env.LANGFUSE_HOST = undefined;
+		process.env.LANGFUSE_DEBUG = undefined;
 
 		// Clear module cache to ensure fresh imports
 		jest.resetModules();
@@ -62,8 +62,8 @@ describe('Langfuse Tracer', () => {
 
 		it('should handle undefined values gracefully', () => {
 			// Setting to undefined actually sets string "undefined", so delete them
-			delete process.env.LANGFUSE_SECRET_KEY;
-			delete process.env.LANGFUSE_PUBLIC_KEY;
+			process.env.LANGFUSE_SECRET_KEY = undefined;
+			process.env.LANGFUSE_PUBLIC_KEY = undefined;
 			expect(tracer.isEnabled()).toBe(false);
 		});
 	});
@@ -232,7 +232,7 @@ describe('Langfuse Tracer', () => {
 		});
 
 		it('should handle debug flag when not set', () => {
-			delete process.env.LANGFUSE_DEBUG;
+			process.env.LANGFUSE_DEBUG = undefined;
 			expect(tracer.isEnabled()).toBe(true);
 		});
 

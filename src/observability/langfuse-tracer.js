@@ -31,8 +31,8 @@
  *    - observability.langfuse.enabled
  */
 
-import { createStandardLogger } from '../utils/logger-utils.js';
 import { getConfig } from '../../scripts/modules/config-manager.js';
+import { createStandardLogger } from '../utils/logger-utils.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();
@@ -67,7 +67,10 @@ function getLangfuseConfig() {
 			enabled: langfuseConfig.enabled
 		};
 	} catch (error) {
-		logger.debug('Could not read config.json for Langfuse configuration:', error.message);
+		logger.debug(
+			'Could not read config.json for Langfuse configuration:',
+			error.message
+		);
 		configValues = {};
 	}
 
@@ -76,7 +79,9 @@ function getLangfuseConfig() {
 		secretKey: envSecretKey || configValues.secretKey,
 		publicKey: envPublicKey || configValues.publicKey,
 		baseUrl: envBaseUrl || configValues.baseUrl || 'https://cloud.langfuse.com',
-		debug: envDebug ? envDebug.toLowerCase() === 'true' : configValues.debug || false,
+		debug: envDebug
+			? envDebug.toLowerCase() === 'true'
+			: configValues.debug || false,
 		enabled: configValues.enabled !== false // Default to true unless explicitly disabled in config
 	};
 }
@@ -88,14 +93,20 @@ function getLangfuseConfig() {
  */
 export function isEnabled() {
 	const config = getLangfuseConfig();
-	
+
 	// Must have both secret and public keys
 	// If env vars are set, ignore config enabled flag (env vars take precedence)
 	// If only config.json is used, respect the enabled flag
-	const hasEnvVars = !!(process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC_KEY);
+	const hasEnvVars = !!(
+		process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC_KEY
+	);
 	const isEnabledInConfig = config.enabled !== false;
-	
-	return !!(config.secretKey && config.publicKey && (hasEnvVars || isEnabledInConfig));
+
+	return !!(
+		config.secretKey &&
+		config.publicKey &&
+		(hasEnvVars || isEnabledInConfig)
+	);
 }
 
 /**
