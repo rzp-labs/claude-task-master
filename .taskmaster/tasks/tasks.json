@@ -170,7 +170,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -196,8 +196,69 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create StreamTraceWrapper utility class",
+            "description": "Implement core streaming wrapper that preserves original stream behavior while adding tracing capabilities",
+            "details": "Create StreamTraceWrapper class with async iterator pattern that wraps AI SDK streams. Implement token accumulation, timing measurement (TTFT, total duration), and progressive Langfuse span updates. Ensure zero impact on original stream functionality with comprehensive error handling.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "Implement TokenCounter utility class",
+            "description": "Create provider-specific token counting with real-time estimation and final verification",
+            "details": "Implement TokenCounter class with word-based estimation for real-time updates during streaming and provider-specific accurate tokenization for final counts. Support OpenAI, Anthropic, and other providers with fallback to word counting. Optimize for performance with <1ms overhead per chunk.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          },
+          {
+            "id": 3,
+            "title": "Extend BaseAIProvider instrumentation for streamText",
+            "description": "Modify _initializeInstrumentation to wrap streamText method following Task 3 pattern",
+            "details": "Extend _initializeInstrumentation() method in BaseAIProvider to add streamText wrapping alongside existing generateText instrumentation. Store original streamText reference and replace with _instrumentedStreamText. Maintain same feature flag checking and zero overhead when disabled. Ensure consistency with Task 3 implementation patterns.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          },
+          {
+            "id": 4,
+            "title": "Implement _instrumentedStreamText method",
+            "description": "Create instrumented wrapper method that integrates StreamTraceWrapper with Langfuse tracing",
+            "details": "Implement _instrumentedStreamText() method following exact pattern from _instrumentedGenerateText. Create Langfuse trace, handle original streamText call, return StreamTraceWrapper instance, and implement comprehensive error handling. Ensure defensive programming - never break original stream behavior even if tracing fails.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          },
+          {
+            "id": 5,
+            "title": "Add comprehensive error handling and stream preservation",
+            "description": "Implement robust error handling that preserves original stream behavior in all scenarios",
+            "details": "Add comprehensive error handling for stream interruptions, network failures, Langfuse API errors, and provider-side issues. Ensure original stream errors propagate unchanged, tracing failures never break streaming, and partial trace data is preserved when possible. Test with error injection scenarios.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          },
+          {
+            "id": 6,
+            "title": "Create comprehensive test suite and performance optimization",
+            "description": "Implement testing strategy with mock streams and performance optimization",
+            "details": "Create comprehensive test suite with mock streaming responses of various sizes, token counting accuracy verification, performance impact measurement, and stream interruption testing. Implement performance optimizations including batched Langfuse updates, memory management for long streams, and ensure <5ms overhead per chunk. Add integration tests with real AI providers.",
+            "status": "in-progress",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 6
+          }
+        ]
       },
       {
         "id": 7,
@@ -256,7 +317,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T06:51:47.393Z",
+      "updated": "2025-06-20T07:28:54.081Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }
