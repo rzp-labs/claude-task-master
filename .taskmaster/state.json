@@ -6,12 +6,5 @@
     "next": "next"
   },
   "migrationNoticeShown": true,
-  "worktrees": {
-    "task-6": {
-      "taskId": "6",
-      "branchName": "task-6",
-      "worktreePath": "/Users/stephen/Projects/MCP/task-master-ai/worktrees/task-6",
-      "createdAt": "2025-06-20T07:14:06.176Z"
-    }
-  }
+  "worktrees": {}
 }

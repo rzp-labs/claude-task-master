@@ -87,3 +87,5 @@ dev-debug.log
 
 # Worktrees
 worktrees/
+
+.taskmaster/state.json
