@@ -17,14 +17,22 @@
  * - flush(): Flush pending traces
  * - shutdown(): Shutdown client and cleanup
  *
- * Environment Variables:
- * - LANGFUSE_SECRET_KEY: Required secret key
- * - LANGFUSE_PUBLIC_KEY: Required public key
- * - LANGFUSE_HOST: Optional host URL (defaults to cloud.langfuse.com)
- * - LANGFUSE_DEBUG: Optional debug flag
+ * Configuration Sources (in order of precedence):
+ * 1. Environment Variables:
+ *    - LANGFUSE_SECRET_KEY: Required secret key
+ *    - LANGFUSE_PUBLIC_KEY: Required public key
+ *    - LANGFUSE_HOST: Optional host URL (defaults to cloud.langfuse.com)
+ *    - LANGFUSE_DEBUG: Optional debug flag
+ * 2. Task Master config.json:
+ *    - observability.langfuse.secretKey
+ *    - observability.langfuse.publicKey
+ *    - observability.langfuse.host
+ *    - observability.langfuse.debug
+ *    - observability.langfuse.enabled
  */
 
 import { createStandardLogger } from '../utils/logger-utils.js';
+import { getConfig } from '../../scripts/modules/config-manager.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();
@@ -35,14 +43,59 @@ let initializationAttempted = false;
 let initializationError = null;
 
 /**
- * Check if Langfuse is enabled by validating required environment variables
+ * Get Langfuse configuration from environment variables and config.json
+ * Environment variables take precedence over config.json
+ * @returns {Object} Configuration object with secretKey, publicKey, host, debug, enabled
+ */
+function getLangfuseConfig() {
+	// Try environment variables first (highest precedence)
+	const envSecretKey = process.env.LANGFUSE_SECRET_KEY;
+	const envPublicKey = process.env.LANGFUSE_PUBLIC_KEY;
+	const envHost = process.env.LANGFUSE_HOST;
+	const envDebug = process.env.LANGFUSE_DEBUG;
+
+	// Try config.json as fallback
+	let configValues = {};
+	try {
+		const config = getConfig();
+		const langfuseConfig = config?.observability?.langfuse || {};
+		configValues = {
+			secretKey: langfuseConfig.secretKey,
+			publicKey: langfuseConfig.publicKey,
+			host: langfuseConfig.host,
+			debug: langfuseConfig.debug,
+			enabled: langfuseConfig.enabled
+		};
+	} catch (error) {
+		logger.debug('Could not read config.json for Langfuse configuration:', error.message);
+		configValues = {};
+	}
+
+	// Merge with environment variables taking precedence
+	return {
+		secretKey: envSecretKey || configValues.secretKey,
+		publicKey: envPublicKey || configValues.publicKey,
+		host: envHost || configValues.host || 'https://cloud.langfuse.com',
+		debug: envDebug ? envDebug.toLowerCase() === 'true' : configValues.debug || false,
+		enabled: configValues.enabled !== false // Default to true unless explicitly disabled in config
+	};
+}
+
+/**
+ * Check if Langfuse is enabled by validating required configuration
+ * Checks both environment variables and config.json
  * @returns {boolean} True if Langfuse is properly configured, false otherwise
  */
 export function isEnabled() {
-	const secretKey = process.env.LANGFUSE_SECRET_KEY;
-	const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
-
-	return !!(secretKey && publicKey);
+	const config = getLangfuseConfig();
+	
+	// Must have both secret and public keys
+	// If env vars are set, ignore config enabled flag (env vars take precedence)
+	// If only config.json is used, respect the enabled flag
+	const hasEnvVars = !!(process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC_KEY);
+	const isEnabledInConfig = config.enabled !== false;
+	
+	return !!(config.secretKey && config.publicKey && (hasEnvVars || isEnabledInConfig));
 }
 
 /**
@@ -216,23 +269,22 @@ async function initializeLangfuseClient() {
 		// Dynamic import to avoid requiring Langfuse when not needed
 		const { Langfuse } = await import('langfuse');
 
-		const secretKey = process.env.LANGFUSE_SECRET_KEY;
-		const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
-		const baseUrl = process.env.LANGFUSE_HOST || 'https://cloud.langfuse.com';
+		// Get configuration from both env vars and config.json
+		const config = getLangfuseConfig();
 
 		langfuseClient = new Langfuse({
-			secretKey,
-			publicKey,
-			baseUrl,
+			secretKey: config.secretKey,
+			publicKey: config.publicKey,
+			baseUrl: config.host,
 			flushAt: 20,
 			flushInterval: 10000,
 			requestTimeout: 30000,
-			debug: process.env.LANGFUSE_DEBUG === 'true'
+			debug: config.debug
 		});
 
 		logger.info('Langfuse client initialized successfully', {
-			baseUrl,
-			debug: process.env.LANGFUSE_DEBUG === 'true'
+			baseUrl: config.host,
+			debug: config.debug
 		});
 
 		return langfuseClient;

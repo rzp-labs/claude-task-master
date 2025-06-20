@@ -84,3 +84,6 @@ dev-debug.log
 
 # NPMRC
 .npmrc
+
+# Worktrees
+worktrees/

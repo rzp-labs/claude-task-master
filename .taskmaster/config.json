@@ -33,5 +33,14 @@
 	},
 	"features": {
 		"worktrees": true
+	},
+	"observability": {
+		"langfuse": {
+			"enabled": false,
+			"secretKey": null,
+			"publicKey": null,
+			"host": "https://cloud.langfuse.com",
+			"debug": false
+		}
 	}
 }

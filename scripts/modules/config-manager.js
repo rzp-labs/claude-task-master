@@ -128,7 +128,13 @@ function _loadAndValidateConfig(explicitRoot = null) {
 							: { ...defaults.models.fallback }
 				},
 				global: { ...defaults.global, ...parsedConfig?.global },
-				features: { ...defaults.features, ...parsedConfig?.features }
+				features: { ...defaults.features, ...parsedConfig?.features },
+				// Include any additional top-level sections from the config file
+				...Object.fromEntries(
+					Object.entries(parsedConfig || {}).filter(([key]) => 
+						!['models', 'global', 'features'].includes(key)
+					)
+				)
 			};
 			configSource = `file (${configPath})`; // Update source info
 
