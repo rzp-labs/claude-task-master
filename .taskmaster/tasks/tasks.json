@@ -76,8 +76,89 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Import Langfuse Dependencies",
+            "description": "Add imports for langfuse-tracer functions (isEnabled, createTrace) and any config utilities needed for feature flags",
+            "details": "Import required functions from src/observability/langfuse-tracer.js in base-provider.js. Verify import paths are correct and functions are available.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 2,
+            "title": "Add Instrumentation Initialization",
+            "description": "Create _initializeInstrumentation() method called from BaseAIProvider constructor to set up tracing",
+            "details": "Add private method that checks if Langfuse is enabled and prepares instrumentation. This method should be called during constructor initialization.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 3,
+            "title": "Implement Method Wrapping Logic",
+            "description": "Store reference to original generateText method and replace with instrumented version",
+            "details": "Implement the decorator pattern: store original method reference and replace this.generateText with instrumented wrapper. Ensure method signature remains identical.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 4,
+            "title": "Create Instrumented generateText Method",
+            "description": "Build the wrapper method that creates Langfuse traces and calls original method",
+            "details": "Create _instrumentedGenerateText that creates trace, calls original method in try-catch-finally, and uses trace.generation() to record LLM call details.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 5,
+            "title": "Add Timing and Metadata Capture",
+            "description": "Implement performance monitoring and metadata extraction for traces",
+            "details": "Capture start/end times, calculate latency, extract model name, provider name, input/output, and token usage. Use high-resolution timing for accuracy.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 6,
+            "title": "Implement Error Handling Preservation",
+            "description": "Ensure exact error behavior is maintained while adding tracing",
+            "details": "Preserve all original error types and messages. Catch and log Langfuse errors without propagating them. Ensure original operation succeeds even if tracing fails.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 7,
+            "title": "Add Feature Flag Integration",
+            "description": "Make instrumentation toggleable based on Langfuse configuration",
+            "details": "Use isEnabled() check to conditionally activate instrumentation. Ensure zero overhead when disabled. Test both enabled and disabled states.",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          },
+          {
+            "id": 8,
+            "title": "Add Integration Tests",
+            "description": "Verify functionality and performance of instrumentation wrapper",
+            "details": "Create tests with mock AI providers to verify tracing doesn't alter responses, error propagation works, and performance overhead is minimal (<5ms).",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 3
+          }
+        ]
       },
       {
         "id": 4,
@@ -175,7 +256,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T06:31:04.923Z",
+      "updated": "2025-06-20T06:51:47.393Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }
