@@ -1,6 +1,6 @@
 import { generateObject, generateText, streamText } from 'ai';
 import { log } from '../../scripts/init.js';
-import { isEnabled, createTrace } from '../observability/langfuse-tracer.js';
+import { createTrace, isEnabled } from '../observability/langfuse-tracer.js';
 
 /**
  * Base class for all AI providers
@@ -239,38 +239,71 @@ export class BaseAIProvider {
 		try {
 			// Create Langfuse trace for this generation (never throw on failure)
 			try {
+				// Prepare base metadata
+				const traceMetadata = {
+					provider: this.name,
+					model: params.modelId,
+					temperature: params.temperature,
+					maxTokens: params.maxTokens
+				};
+
+				// Add Task Master context if available
+				if (params.taskMasterContext) {
+					traceMetadata.taskMaster = {
+						taskId: params.taskMasterContext.taskId,
+						tag: params.taskMasterContext.tag,
+						command: params.taskMasterContext.command,
+						role: params.taskMasterContext.role,
+						projectRoot: params.taskMasterContext.projectRoot
+					};
+				}
+
 				trace = await createTrace({
 					name: `${this.name} generateText`,
-					metadata: {
-						provider: this.name,
-						model: params.modelId,
-						temperature: params.temperature,
-						maxTokens: params.maxTokens
-					},
+					metadata: traceMetadata,
 					tags: ['ai-generation', 'generateText', this.name.toLowerCase()]
 				});
 			} catch (traceError) {
 				// Log but never propagate Langfuse trace creation errors
-				log('debug', `${this.name} Langfuse trace creation failed: ${traceError.message}`);
+				log(
+					'debug',
+					`${this.name} Langfuse trace creation failed: ${traceError.message}`
+				);
 				trace = null;
 			}
 
 			// Create generation within the trace if trace was created successfully
 			if (trace) {
 				try {
+					// Prepare generation metadata
+					const generationMetadata = {
+						provider: this.name,
+						temperature: params.temperature,
+						maxTokens: params.maxTokens
+					};
+
+					// Add Task Master context to generation metadata if available
+					if (params.taskMasterContext) {
+						generationMetadata.taskMaster = {
+							taskId: params.taskMasterContext.taskId,
+							tag: params.taskMasterContext.tag,
+							command: params.taskMasterContext.command,
+							role: params.taskMasterContext.role
+						};
+					}
+
 					generation = trace.generation({
 						name: `${this.name}-${params.modelId}`,
 						model: params.modelId,
 						input: params.messages,
-						metadata: {
-							provider: this.name,
-							temperature: params.temperature,
-							maxTokens: params.maxTokens
-						}
+						metadata: generationMetadata
 					});
 				} catch (generationError) {
 					// Log but never propagate Langfuse generation creation errors
-					log('debug', `${this.name} Langfuse generation creation failed: ${generationError.message}`);
+					log(
+						'debug',
+						`${this.name} Langfuse generation creation failed: ${generationError.message}`
+					);
 					generation = null;
 				}
 			}
@@ -298,12 +331,14 @@ export class BaseAIProvider {
 					});
 				} catch (endError) {
 					// Log but never propagate Langfuse generation end errors
-					log('debug', `${this.name} Langfuse generation end failed: ${endError.message}`);
+					log(
+						'debug',
+						`${this.name} Langfuse generation end failed: ${endError.message}`
+					);
 				}
 			}
 
 			return result;
-
 		} catch (err) {
 			error = err;
 
@@ -324,24 +359,27 @@ export class BaseAIProvider {
 					});
 				} catch (endError) {
 					// Log but never propagate Langfuse generation end errors
-					log('debug', `${this.name} Langfuse error generation end failed: ${endError.message}`);
+					log(
+						'debug',
+						`${this.name} Langfuse error generation end failed: ${endError.message}`
+					);
 				}
 			}
 
 			// Re-throw the original error to preserve exact error handling behavior
 			throw err;
-
 		} finally {
 			// Log tracing attempt for debugging (only if trace was attempted)
 			if (trace) {
 				const endTime = performance.now();
 				const latencyMs = endTime - startTime;
-				
-				log('debug', 
+
+				log(
+					'debug',
 					`${this.name} generateText trace recorded - ` +
-					`latency: ${Math.round(latencyMs)}ms, ` +
-					`success: ${!error}, ` +
-					`model: ${params.modelId}`
+						`latency: ${Math.round(latencyMs)}ms, ` +
+						`success: ${!error}, ` +
+						`model: ${params.modelId}`
 				);
 			}
 		}
@@ -356,22 +394,31 @@ export class BaseAIProvider {
 	_initializeInstrumentation() {
 		// Check if Langfuse is enabled (feature flag check)
 		if (!isEnabled()) {
-			log('debug', `${this.name} Langfuse instrumentation disabled - skipping initialization`);
+			log(
+				'debug',
+				`${this.name} Langfuse instrumentation disabled - skipping initialization`
+			);
 			this._instrumentationEnabled = false;
 			return; // Zero overhead when disabled - no method wrapping occurs
 		}
 
-		log('debug', `${this.name} Langfuse instrumentation enabled - wrapping generateText method`);
-		
+		log(
+			'debug',
+			`${this.name} Langfuse instrumentation enabled - wrapping generateText method`
+		);
+
 		// Store reference to original generateText method
 		this._originalGenerateText = this.generateText.bind(this);
-		
+
 		// Replace generateText with instrumented version
 		this.generateText = this._instrumentedGenerateText.bind(this);
-		
+
 		// Set flag to indicate instrumentation is active
 		this._instrumentationEnabled = true;
-		
-		log('debug', `${this.name} generateText method successfully wrapped with Langfuse instrumentation`);
+
+		log(
+			'debug',
+			`${this.name} generateText method successfully wrapped with Langfuse instrumentation`
+		);
 	}
 }

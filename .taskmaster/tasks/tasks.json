@@ -170,8 +170,49 @@
         "dependencies": [
           3
         ],
-        "status": "in-progress",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TaskMasterContextExtractor utility class",
+            "description": "Implement safe context extraction utility for Task Master specific metadata including task ID, current tag, command name, and role information",
+            "details": "Create src/observability/task-master-context-extractor.js with methods to safely extract context from various sources:\n- extractTaskId(): Try command args, git branch pattern (task-N), state files\n- extractCurrentTag(): Use existing getCurrentTag() utility\n- extractCommand(): Parse from process.argv or MCP tool name  \n- extractContext(): Main method that safely orchestrates all extractions\nReturn standardized context object with graceful error handling",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 4
+          },
+          {
+            "id": 2,
+            "title": "Enhance ai-services-unified.js with context collection",
+            "description": "Modify ai-services-unified.js to collect Task Master context before provider calls and pass it through options parameter",
+            "details": "Modify scripts/modules/ai-services-unified.js:\n- Import TaskMasterContextExtractor\n- In _unifiedServiceRunner(), extract Task Master context using available info (role, commandName, projectRoot)\n- Pass context through options.taskMasterContext to provider calls\n- Maintain backward compatibility and error handling",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 4
+          },
+          {
+            "id": 3,
+            "title": "Enhance base-provider.js instrumentation with Task Master metadata",
+            "description": "Modify base provider instrumentation to include Task Master context in Langfuse trace metadata",
+            "details": "Modify src/ai-providers/base-provider.js:\n- In _instrumentedGenerateText(), check for options.taskMasterContext\n- Add Task Master metadata to trace creation: taskId, tag, command, role\n- Ensure backward compatibility when context is not available\n- Maintain existing error handling and performance characteristics",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 4
+          },
+          {
+            "id": 4,
+            "title": "Test and validate Task Master context metadata collection",
+            "description": "Comprehensive testing of metadata collection across various Task Master commands, tag contexts, and execution scenarios",
+            "details": "Test the implementation across different scenarios:\n- CLI commands with task context (task-start, task-update, etc.)\n- MCP operations with various task IDs and nested subtasks  \n- Tag switching scenarios to verify current tag detection\n- Error handling with missing/null context values\n- Verify metadata appears correctly in Langfuse traces\n- Performance impact assessment",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 4
+          }
+        ]
       },
       {
         "id": 5,
