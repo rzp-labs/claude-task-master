@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import dotenv from 'dotenv';
 import TaskMasterMCPServer from './src/index.js';
 import logger from './src/logger.js';

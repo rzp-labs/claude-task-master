@@ -5,11 +5,11 @@
 
 import {
 	checkCostThresholds,
-	getSessionCostSummary,
-	getDailyCostSummary,
-	resetSessionCosts,
-	resetDailyCosts,
 	formatCostAlert,
+	getDailyCostSummary,
+	getSessionCostSummary,
+	resetDailyCosts,
+	resetSessionCosts,
 	shouldSkipCostTracking
 } from '../../../src/utils/cost-monitor.js';
 
@@ -151,8 +151,8 @@ describe('cost-monitor', () => {
 			expect(summary.total).toBe(0.5);
 			expect(summary.byTask['task-1']).toBe(0.2);
 			expect(summary.byTask['task-2']).toBe(0.3);
-			expect(summary.byProvider['anthropic']).toBe(0.2);
-			expect(summary.byProvider['openai']).toBe(0.3);
+			expect(summary.byProvider.anthropic).toBe(0.2);
+			expect(summary.byProvider.openai).toBe(0.3);
 		});
 
 		test('should reset session costs', () => {

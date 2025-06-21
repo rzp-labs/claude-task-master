@@ -4,11 +4,11 @@
  */
 
 import {
-	getSessionCostSummary,
+	formatCostAlert,
 	getDailyCostSummary,
-	resetSessionCosts,
+	getSessionCostSummary,
 	resetDailyCosts,
-	formatCostAlert
+	resetSessionCosts
 } from '../../../src/utils/cost-monitor.js';
 
 describe('cost-monitor basic functionality', () => {

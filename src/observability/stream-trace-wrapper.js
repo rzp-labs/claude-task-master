@@ -7,12 +7,12 @@
  * @module StreamTraceWrapper
  */
 
-import { createStandardLogger } from '../utils/logger-utils.js';
 import { calculateAiCost } from '../utils/cost-calculator.js';
 import {
 	checkCostThresholds,
 	shouldSkipCostTracking
 } from '../utils/cost-monitor.js';
+import { createStandardLogger } from '../utils/logger-utils.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();

@@ -4,12 +4,12 @@
  */
 
 import {
-	getCostsByTask,
-	getCostsBySession,
-	getCostsByTimeRange,
-	getCurrentSessionCosts,
 	aggregateTraceCosts,
-	formatCostSummary
+	formatCostSummary,
+	getCostsBySession,
+	getCostsByTask,
+	getCostsByTimeRange,
+	getCurrentSessionCosts
 } from '../../../src/utils/cost-aggregator.js';
 
 describe('cost-aggregator', () => {

@@ -105,7 +105,6 @@ class ConfigurationError extends Error {
 	}
 }
 
-
 function _loadAndValidateConfig(explicitRoot = null) {
 	const defaults = DEFAULTS; // Use the defined defaults
 	let rootToUse = explicitRoot;
@@ -178,7 +177,7 @@ function _loadAndValidateConfig(explicitRoot = null) {
 					)
 				)
 			};
-			
+
 			configSource = `file (${configPath})`; // Update source info
 
 			// Issue deprecation warning if using legacy config file
@@ -631,6 +630,59 @@ function reloadLangfuseConfig(explicitRoot = null) {
 			chalk.red(`Error reloading Langfuse configuration: ${error.message}`)
 		);
 		return false;
+	}
+}
+
+/**
+ * Updates a specific configuration value using dot notation
+ * @param {string} path - Dot notation path to the config value (e.g., 'observability.langfuse.enabled')
+ * @param {*} value - New value to set
+ * @param {string|null} explicitRoot - Optional explicit path to the project root  
+ * @returns {object} Result object with success/error
+
+ */
+function updateConfigValue(path, value, explicitRoot = null) {
+	try {
+		const currentConfig = getConfig(explicitRoot);
+
+		// Split the path into parts
+		const pathParts = path.split('.');
+
+		// Navigate to the parent object
+		let current = currentConfig;
+		for (let i = 0; i < pathParts.length - 1; i++) {
+			if (!current[pathParts[i]]) {
+				current[pathParts[i]] = {};
+			}
+			current = current[pathParts[i]];
+		}
+
+		// Set the value
+		const lastKey = pathParts[pathParts.length - 1];
+		current[lastKey] = value;
+
+		// Write the updated configuration
+		const writeResult = writeConfig(currentConfig, explicitRoot);
+		if (!writeResult) {
+			return {
+				success: false,
+				error: 'Failed to write updated configuration'
+			};
+		}
+
+		return {
+			success: true,
+			data: {
+				path,
+				value,
+				message: `Successfully updated ${path} to ${JSON.stringify(value)}`
+			}
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error.message
+		};
 	}
 }
 
@@ -1092,6 +1144,7 @@ export {
 	getLangfuseRedactionPatterns,
 	getLangfuseBatchSize,
 	reloadLangfuseConfig,
+	updateConfigValue,
 	// API Key Checkers (still relevant)
 	isApiKeySet,
 	getMcpApiKeyStatus,

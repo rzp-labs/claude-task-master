@@ -121,12 +121,20 @@ All MCP tools are prefixed with their server name (e.g., `mcp__taskmaster-ai__`)
 - **`mcp__repomix__pack_remote_repository`** - Generate an XML file of a remote repository for efficient search
 - **`mcp__repomix__grep_repomix_output`** - Search for patterns in packed codebase using regex
 - **`mcp__repomix__read_repomix_output`** - Read contents of packed codebase with optional line ranges
-- **`mcp__repomix__file_system_read_directory`** - List directory contents with file/folder indicators
-- **`mcp__repomix__file_system_read_file`** - Read individual files with security validation
+- **`mcp__repomix__file_system_read_directory`** - List directory contents with file/folder indicators (allows search for .gitignored files directories)
+- **`mcp__repomix__file_system_read_file`** - Read individual files with security validation (allows search for for .gitignored files)
 - **`mcp__code-reasoning__code-reasoning`** - Code reasoning and analysis
 - **`mcp__sequential-thinking__sequentialthinking`** - Sequential thinking for complex problems
 - **`mcp__perplexity-ask__perplexity_ask`** - Perplexity AI integration
 - **`mcp__context7__resolve-library-id`** / **`get-library-docs`** - Library documentation
+
+#### Language Server Tools (`mcp__language-server__`)
+
+> **Use for diagnostics and complex text editing**
+
+- **`get_diagnostics`** - Get real-time linting errors, warnings, and type errors from language servers
+- **`get_codelens`** / **`execute_codelens`** - Code lens hints and execution (run tests, reference counts, etc.)
+- **`apply_text_edit`** - Advanced text editing with regex support and bracket balancing protection
 
 #### File System & Code Operations (`mcp__serena__`)
 
@@ -154,7 +162,7 @@ All MCP tools are prefixed with their server name (e.g., `mcp__taskmaster-ai__`)
 
 - **`replace_symbol_body`** - Replace the body of a specific symbol
 - **`insert_after_symbol`** / **`insert_before_symbol`** - Insert code relative to symbols
-- **`replace_regex`** - Replace content using regular expressions
+
 - **`delete_lines`** / **`replace_lines`** / **`insert_at_line`** - Line-based editing
 
 **Memory & Context Management**
@@ -165,9 +173,9 @@ All MCP tools are prefixed with their server name (e.g., `mcp__taskmaster-ai__`)
 - **`think_about_whether_you_are_done`** - Assess task completion
 - **`summarize_changes`** - Summarize codebase modifications
 
-> **should ONLY be used when another tool cannot complete the needed action**
+**Shell Command Execution (DISABLED)**
 
-- **`execute_shell_command`** - Run terminal commands with output capture
+- **`execute_shell_command`** - DISABLED in favor of native Bash with granular permissions
 
 #### Task Master Tools (`mcp__taskmaster-ai__`)
 
@@ -196,7 +204,7 @@ Task management and AI-powered project organization:
 
 **Single Subtask Operations**
 
-- **`add_subtask`** - Add subtasks to existing tasks
+- **`add_subtask`** - DISABLED (bug: wipes tag structure when used)
 - **`update_subtask`** - Append timestamped info to subtasks
 - **`remove_subtask`** - Remove subtask from parent
 
@@ -349,3 +357,53 @@ Key API keys are loaded from environment:
 - `MISTRAL_API_KEY`
 - `AZURE_OPENAI_API_KEY`
 - `OLLAMA_API_KEY`
+
+## Tool Permission Strategy
+
+The project uses a carefully configured permission system to optimize tool usage and maintain security:
+
+### Tool Hierarchy
+
+**Diagnostics & Analysis**
+
+- `mcp__language-server__get_diagnostics` - Real-time linting errors and warnings
+- `mcp__language-server__get_codelens` / `execute_codelens` - Interactive code features
+
+**Search & Discovery**
+
+- `mcp__repomix__*` tools for efficient codebase search and analysis
+- `mcp__serena__search_for_pattern` for targeted regex searches
+- `mcp__serena__find_symbol` / `find_referencing_symbols` for code intelligence
+
+**File Operations**
+
+- `mcp__serena__read_file` / `list_dir` for normal project files (auto-approved)
+- `mcp__repomix__file_system_read_file` for .gitignored files (requires approval)
+
+**Code Editing**
+
+- `mcp__language-server__apply_text_edit` for complex edits with bracket protection
+- `mcp__serena__replace_symbol_body` / `insert_*_symbol` for semantic editing
+- `mcp__serena__replace_lines` / `delete_lines` for line-based edits
+
+### Permission Levels
+
+**Auto-Approved Tools**
+
+- Project-aware operations (Serena file/symbol tools)
+- Safe analysis tools (repomix search, diagnostics)
+- Controlled shell commands (formatting, testing)
+
+**Requires Approval**
+
+- .gitignored file access (repomix file tools)
+- Delete operations (all MCP servers)
+- Git worktree operations (blocked via Bash)
+
+**Blocked Tools**
+
+- Redundant native tools (Read, Edit, Grep, etc.)
+- Unsafe shell patterns (git worktree, find, grep via Bash)
+- Overlapping functionality (serena regex, language-server symbol tools)
+
+This configuration ensures efficient workflows while maintaining security boundaries.

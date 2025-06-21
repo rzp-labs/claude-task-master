@@ -7,8 +7,8 @@
 
 import { log } from '../../scripts/init.js';
 import {
-	isCostAlertsEnabled,
-	getCostAlertThresholds
+	getCostAlertThresholds,
+	isCostAlertsEnabled
 } from '../../scripts/modules/config-manager.js';
 
 // Session-level cost tracking

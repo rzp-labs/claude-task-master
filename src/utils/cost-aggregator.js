@@ -5,8 +5,8 @@
  * Provides functions to aggregate costs by task, session, or time period.
  */
 
-import { getClient } from '../observability/langfuse-tracer.js';
 import { log } from '../../scripts/init.js';
+import { getClient } from '../observability/langfuse-tracer.js';
 
 /**
  * Get total costs for a specific task by querying Langfuse traces
@@ -105,7 +105,7 @@ export async function getCostsByTimeRange(startDate, endDate) {
 		const start = new Date(startDate);
 		const end = new Date(endDate);
 
-		if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+		if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
 			log('debug', 'getCostsByTimeRange: Invalid date parameters');
 			return createEmptyCostSummary('Invalid date parameters');
 		}

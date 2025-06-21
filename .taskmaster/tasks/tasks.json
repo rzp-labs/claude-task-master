@@ -442,7 +442,7 @@
             "title": "Add CLI Commands",
             "description": "Implement CLI commands for Langfuse configuration management",
             "details": "Add 'langfuse' command group to commands.js with subcommands: enable, disable, config, setup. Follow existing command patterns from models commands. Implement handlers for each command that read/write configuration, validate settings, trigger runtime reloads, and provide user feedback. Include help text and error handling.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "testStrategy": "",
             "parentTaskId": 8
@@ -486,61 +486,11 @@
         ],
         "status": "pending",
         "subtasks": []
-      },
-      {
-        "id": 11,
-        "title": "Test Langfuse Tracing Integration",
-        "description": "Create comprehensive test suite to validate Langfuse tracing functionality across all AI operations and configuration scenarios",
-        "details": "Implement end-to-end integration tests that validate the complete Langfuse tracing pipeline. Create test scenarios for: basic AI operations (generate, stream, object generation) with trace validation, configuration management integration testing, error handling and fallback scenarios, performance under load conditions, and trace correlation with application logs. Use Jest with async/await patterns to test trace submission and retrieval. Mock Langfuse API responses to test various network conditions and error states. Implement test utilities to verify trace data integrity, timing accuracy, and proper metadata capture. Create automated tests that run against both cloud and self-hosted Langfuse instances. Include tests for sampling behavior, batching efficiency, and circuit breaker functionality. Add integration tests that validate trace IDs appear in logs and debug commands work correctly.",
-        "testStrategy": "Set up test environment with mock Langfuse instance and test API keys. Create test harnesses for each AI operation type (generate, stream, object). Verify traces are created with correct metadata, timing, and token counts. Test configuration scenarios including missing credentials, invalid settings, and runtime configuration changes. Validate error scenarios don't break tracing or main application flow. Use performance testing to ensure tracing overhead is minimal (<5ms per operation). Test trace retrieval and debugging utilities with various trace IDs. Verify sampling and batching work under simulated high-load conditions. Include tests for trace correlation by checking log output contains expected trace IDs.",
-        "status": "pending",
-        "dependencies": [
-          2,
-          6,
-          8,
-          9,
-          10
-        ],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 12,
-        "title": "Implement Dark Mode for Web Dashboard",
-        "description": "Add dark mode toggle functionality to the web dashboard with persistent user preference storage and comprehensive theming across all UI components.",
-        "details": "Create a dark mode system that includes: CSS custom properties for light/dark theme variables (colors, backgrounds, borders, shadows). Implement theme toggle component with sun/moon icon that persists preference in localStorage. Update all existing components to use CSS custom properties instead of hardcoded colors. Add smooth transitions between theme switches. Ensure proper contrast ratios for accessibility (WCAG AA compliance). Create theme provider context for React components if applicable. Handle system preference detection using prefers-color-scheme media query. Update charts, graphs, and data visualizations to work with both themes. Ensure all interactive elements (buttons, inputs, dropdowns) have appropriate hover/focus states in both modes.",
-        "testStrategy": "Test theme toggle functionality persists across browser sessions, verify all UI components render correctly in both light and dark modes, validate color contrast ratios meet accessibility standards using automated tools, test system preference detection works on initial load, ensure smooth transitions occur without layout shifts, verify data visualizations remain readable in both themes, test with various browser configurations and screen readers.",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 13,
-        "title": "Test",
-        "description": "Test desc",
-        "details": "",
-        "testStrategy": "",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 14,
-        "title": "Test Langfuse",
-        "description": "Testing observability",
-        "details": "",
-        "testStrategy": "",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-20T22:36:30.529Z",
+      "updated": "2025-06-21T20:38:28.054Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

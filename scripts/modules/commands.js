@@ -3499,6 +3499,96 @@ Examples:
 		});
 
 	// move-task command
+	// langfuse command
+	programInstance
+		.command('langfuse')
+		.description('Manage Langfuse observability configuration')
+		.option('--enable', 'Enable Langfuse integration')
+		.option('--disable', 'Disable Langfuse integration')
+		.option('--config', 'Display current Langfuse configuration')
+		.addHelpText(
+			'after',
+			`
+Examples:
+  $ task-master langfuse                           # View current configuration
+  $ task-master langfuse --enable                 # Enable Langfuse integration
+  $ task-master langfuse --disable                # Disable Langfuse integration`
+		)
+		.action(async (options) => {
+			const projectRoot = findProjectRoot();
+			if (!projectRoot) {
+				console.error(chalk.red('Error: Could not find project root.'));
+				process.exit(1);
+			}
+
+			try {
+				const { getLangfuseConfig, updateConfigValue, reloadLangfuseConfig } =
+					await import('./config-manager.js');
+
+				if (options.enable) {
+					console.log(chalk.blue('Enabling Langfuse integration...'));
+					const result = await updateConfigValue(
+						projectRoot,
+						'observability.langfuse.enabled',
+						true
+					);
+					if (result.success) {
+						console.log(
+							chalk.green('✅ Langfuse integration enabled successfully')
+						);
+						reloadLangfuseConfig(projectRoot);
+					} else {
+						console.error(
+							chalk.red(`❌ Error enabling Langfuse: ${result.error}`)
+						);
+					}
+					return;
+				}
+
+				if (options.disable) {
+					console.log(chalk.blue('Disabling Langfuse integration...'));
+					const result = await updateConfigValue(
+						projectRoot,
+						'observability.langfuse.enabled',
+						false
+					);
+					if (result.success) {
+						console.log(
+							chalk.green('✅ Langfuse integration disabled successfully')
+						);
+						reloadLangfuseConfig(projectRoot);
+					} else {
+						console.error(
+							chalk.red(`❌ Error disabling Langfuse: ${result.error}`)
+						);
+					}
+					return;
+				}
+
+				// Default: Display current configuration
+				const config = getLangfuseConfig(projectRoot);
+				console.log(chalk.blue.bold('\n🔍 Langfuse Configuration'));
+				console.log(chalk.blue('━'.repeat(50)));
+				console.log(
+					`${chalk.yellow('Enabled:')} ${config.enabled ? chalk.green('Yes') : chalk.red('No')}`
+				);
+				console.log(
+					`${chalk.yellow('Base URL:')} ${config.baseUrl || 'Not set'}`
+				);
+				console.log(
+					`${chalk.yellow('Public Key:')} ${config.publicKey ? chalk.green('Set') : chalk.red('Not set')}`
+				);
+				console.log(
+					`${chalk.yellow('Secret Key:')} ${config.secretKey ? chalk.green('Set') : chalk.red('Not set')}`
+				);
+				console.log('');
+			} catch (error) {
+				console.error(
+					chalk.red(`Error managing Langfuse configuration: ${error.message}`)
+				);
+				process.exit(1);
+			}
+		});
 	programInstance
 		.command('move')
 		.description('Move a task or subtask to a new position')

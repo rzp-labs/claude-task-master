@@ -57,11 +57,11 @@ jest.mock('ai', () => ({
 	)
 }));
 
-import {
-	isEnabled,
-	createTrace
-} from '../../src/observability/langfuse-tracer.js';
 import { generateText } from 'ai';
+import {
+	createTrace,
+	isEnabled
+} from '../../src/observability/langfuse-tracer.js';
 
 describe('Cost Tracking Integration', () => {
 	// Test provider implementation

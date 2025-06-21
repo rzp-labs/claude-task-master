@@ -3,12 +3,12 @@
  * Tests handling of custom models, unknown providers, and edge scenarios
  */
 
+import { aggregateTraceCosts } from '../../src/utils/cost-aggregator.js';
 import { calculateAiCost } from '../../src/utils/cost-calculator.js';
 import {
 	checkCostThresholds,
 	shouldSkipCostTracking
 } from '../../src/utils/cost-monitor.js';
-import { aggregateTraceCosts } from '../../src/utils/cost-aggregator.js';
 
 // Mock config manager for edge case testing
 jest.mock('../../scripts/modules/config-manager.js', () => ({
