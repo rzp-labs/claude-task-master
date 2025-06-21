@@ -1,95 +1,95 @@
 {
-	"mcpServers": {
-		"language-server": {
-			"command": "/Users/stephen/Projects/MCP/mcp-language-server/mcp-language-server",
-			"args": [
-				"-workspace",
-				"/Users/stephen/Projects/MCP/task-master-ai",
-				"-lsp",
-				"typescript-language-server",
-				"--",
-				"--stdio"
-			],
-			"cwd": "/Users/stephen/Projects/MCP/mcp-language-server",
-			"env": {
-				"DEBUG": "1"
-			}
-		},
-		"serena": {
-			"type": "stdio",
-			"command": "/Users/stephen/.local/bin/uv",
-			"args": [
-				"run",
-				"--directory",
-				"/Users/stephen/Projects/MCP/serena",
-				"serena-mcp-server",
-				"--context",
-				"agent",
-				"-- mode",
-				"editing"
-			],
-			"env": {}
-		},
-		"conport": {
-			"type": "stdio",
-			"command": "/Users/stephen/Projects/MCP/context-portal/.venv/bin/python",
-			"args": [
-				"-m",
-				"context_portal_mcp.main",
-				"--mode",
-				"stdio",
-				"--workspace_id",
-				"/Users/stephen/Projects/MCP/task-master-ai",
-				"--log-file",
-				"./logs/conport.log",
-				"--log-level",
-				"INFO"
-			]
-		},
-		"repomix": {
-			"type": "stdio",
-			"command": "npx",
-			"args": ["-y", "repomix", "--mcp"],
-			"env": {}
-		},
-		"code-reasoning": {
-			"command": "npx",
-			"args": ["-y", "@mettamatt/code-reasoning"]
-		},
-		"sequential-thinking": {
-			"command": "/opt/homebrew/opt/node@22/bin/npx",
-			"args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-			"env": {}
-		},
-		"perplexity-ask": {
-			"command": "/opt/homebrew/opt/node@22/bin/npx",
-			"args": ["-y", "@chatmcp/server-perplexity-ask"],
-			"env": {
-				"PERPLEXITY_API_KEY": "op://rzp-labs/PERPLEXITY_API_KEY/api_key"
-			}
-		},
-		"context7": {
-			"command": "/opt/homebrew/opt/node@22/bin/npx",
-			"args": ["-y", "@upstash/context7-mcp@latest"]
-		},
-		"taskmaster-ai": {
-			"command": "node",
-			"args": [
-				"/Users/stephen/Projects/MCP/task-master-ai/mcp-server/server.js"
-			],
-			"env": {}
-		},
-		"supabase": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@supabase/mcp-server-supabase@latest",
-				"--read-only",
-				"--project-ref=zenyth"
-			],
-			"env": {
-				"SUPABASE_ACCESS_TOKEN": "op://rzp-labs/Supabase/PAT"
-			}
-		}
-	}
+  "mcpServers": {
+    "language-server": {
+      "command": "/Users/stephen/Projects/MCP/mcp-language-server/mcp-language-server",
+      "args": [
+        "-workspace",
+        "/Users/stephen/Projects/MCP/task-master-ai",
+        "-lsp",
+        "typescript-language-server",
+        "--",
+        "--stdio"
+      ],
+      "cwd": "/Users/stephen/Projects/MCP/mcp-language-server",
+      "env": {
+        "DEBUG": "1"
+      }
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "/Users/stephen/.local/bin/uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/stephen/Projects/MCP/serena",
+        "serena-mcp-server",
+        "--context",
+        "agent",
+        "--mode",
+        "interactive"
+      ],
+      "env": {}
+    },
+    "conport": {
+      "type": "stdio",
+      "command": "/Users/stephen/Projects/MCP/context-portal/.venv/bin/python",
+      "args": [
+        "-m",
+        "context_portal_mcp.main",
+        "--mode",
+        "stdio",
+        "--workspace_id",
+        "/Users/stephen/Projects/MCP/task-master-ai",
+        "--log-file",
+        "./logs/conport.log",
+        "--log-level",
+        "INFO"
+      ]
+    },
+    "repomix": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "repomix", "--mcp"],
+      "env": {}
+    },
+    "code-reasoning": {
+      "command": "npx",
+      "args": ["-y", "@mettamatt/code-reasoning"]
+    },
+    "sequential-thinking": {
+      "command": "/opt/homebrew/opt/node@22/bin/npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {}
+    },
+    "perplexity-ask": {
+      "command": "/opt/homebrew/opt/node@22/bin/npx",
+      "args": ["-y", "@chatmcp/server-perplexity-ask"],
+      "env": {
+        "PERPLEXITY_API_KEY": "op://rzp-labs/PERPLEXITY_API_KEY/api_key"
+      }
+    },
+    "context7": {
+      "command": "/opt/homebrew/opt/node@22/bin/npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "taskmaster-ai": {
+      "command": "node",
+      "args": [
+        "/Users/stephen/Projects/MCP/task-master-ai/mcp-server/server.js"
+      ],
+      "env": {}
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=zenyth"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "op://rzp-labs/Supabase/PAT"
+      }
+    }
+  }
 }

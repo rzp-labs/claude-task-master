@@ -382,7 +382,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -395,7 +395,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -448,11 +448,51 @@
             "parentTaskId": 8
           },
           {
-            "id": 6,
-            "title": "Update Langfuse Integration",
-            "description": "Modify langfuse-tracer.js to use new configuration options for sampling, redaction, and batching",
-            "details": "Update createTrace() to implement sampling logic using samplingRate. Add redaction functionality with applyRedaction() function that uses redactionPatterns. Implement basic batching consideration using batchSize. Ensure all new features are optional and maintain backward compatibility with existing Langfuse functionality.",
-            "status": "pending",
+            "id": 7,
+            "title": "Update Import Statements",
+            "description": "Add imports for getLangfuseSamplingRate, getLangfuseRedactionPatterns, and getLangfuseBatchSize from config-manager.js",
+            "details": "Update the import section of langfuse-tracer.js to include the new configuration getters that were implemented in subtasks 8.1-8.5",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 8,
+            "title": "Implement Langfuse Built-in Masking",
+            "description": "Create masking function using Langfuse's native capabilities and integrate redaction patterns from configuration",
+            "details": "Use Langfuse's built-in mask parameter instead of custom redaction. Create createMaskingFunction() that converts redactionPatterns into Langfuse-compatible masking function",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 9,
+            "title": "Add Sampling Logic",
+            "description": "Implement probabilistic sampling in createTrace() with early return for efficiency",
+            "details": "Add sampling check at beginning of createTrace() using getLangfuseSamplingRate(). Support samplingRate values: false (disabled), 0 (no traces), 1 (all traces), 0.5 (50% of traces)",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 10,
+            "title": "Add Simple Batching",
+            "description": "Implement counter-based batching that respects batchSize configuration",
+            "details": "Add activeTraceCount variable and check batchSize in createTrace(). Increment counter on successful trace creation. Simple approach for basic batching consideration",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 8
+          },
+          {
+            "id": 11,
+            "title": "Integration and Testing",
+            "description": "Update client initialization with masking, verify all existing tests pass, and test new features",
+            "details": "Integrate masking function into initializeLangfuseClient(). Run existing test suite to ensure no regressions. Test sampling, masking, and batching work with configuration options",
+            "status": "done",
             "dependencies": [],
             "testStrategy": "",
             "parentTaskId": 8
@@ -490,7 +530,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-21T20:38:28.054Z",
+      "updated": "2025-06-21T22:02:00.349Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }
