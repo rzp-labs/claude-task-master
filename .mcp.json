@@ -1,5 +1,20 @@
 {
   "mcpServers": {
+    "language-server": {
+      "command": "/Users/stephen/Projects/MCP/mcp-language-server/mcp-language-server",
+      "args": [
+        "-workspace",
+        "/Users/stephen/Projects/MCP/task-master-ai",
+        "-lsp",
+        "typescript-language-server",
+        "--",
+        "--stdio"
+      ],
+      "cwd": "/Users/stephen/Projects/MCP/mcp-language-server",
+      "env": {
+        "DEBUG": "1"
+      }
+    },
     "serena": {
       "type": "stdio",
       "command": "/Users/stephen/.local/bin/uv",
