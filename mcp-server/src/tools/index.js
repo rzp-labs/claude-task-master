@@ -36,6 +36,7 @@ import { registerUpdateTaskTool } from './update-task.js';
 import { registerUpdateTasksTool } from './update-tasks.js';
 import { registerUseTagTool } from './use-tag.js';
 import { registerValidateDependenciesTool } from './validate-dependencies.js';
+import { registerRulesTool } from './rules.js';
 
 // Worktree tools
 import { registerCreateWorktreeTool } from './worktree/create-worktree.js';
@@ -53,6 +54,7 @@ export function registerTaskMasterTools(server) {
 		// Group 1: Initialization & Setup
 		registerInitializeProjectTool(server);
 		registerModelsTool(server);
+		registerRulesTool(server);
 		registerParsePRDTool(server);
 
 		// Group 2: Task Analysis & Expansion

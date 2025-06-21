@@ -4,9 +4,9 @@
 
 import { NoSuchModelError } from '@ai-sdk/provider';
 import { generateId } from '@ai-sdk/provider-utils';
-import { createAPICallError, createAuthenticationError } from './errors.js';
-import { extractJson } from './json-extractor.js';
 import { convertToClaudeCodeMessages } from './message-converter.js';
+import { extractJson } from './json-extractor.js';
+import { createAPICallError, createAuthenticationError } from './errors.js';
 
 let query;
 let AbortError;

@@ -382,7 +382,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "review",
         "subtasks": []
       },
       {
@@ -530,7 +530,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-21T22:02:00.349Z",
+      "updated": "2025-06-21T23:40:48.618Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

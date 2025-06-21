@@ -96,6 +96,8 @@ MCP (Model Control Protocol) lets you run Task Master directly from your editor.
 
 > 🔑 Replace `YOUR_…_KEY_HERE` with your real API keys. You can remove keys you don't use.
 
+> **Note**: If you see `0 tools enabled` in the MCP settings, try removing the `--package=task-master-ai` flag from `args`.
+
 ###### VS Code (`servers` + `type`)
 
 ```json
@@ -198,6 +200,9 @@ task-master init
 
 # If installed locally
 npx task-master init
+
+# Initialize project with specific rules
+task-master init --rules cursor,windsurf,vscode
 ```
 
 This will prompt you for project details and set up a new project with the necessary files and structure.
@@ -225,6 +230,9 @@ task-master research "What are the latest best practices for JWT authentication?
 
 # Generate task files
 task-master generate
+
+# Add rules after initialization
+task-master rules add windsurf,roo,vscode
 ```
 
 ## Git Worktrees Support

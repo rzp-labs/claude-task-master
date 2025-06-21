@@ -27,6 +27,7 @@ import { createLogWrapper } from '../../tools/utils.js';
  * @param {string} [args.prompt] - Additional context to guide subtask generation.
  * @param {boolean} [args.force] - Force expansion even if subtasks exist.
  * @param {string} [args.projectRoot] - Project root directory.
+ * @param {string} [args.tag] - Tag for the task
  * @param {Object} log - Logger object
  * @param {Object} context - Context object containing session
  * @param {Object} [context.session] - MCP Session object
@@ -35,7 +36,8 @@ import { createLogWrapper } from '../../tools/utils.js';
 export async function expandTaskDirect(args, log, context = {}) {
 	const { session } = context; // Extract session
 	// Destructure expected args, including projectRoot
-	const { tasksJsonPath, id, num, research, prompt, force, projectRoot } = args;
+	const { tasksJsonPath, id, num, research, prompt, force, projectRoot, tag } =
+		args;
 
 	// Log session root data for debugging
 	log.info(
@@ -195,7 +197,8 @@ export async function expandTaskDirect(args, log, context = {}) {
 					session,
 					projectRoot,
 					commandName: 'expand-task',
-					outputType: 'mcp'
+					outputType: 'mcp',
+					tag
 				},
 				forceFlag
 			);

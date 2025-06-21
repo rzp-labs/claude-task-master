@@ -36,16 +36,16 @@ import {
 // Import provider classes
 import {
 	AnthropicAIProvider,
-	AzureProvider,
-	BedrockAIProvider,
-	ClaudeCodeProvider,
-	GoogleAIProvider,
-	OllamaAIProvider,
-	OpenAIProvider,
-	OpenRouterAIProvider,
 	PerplexityAIProvider,
+	GoogleAIProvider,
+	OpenAIProvider,
+	XAIProvider,
+	OpenRouterAIProvider,
+	OllamaAIProvider,
+	BedrockAIProvider,
+	AzureProvider,
 	VertexAIProvider,
-	XAIProvider
+	ClaudeCodeProvider
 } from '../../src/ai-providers/index.js';
 
 // Import Task Master context extractor

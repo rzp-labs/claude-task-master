@@ -85,7 +85,14 @@ dev-debug.log
 # NPMRC
 .npmrc
 
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 # Worktrees
-worktrees/
 
+worktrees/
 .taskmaster/state.json

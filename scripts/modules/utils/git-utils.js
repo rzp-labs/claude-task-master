@@ -350,6 +350,25 @@ function getCurrentBranchSync(projectRoot) {
 }
 
 /**
+ * Check if the current working directory is inside a Git work-tree.
+ * Uses `git rev-parse --is-inside-work-tree` which is more specific than --git-dir
+ * for detecting work-trees (excludes bare repos and .git directories).
+ * This is ideal for preventing accidental git init in existing work-trees.
+ * @returns {boolean} True if inside a Git work-tree, false otherwise.
+ */
+function insideGitWorkTree() {
+	try {
+		execSync('git rev-parse --is-inside-work-tree', {
+			stdio: 'ignore',
+			cwd: process.cwd()
+		});
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
  * Check if the current directory is a Git worktree
  * @param {string} projectRoot - Directory to check (required)
  * @returns {Promise<boolean>} True if directory is a worktree, false otherwise
@@ -461,7 +480,6 @@ async function validateGitVersion(projectRoot = null) {
 		);
 	}
 }
-
 // Export all functions
 export {
 	isGitRepository,
@@ -482,5 +500,6 @@ export {
 	getCurrentBranchSync,
 	isWorktree,
 	getWorktreeInfo,
-	validateGitVersion
+	validateGitVersion,
+	insideGitWorkTree
 };

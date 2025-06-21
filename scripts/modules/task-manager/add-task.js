@@ -2,11 +2,9 @@ import path from 'path';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import Fuse from 'fuse.js'; // Import Fuse.js for advanced fuzzy search
 import { z } from 'zod';
+import Fuse from 'fuse.js'; // Import Fuse.js for advanced fuzzy search
 
-import { generateObjectService } from '../ai-services-unified.js';
-import { getDefaultPriority } from '../config-manager.js';
 import {
 	displayAiUsageSummary,
 	displayBanner,
@@ -27,8 +25,9 @@ import {
 	truncate,
 	writeJSON
 } from '../utils.js';
+import { generateObjectService } from '../ai-services-unified.js';
+import { getDefaultPriority } from '../config-manager.js';
 import ContextGatherer from '../utils/contextGatherer.js';
-import generateTaskFiles from './generate-task-files.js';
 
 // Define Zod schema for the expected AI output object
 const AiTaskDataSchema = z.object({
@@ -44,7 +43,7 @@ const AiTaskDataSchema = z.object({
 		.describe('Detailed approach for verifying task completion'),
 	dependencies: z
 		.array(z.number())
-		.optional()
+		.nullable()
 		.describe(
 			'Array of task IDs that this task depends on (must be completed before this task can start)'
 		)

@@ -7,7 +7,8 @@
 			"tasks",
 			"worktrees",
 			"package-lock.json",
-			"tests/fixture/*.json"
+			"tests/fixture/*.json",
+			"dist"
 		]
 	},
 	"formatter": {
