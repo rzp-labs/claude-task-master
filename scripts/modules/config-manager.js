@@ -105,6 +105,7 @@ class ConfigurationError extends Error {
 	}
 }
 
+
 function _loadAndValidateConfig(explicitRoot = null) {
 	const defaults = DEFAULTS; // Use the defined defaults
 	let rootToUse = explicitRoot;
@@ -153,6 +154,10 @@ function _loadAndValidateConfig(explicitRoot = null) {
 				},
 				global: { ...defaults.global, ...parsedConfig?.global },
 				features: { ...defaults.features, ...parsedConfig?.features },
+				costTracking: {
+					...defaults.costTracking,
+					...parsedConfig?.costTracking
+				},
 				observability: {
 					langfuse: {
 						...defaults.observability.langfuse,
@@ -163,10 +168,17 @@ function _loadAndValidateConfig(explicitRoot = null) {
 				...Object.fromEntries(
 					Object.entries(parsedConfig || {}).filter(
 						([key]) =>
-							!['models', 'global', 'features', 'observability'].includes(key)
+							![
+								'models',
+								'global',
+								'features',
+								'costTracking',
+								'observability'
+							].includes(key)
 					)
 				)
 			};
+			
 			configSource = `file (${configPath})`; // Update source info
 
 			// Issue deprecation warning if using legacy config file

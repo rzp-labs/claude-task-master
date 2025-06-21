@@ -26,7 +26,10 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import { Command } from 'commander';
+import dotenv from 'dotenv';
 import { registerCommands } from '../scripts/modules/commands.js';
+
+// Environment variables loading removed - use system environment instead
 import { displayBanner, displayHelp } from '../scripts/modules/ui.js';
 import { detectCamelCaseFlags } from '../scripts/modules/utils.js';
 
