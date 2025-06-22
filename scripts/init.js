@@ -32,7 +32,6 @@ import {
 	getRulesProfile
 } from '../src/utils/rule-transformer.js';
 
-import { execSync } from 'child_process';
 import {
 	ENV_EXAMPLE_FILE,
 	EXAMPLE_PRD_FILE,

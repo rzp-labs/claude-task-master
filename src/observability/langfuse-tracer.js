@@ -451,9 +451,9 @@ export async function updateConfiguration() {
  * @returns {Promise<void>}
  */
 export async function shutdown() {
-	if (langfuseClient && typeof langfuseClient.shutdown === 'function') {
+	if (langfuseClient && typeof langfuseClient.shutdownAsync === 'function') {
 		try {
-			await langfuseClient.shutdown();
+			await langfuseClient.shutdownAsync();
 			logger.debug('Langfuse client shutdown successfully');
 		} catch (error) {
 			logger.error('Failed to shutdown Langfuse client', error);

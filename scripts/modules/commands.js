@@ -132,17 +132,6 @@ import {
 	setModel
 } from './task-manager/models.js';
 import {
-	isValidTaskStatus,
-	TASK_STATUS_OPTIONS
-} from '../../src/constants/task-status.js';
-import {
-	isValidRulesAction,
-	RULES_ACTIONS,
-	RULES_SETUP_ACTION
-} from '../../src/constants/rules-actions.js';
-import { getTaskMasterVersion } from '../../src/utils/getVersion.js';
-import { syncTasksToReadme } from './sync-readme.js';
-import { RULE_PROFILES } from '../../src/constants/profiles.js';
 import {
 	convertAllRulesToProfileRules,
 	removeProfileRules,

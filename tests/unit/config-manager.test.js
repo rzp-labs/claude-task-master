@@ -113,6 +113,29 @@ const MOCK_CONFIG_PATH = path.join(
 
 // Updated DEFAULT_CONFIG reflecting the implementation
 const DEFAULT_CONFIG = {
+	costTracking: {
+		enabled: true,
+		alerts: {
+			enabled: true,
+			thresholds: {
+				sessionLimit: 1.0,
+				taskLimit: 0.5,
+				dailyLimit: 5.0
+			}
+		}
+	},
+	features: {
+		worktrees: false
+	},
+	global: {
+		logLevel: 'info',
+		debug: false,
+		defaultSubtasks: 5,
+		defaultPriority: 'medium',
+		projectName: 'Task Master',
+		ollamaBaseURL: 'http://localhost:11434/api',
+		bedrockBaseURL: 'https://bedrock.us-east-1.amazonaws.com'
+	},
 	models: {
 		main: {
 			provider: 'anthropic',
@@ -133,20 +156,20 @@ const DEFAULT_CONFIG = {
 			temperature: 0.2
 		}
 	},
-	global: {
-		logLevel: 'info',
-		debug: false,
-		defaultSubtasks: 5,
-		defaultPriority: 'medium',
-		projectName: 'Task Master',
-		ollamaBaseURL: 'http://localhost:11434/api',
-		bedrockBaseURL: 'https://bedrock.us-east-1.amazonaws.com'
-	},
-	features: {
-		worktrees: false
+	observability: {
+		langfuse: {
+			enabled: false,
+			secretKey: undefined,
+			publicKey: undefined,
+			baseUrl: 'https://cloud.langfuse.com',
+			debug: false,
+			samplingRate: false,
+			promptResponseLogging: false,
+			batchSize: 0,
+			redactionPatterns: []
+		}
 	}
 };
-
 // Other test data (VALID_CUSTOM_CONFIG, PARTIAL_CONFIG, INVALID_PROVIDER_CONFIG)
 const VALID_CUSTOM_CONFIG = {
 	models: {

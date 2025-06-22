@@ -1,0 +1,2 @@
+devCommand: cd task-master-ai && npm install && npm link && echo "Task Master AI ready for development"
+portRange: 3050-3060
