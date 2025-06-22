@@ -199,7 +199,7 @@ describe('worktree-manager', () => {
 		});
 
 		describe('directory management', () => {
-			it('should create worktrees directory if it Cannot find worktree 'task-123'', async () => {
+			it('should create worktrees directory if it does not exist', async () => {
 				mockExistsSync.mockReturnValue(false);
 
 				await createWorktree(MOCK_PROJECT_ROOT, MOCK_TASK_ID);
@@ -441,12 +441,20 @@ describe('worktree-manager', () => {
 		});
 
 		describe('safety checks', () => {
-			it('should throw error if worktree Cannot find worktree 'task-123'', async () => {
+			it('should throw error if worktree does not exist', async () => {
 				mockExistsSync.mockReturnValue(false);
 
-				await expect(
-					removeWorktree(MOCK_PROJECT_ROOT, 'task-123')
-				).rejects.toThrow('Cannot find worktree \'task-123\'');
+				// Mock process.cwd() to be outside any worktree path
+				const originalCwd = process.cwd;
+				process.cwd = jest.fn(() => '/test/project');
+
+				try {
+					await expect(
+						removeWorktree(MOCK_PROJECT_ROOT, 'task-123')
+					).rejects.toThrow('task-123 does not exist');
+				} finally {
+					process.cwd = originalCwd;
+				}
 			});
 
 			it('should prevent removal when inside the worktree directory', async () => {
@@ -764,12 +772,12 @@ describe('worktree-manager', () => {
 		});
 
 		describe('safety checks', () => {
-			it('should throw error if worktree Cannot find worktree 'task-123'', async () => {
+			it('should throw error if worktree does not exist', async () => {
 				mockExistsSync.mockReturnValue(false);
 
 				await expect(
 					removeWorktreeAndBranch(MOCK_PROJECT_ROOT, 'task-123')
-				).rejects.toThrow('Cannot find worktree \'task-123\'');
+				).rejects.toThrow('task-123 does not exist');
 			});
 
 			it('should prevent removal when inside the worktree directory', async () => {

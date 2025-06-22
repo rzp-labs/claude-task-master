@@ -44,8 +44,6 @@ import {
 	TASKMASTER_TASKS_DIR,
 	TASKMASTER_TEMPLATES_DIR
 } from '../src/constants/paths.js';
-import { convertAllCursorRulesToRooRules } from './modules/rule-transformer.js';
-import { isSilentMode } from './modules/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

@@ -13,17 +13,17 @@ import { getClient } from '../observability/langfuse-tracer.js';
  * @param {string} taskId - Task identifier to filter traces
  * @returns {Promise<Object>} Aggregated cost data for the task
  */
-export async function getCostsByTask(taskId) {
+export async function getCostsByTask(taskId, projectRoot) {
 	try {
+		const taskIdToUse = taskId || 'unknown';
+
 		if (!taskId) {
 			log('debug', 'getCostsByTask: Missing taskId parameter');
-			return createEmptyCostSummary('Missing taskId parameter');
 		}
 
 		const client = await getClient();
 		if (!client) {
 			log('debug', 'getCostsByTask: Langfuse client not available');
-			return createEmptyCostSummary('Langfuse client not available');
 		}
 
 		// Note: Langfuse trace querying may not be available in the current version
@@ -31,19 +31,41 @@ export async function getCostsByTask(taskId) {
 		// Langfuse client supports trace querying functionality
 		log(
 			'info',
-			`getCostsByTask: Querying costs for task ${taskId} (placeholder implementation)`
+			`getCostsByTask: Querying costs for task ${taskIdToUse} (placeholder implementation)`
 		);
 
 		// Placeholder: Return empty summary until Langfuse querying is implemented
-		return createEmptyCostSummary(
-			'Langfuse trace querying not yet implemented'
-		);
+		return {
+			taskId: taskIdToUse,
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'placeholder',
+			note: 'This is a placeholder implementation until Langfuse trace querying is available'
+		};
 	} catch (error) {
 		log('error', 'getCostsByTask: Error aggregating costs', {
 			error: error.message,
 			taskId
 		});
-		return createEmptyCostSummary(`Error: ${error.message}`);
+		return {
+			taskId: taskId || 'unknown',
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'error',
+			note: `Error: ${error.message}`
+		};
 	}
 }
 
@@ -52,34 +74,56 @@ export async function getCostsByTask(taskId) {
  * @param {string} sessionId - Session identifier to filter traces
  * @returns {Promise<Object>} Aggregated cost data for the session
  */
-export async function getCostsBySession(sessionId) {
+export async function getCostsBySession(sessionId, projectRoot) {
 	try {
+		const sessionIdToUse = sessionId || 'unknown';
+
 		if (!sessionId) {
 			log('debug', 'getCostsBySession: Missing sessionId parameter');
-			return createEmptyCostSummary('Missing sessionId parameter');
 		}
 
 		const client = await getClient();
 		if (!client) {
 			log('debug', 'getCostsBySession: Langfuse client not available');
-			return createEmptyCostSummary('Langfuse client not available');
 		}
 
 		log(
 			'info',
-			`getCostsBySession: Querying costs for session ${sessionId} (placeholder implementation)`
+			`getCostsBySession: Querying costs for session ${sessionIdToUse} (placeholder implementation)`
 		);
 
 		// Placeholder implementation
-		return createEmptyCostSummary(
-			'Langfuse trace querying not yet implemented'
-		);
+		return {
+			sessionId: sessionIdToUse,
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'placeholder',
+			note: 'This is a placeholder implementation until Langfuse trace querying is available'
+		};
 	} catch (error) {
 		log('error', 'getCostsBySession: Error aggregating costs', {
 			error: error.message,
 			sessionId
 		});
-		return createEmptyCostSummary(`Error: ${error.message}`);
+		return {
+			sessionId: sessionId || 'unknown',
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'error',
+			note: `Error: ${error.message}`
+		};
 	}
 }
 
@@ -89,43 +133,77 @@ export async function getCostsBySession(sessionId) {
  * @param {Date|string} endDate - End date for the range
  * @returns {Promise<Object>} Aggregated cost data for the time range
  */
-export async function getCostsByTimeRange(startDate, endDate) {
+export async function getCostsByTimeRange(startDate, endDate, projectRoot) {
 	try {
+		let start, end;
+
 		if (!startDate || !endDate) {
 			log('debug', 'getCostsByTimeRange: Missing date parameters');
-			return createEmptyCostSummary('Missing date parameters');
+			start = null;
+			end = null;
+		} else {
+			start = new Date(startDate);
+			end = new Date(endDate);
+
+			if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+				log('debug', 'getCostsByTimeRange: Invalid date parameters');
+				start = null;
+				end = null;
+			}
 		}
 
 		const client = await getClient();
 		if (!client) {
 			log('debug', 'getCostsByTimeRange: Langfuse client not available');
-			return createEmptyCostSummary('Langfuse client not available');
 		}
 
-		const start = new Date(startDate);
-		const end = new Date(endDate);
-
-		if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-			log('debug', 'getCostsByTimeRange: Invalid date parameters');
-			return createEmptyCostSummary('Invalid date parameters');
+		if (start && end) {
+			log(
+				'info',
+				`getCostsByTimeRange: Querying costs from ${start.toISOString()} to ${end.toISOString()} (placeholder implementation)`
+			);
+		} else {
+			log(
+				'info',
+				'getCostsByTimeRange: Invalid date range (placeholder implementation)'
+			);
 		}
-
-		log(
-			'info',
-			`getCostsByTimeRange: Querying costs from ${start.toISOString()} to ${end.toISOString()} (placeholder implementation)`
-		);
 
 		// Placeholder implementation
-		return createEmptyCostSummary(
-			'Langfuse trace querying not yet implemented'
-		);
+		return {
+			startTime: start ? start.toISOString() : null,
+			endTime: end ? end.toISOString() : null,
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'placeholder',
+			note: 'This is a placeholder implementation until Langfuse trace querying is available'
+		};
 	} catch (error) {
 		log('error', 'getCostsByTimeRange: Error aggregating costs', {
 			error: error.message,
 			startDate,
 			endDate
 		});
-		return createEmptyCostSummary(`Error: ${error.message}`);
+		return {
+			startTime: null,
+			endTime: null,
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'error',
+			note: `Error: ${error.message}`
+		};
 	}
 }
 
@@ -134,12 +212,11 @@ export async function getCostsByTimeRange(startDate, endDate) {
  * This function maintains a session-level cache for performance
  * @returns {Promise<Object>} Current session cost data
  */
-export async function getCurrentSessionCosts() {
+export async function getCurrentSessionCosts(projectRoot) {
 	try {
 		const client = await getClient();
 		if (!client) {
 			log('debug', 'getCurrentSessionCosts: Langfuse client not available');
-			return createEmptyCostSummary('Langfuse client not available');
 		}
 
 		// For now, return current session as today's costs
@@ -156,14 +233,38 @@ export async function getCurrentSessionCosts() {
 		);
 
 		// Placeholder implementation
-		return createEmptyCostSummary(
-			'Langfuse trace querying not yet implemented'
-		);
+		return {
+			sessionId: 'current',
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'placeholder',
+			startTime: startOfDay.toISOString(),
+			note: 'This is a placeholder implementation until Langfuse trace querying is available'
+		};
 	} catch (error) {
 		log('error', 'getCurrentSessionCosts: Error getting session costs', {
 			error: error.message
 		});
-		return createEmptyCostSummary(`Error: ${error.message}`);
+		return {
+			sessionId: 'current',
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0,
+			status: 'error',
+			startTime: new Date().toISOString(),
+			note: `Error: ${error.message}`
+		};
 	}
 }
 
@@ -173,79 +274,96 @@ export async function getCurrentSessionCosts() {
  * @returns {Object} Aggregated cost summary
  */
 export function aggregateTraceCosts(traces) {
-	if (!Array.isArray(traces) || traces.length === 0) {
-		return createEmptyCostSummary('No traces provided');
+	if (!Array.isArray(traces)) {
+		// Handle null/undefined gracefully
+		return {
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0
+		};
+	}
+
+	if (traces.length === 0) {
+		return {
+			totalCost: 0,
+			breakdown: {
+				inputCost: 0,
+				outputCost: 0,
+				byProvider: {},
+				byModel: {}
+			},
+			traceCount: 0
+		};
 	}
 
 	const summary = {
 		totalCost: 0,
-		inputCost: 0,
-		outputCost: 0,
-		currency: 'USD',
-		traceCount: 0,
-		providers: {},
-		models: {},
-		timeRange: {
-			start: null,
-			end: null
+		breakdown: {
+			inputCost: 0,
+			outputCost: 0,
+			byProvider: {},
+			byModel: {},
+			skippedTraces: 0
 		},
-		errors: []
+		traceCount: 0
 	};
 
 	for (const trace of traces) {
+		summary.traceCount++;
 		try {
 			// Extract cost data from trace metadata
 			const costData = extractCostFromTrace(trace);
-			if (costData) {
+			if (
+				costData &&
+				typeof costData.totalCost === 'number' &&
+				!isNaN(costData.totalCost)
+			) {
 				summary.totalCost += costData.totalCost || 0;
-				summary.inputCost += costData.inputCost || 0;
-				summary.outputCost += costData.outputCost || 0;
-				summary.traceCount++;
+				summary.breakdown.inputCost += costData.inputCost || 0;
+				summary.breakdown.outputCost += costData.outputCost || 0;
 
 				// Track provider costs
 				const provider = costData.provider || 'unknown';
-				if (!summary.providers[provider]) {
-					summary.providers[provider] = { totalCost: 0, traceCount: 0 };
-				}
-				summary.providers[provider].totalCost += costData.totalCost || 0;
-				summary.providers[provider].traceCount++;
+				summary.breakdown.byProvider[provider] =
+					(summary.breakdown.byProvider[provider] || 0) +
+					(costData.totalCost || 0);
 
 				// Track model costs
 				const model = costData.model || 'unknown';
-				if (!summary.models[model]) {
-					summary.models[model] = { totalCost: 0, traceCount: 0 };
-				}
-				summary.models[model].totalCost += costData.totalCost || 0;
-				summary.models[model].traceCount++;
-
-				// Update time range
-				const timestamp = costData.timestamp || trace.timestamp;
-				if (timestamp) {
-					const date = new Date(timestamp);
-					if (!summary.timeRange.start || date < summary.timeRange.start) {
-						summary.timeRange.start = date;
-					}
-					if (!summary.timeRange.end || date > summary.timeRange.end) {
-						summary.timeRange.end = date;
-					}
-				}
+				summary.breakdown.byModel[model] =
+					(summary.breakdown.byModel[model] || 0) + (costData.totalCost || 0);
+			} else {
+				summary.breakdown.skippedTraces++;
 			}
 		} catch (error) {
-			summary.errors.push(`Error processing trace: ${error.message}`);
+			summary.breakdown.skippedTraces++;
 		}
 	}
 
 	// Round monetary values to avoid floating point issues
 	summary.totalCost = parseFloat(summary.totalCost.toFixed(6));
-	summary.inputCost = parseFloat(summary.inputCost.toFixed(6));
-	summary.outputCost = parseFloat(summary.outputCost.toFixed(6));
+	summary.breakdown.inputCost = parseFloat(
+		summary.breakdown.inputCost.toFixed(6)
+	);
+	summary.breakdown.outputCost = parseFloat(
+		summary.breakdown.outputCost.toFixed(6)
+	);
 
 	// Round provider and model costs
-	for (const provider of Object.values(summary.providers)) {
-		provider.totalCost = parseFloat(provider.totalCost.toFixed(6));
+	for (const provider in summary.breakdown.byProvider) {
+		summary.breakdown.byProvider[provider] = parseFloat(
+			summary.breakdown.byProvider[provider].toFixed(6)
+		);
 	}
-	for (const model of Object.values(summary.models)) {
-		model.totalCost = parseFloat(model.totalCost.toFixed(6));
+	for (const model in summary.breakdown.byModel) {
+		summary.breakdown.byModel[model] = parseFloat(
+			summary.breakdown.byModel[model].toFixed(6)
+		);
 	}
 
 	return summary;
@@ -274,8 +392,14 @@ function extractCostFromTrace(trace) {
 				inputCost: costData.inputCost || 0,
 				outputCost: costData.outputCost || 0,
 				currency: costData.currency || 'USD',
-				provider: trace.metadata?.provider || costData.breakdown?.providerName,
-				model: trace.metadata?.model || costData.breakdown?.modelId,
+				provider:
+					costData.breakdown?.provider ||
+					trace.metadata?.provider ||
+					costData.breakdown?.providerName,
+				model:
+					costData.breakdown?.model ||
+					trace.metadata?.model ||
+					costData.breakdown?.modelId,
 				timestamp: costData.breakdown?.calculationTimestamp || trace.timestamp
 			};
 		}
@@ -319,51 +443,51 @@ export function formatCostSummary(costSummary) {
 
 	// Ensure required properties exist with defaults
 	const totalCost = costSummary.totalCost || 0;
-	const inputCost = costSummary.inputCost || 0;
-	const outputCost = costSummary.outputCost || 0;
-	const currency = costSummary.currency || 'USD';
+	const breakdown = costSummary.breakdown || {};
+	const inputCost = breakdown.inputCost || 0;
+	const outputCost = breakdown.outputCost || 0;
 	const traceCount = costSummary.traceCount || 0;
-	const providers = costSummary.providers || {};
-	const models = costSummary.models || {};
+	const byProvider = breakdown.byProvider || {};
+	const byModel = breakdown.byModel || {};
 
 	const lines = [];
-	lines.push(`Total Cost: ${currency} ${totalCost.toFixed(6)}`);
-	lines.push(`Input Cost: ${currency} ${inputCost.toFixed(6)}`);
-	lines.push(`Output Cost: ${currency} ${outputCost.toFixed(6)}`);
+	lines.push(`Total Cost: $${totalCost.toFixed(3)}`);
+	lines.push(`Input: $${inputCost.toFixed(3)}`);
+	lines.push(`Output: $${outputCost.toFixed(3)}`);
 	lines.push(`Traces: ${traceCount}`);
 
-	if (Object.keys(providers).length > 0) {
+	if (Object.keys(byProvider).length > 0) {
 		lines.push('');
-		lines.push('By Provider:');
-		for (const [provider, data] of Object.entries(providers)) {
-			const providerCost = (data.totalCost || 0).toFixed(6);
-			const providerTraces = data.traceCount || 0;
-			lines.push(
-				`  ${provider}: ${currency} ${providerCost} (${providerTraces} traces)`
-			);
+
+		// Sort providers by cost (descending) and take top 10
+		const sortedProviders = Object.entries(byProvider)
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, 10);
+
+		for (const [provider, cost] of sortedProviders) {
+			lines.push(`${provider}: $${cost.toFixed(3)}`);
 		}
+
+		if (Object.keys(byProvider).length > 10) {
+			lines.push(`(and ${Object.keys(byProvider).length - 10} more)`);
+		}
+	} else {
+		lines.push('No provider breakdown available');
 	}
 
-	if (Object.keys(models).length > 0) {
-		lines.push('');
-		lines.push('By Model:');
-		for (const [model, data] of Object.entries(models)) {
-			const modelCost = (data.totalCost || 0).toFixed(6);
-			const modelTraces = data.traceCount || 0;
-			lines.push(
-				`  ${model}: ${currency} ${modelCost} (${modelTraces} traces)`
-			);
-		}
-	}
-
-	if (costSummary.timeRange.start && costSummary.timeRange.end) {
+	// Handle timeRange safely
+	if (
+		costSummary.timeRange &&
+		costSummary.timeRange.start &&
+		costSummary.timeRange.end
+	) {
 		lines.push('');
 		lines.push(
 			`Time Range: ${costSummary.timeRange.start.toISOString()} to ${costSummary.timeRange.end.toISOString()}`
 		);
 	}
 
-	if (costSummary.errors.length > 0) {
+	if (costSummary.errors && costSummary.errors.length > 0) {
 		lines.push('');
 		lines.push('Errors:');
 		for (const error of costSummary.errors) {

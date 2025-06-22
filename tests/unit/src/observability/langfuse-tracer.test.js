@@ -16,10 +16,11 @@ describe('Langfuse Tracer', () => {
 		originalEnv = process.env;
 
 		// Clear all Langfuse environment variables for clean testing
-		process.env.LANGFUSE_SECRET_KEY = undefined;
-		process.env.LANGFUSE_PUBLIC_KEY = undefined;
-		process.env.LANGFUSE_HOST = undefined;
-		process.env.LANGFUSE_DEBUG = undefined;
+		delete process.env.LANGFUSE_SECRET_KEY;
+		delete process.env.LANGFUSE_PUBLIC_KEY;
+		delete process.env.LANGFUSE_HOST;
+		delete process.env.LANGFUSE_DEBUG;
+		delete process.env.LANGFUSE_BASEURL;
 
 		// Clear module cache to ensure fresh imports
 		jest.resetModules();
@@ -34,6 +35,15 @@ describe('Langfuse Tracer', () => {
 	});
 
 	describe('Environment Variable Loading', () => {
+		afterEach(() => {
+			// Clean up environment variables after each test
+			delete process.env.LANGFUSE_SECRET_KEY;
+			delete process.env.LANGFUSE_PUBLIC_KEY;
+			delete process.env.LANGFUSE_HOST;
+			delete process.env.LANGFUSE_DEBUG;
+			delete process.env.LANGFUSE_BASEURL;
+		});
+
 		it('should detect when Langfuse is not configured', () => {
 			expect(tracer.isEnabled()).toBe(false);
 		});
@@ -61,9 +71,8 @@ describe('Langfuse Tracer', () => {
 		});
 
 		it('should handle undefined values gracefully', () => {
-			// Setting to undefined actually sets string "undefined", so delete them
-			process.env.LANGFUSE_SECRET_KEY = undefined;
-			process.env.LANGFUSE_PUBLIC_KEY = undefined;
+			// Don't set any environment variables - they should remain undefined
+			// The afterEach cleanup ensures no variables are set from previous tests
 			expect(tracer.isEnabled()).toBe(false);
 		});
 	});

@@ -241,7 +241,8 @@ describe('addTask', () => {
 		// Assert
 		expect(readJSON).toHaveBeenCalledWith(
 			'tasks/tasks.json',
-			'/mock/project/root'
+			'/mock/project/root',
+			'master'
 		);
 		expect(generateObjectService).toHaveBeenCalledWith(expect.any(Object));
 		expect(writeJSON).toHaveBeenCalledWith(

@@ -40,9 +40,9 @@ const logger = createStandardLogger();
 
 // Enhanced configuration imports for new features
 import {
-	getLangfuseBatchSize,
+	getLangfuseSamplingRate,
 	getLangfuseRedactionPatterns,
-	getLangfuseSamplingRate
+	getLangfuseBatchSize
 } from '../../scripts/modules/config-manager.js';
 // Singleton instance
 let langfuseClient = null;
@@ -453,9 +453,9 @@ export async function updateConfiguration() {
  * @returns {Promise<void>}
  */
 export async function shutdown() {
-	if (langfuseClient && typeof langfuseClient.shutdownAsync === 'function') {
+	if (langfuseClient && typeof langfuseClient.shutdown === 'function') {
 		try {
-			await langfuseClient.shutdownAsync();
+			await langfuseClient.shutdown();
 			logger.debug('Langfuse client shutdown successfully');
 		} catch (error) {
 			logger.error('Failed to shutdown Langfuse client', error);
