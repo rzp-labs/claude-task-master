@@ -25,12 +25,23 @@ export function calculateAiCost(
 ) {
 	try {
 		// Validate inputs
-		if (!providerName || !modelId) {
-			log('debug', 'calculateAiCost: Missing providerName or modelId', {
-				providerName,
-				modelId
-			});
-			return createZeroCostResult('Missing required parameters');
+		if (
+			!providerName ||
+			!modelId ||
+			typeof providerName !== 'string' ||
+			typeof modelId !== 'string' ||
+			!providerName.trim() ||
+			!modelId.trim()
+		) {
+			log(
+				'debug',
+				'calculateAiCost: Missing or invalid providerName or modelId',
+				{
+					providerName,
+					modelId
+				}
+			);
+			return createZeroCostResult('Missing or invalid required parameters');
 		}
 
 		// Use provided modelMap or fall back to global MODEL_MAP
@@ -48,9 +59,15 @@ export function calculateAiCost(
 			MODEL_MAP
 		);
 
-		// Normalize token counts (handle negative, null, undefined, non-numeric values)
-		const normalizedInputTokens = Math.max(0, Number(inputTokens) || 0);
-		const normalizedOutputTokens = Math.max(0, Number(outputTokens) || 0);
+		// Normalize token counts (handle negative, null, undefined, non-numeric values, Infinity, NaN)
+		const normalizedInputTokens = Math.max(
+			0,
+			Number.isFinite(Number(inputTokens)) ? Number(inputTokens) : 0
+		);
+		const normalizedOutputTokens = Math.max(
+			0,
+			Number.isFinite(Number(outputTokens)) ? Number(outputTokens) : 0
+		);
 
 		// Calculate costs (convert tokens to millions for pricing)
 		const calculatedInputCost = (normalizedInputTokens / 1_000_000) * inputCost;

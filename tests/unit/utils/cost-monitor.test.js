@@ -89,16 +89,18 @@ describe('cost-monitor', () => {
 
 			// Should trigger both session and task alerts since 1.5 > 1.0 and 1.5 > 0.5
 			expect(result.alerts).toHaveLength(2);
-			
+
 			// Find session alert
-			const sessionAlert = result.alerts.find(alert => alert.type === 'session');
+			const sessionAlert = result.alerts.find(
+				(alert) => alert.type === 'session'
+			);
 			expect(sessionAlert).toBeDefined();
 			expect(sessionAlert.threshold).toBe(1.0);
 			expect(sessionAlert.current).toBe(1.5);
 			expect(sessionAlert.message).toContain('Session cost limit exceeded');
-			
+
 			// Find task alert
-			const taskAlert = result.alerts.find(alert => alert.type === 'task');
+			const taskAlert = result.alerts.find((alert) => alert.type === 'task');
 			expect(taskAlert).toBeDefined();
 			expect(taskAlert.threshold).toBe(0.5);
 			expect(taskAlert.current).toBe(1.5);
