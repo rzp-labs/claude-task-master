@@ -21,10 +21,10 @@ describe('BaseAIProvider Langfuse Instrumentation', () => {
 		originalEnv = process.env;
 
 		// Clear all Langfuse environment variables for clean testing
-		process.env.LANGFUSE_SECRET_KEY = undefined;
-		process.env.LANGFUSE_PUBLIC_KEY = undefined;
-		process.env.LANGFUSE_BASEURL = undefined;
-		process.env.LANGFUSE_DEBUG = undefined;
+		delete process.env.LANGFUSE_SECRET_KEY;
+		delete process.env.LANGFUSE_PUBLIC_KEY;
+		delete process.env.LANGFUSE_BASEURL;
+		delete process.env.LANGFUSE_DEBUG;
 
 		// Clear module cache to ensure fresh imports
 		jest.resetModules();

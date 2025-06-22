@@ -137,7 +137,11 @@ function getLangfuseConfig() {
 export function isEnabled() {
 	const config = getLangfuseConfig();
 
-	// Must have both secret and public keys
+	// Must have both secret and public keys - this is the primary requirement
+	if (!config.secretKey || !config.publicKey) {
+		return false;
+	}
+
 	// If env vars are set, ignore config enabled flag (env vars take precedence)
 	// If only config.json is used, respect the enabled flag
 	const hasEnvVars = !!(
@@ -145,11 +149,7 @@ export function isEnabled() {
 	);
 	const isEnabledInConfig = config.enabled !== false;
 
-	return !!(
-		config.secretKey &&
-		config.publicKey &&
-		(hasEnvVars || isEnabledInConfig)
-	);
+	return hasEnvVars || isEnabledInConfig;
 }
 
 /**

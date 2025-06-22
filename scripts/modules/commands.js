@@ -132,7 +132,6 @@ import {
 	setModel
 } from './task-manager/models.js';
 import {
-import {
 	convertAllRulesToProfileRules,
 	removeProfileRules,
 	isValidProfile,
