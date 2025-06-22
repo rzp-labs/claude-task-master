@@ -63,12 +63,14 @@ your-project/
 The worktree feature consists of several key modules:
 
 1. **worktree-manager.js**: Core worktree operations
+
    - `createWorktree()`: Creates worktree and branch
    - `removeWorktree()`: Safely removes worktrees
    - `removeWorktreeAndBranch()`: Removes both worktree and branch
    - `listWorktrees()`: Lists all worktrees with metadata
 
 2. **worktree-state-manager.js**: State persistence
+
    - Maintains registry of Task Master worktrees
    - Syncs state with actual Git worktrees
    - Tracks task-to-worktree mappings
@@ -122,15 +124,19 @@ Potential improvements for the worktree feature:
 ### Common Issues
 
 **"Worktrees are disabled"**
+
 - Solution: Enable the feature in `.taskmaster/config.json`
 
 **"Cannot remove worktree while inside it"**
+
 - Solution: Navigate to main repository first (`cd ../..`)
 
 **"fatal: not a git repository"**
+
 - Solution: Ensure you're running commands from a Git repository
 
 **"Worktree has uncommitted changes"**
+
 - Solution: Commit/stash changes or use `--force` flag
 
 ### Debug Information
