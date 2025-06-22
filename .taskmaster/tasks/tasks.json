@@ -382,8 +382,59 @@
         "dependencies": [
           3
         ],
-        "status": "review",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Dependencies and Configuration Setup",
+            "description": "Check/install zod-to-json-schema dependency and add object generation tracing configuration options to config-manager.js",
+            "details": "1. Verify zod-to-json-schema is available or install it\\n2. Add objectGeneration config section to DEFAULTS in config-manager.js\\n3. Add configuration getter functions for object generation tracing\\n4. Create basic test structure\\n5. Add environment variable support for new configuration options",
+            "status": "done",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 7
+          },
+          {
+            "id": 2,
+            "title": "Enhanced Schema Capture Infrastructure",
+            "description": "Create advanced Zod to JSON Schema conversion utilities with circular reference handling and schema versioning",
+            "details": "1. Create src/observability/schema-capture.js utility module\\n2. Implement advanced Zod to JSON Schema conversion using zod-to-json-schema\\n3. Add circular reference detection and safe serialization\\n4. Implement schema version hashing and caching\\n5. Add comprehensive unit tests for schema handling\\n6. Handle complex types: unions, intersections, recursive schemas",
+            "status": "in-progress",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 7
+          },
+          {
+            "id": 3,
+            "title": "Object Generation Metrics Enhancement",
+            "description": "Enhance object generation metrics including validation error capture and success/failure rate tracking",
+            "details": "1. Enhance _calculateObjectMetrics() for detailed object analysis\\n2. Add validation error capture and categorization\\n3. Implement success/failure rate tracking with detailed error types\\n4. Add object generation timing metrics and performance monitoring\\n5. Create structured metrics for Langfuse trace metadata\\n6. Add unit tests for metrics calculation accuracy",
+            "status": "pending",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 7
+          },
+          {
+            "id": 4,
+            "title": "Sensitive Data Redaction",
+            "description": "Implement field-level redaction based on patterns to ensure sensitive data in generated objects is excluded from traces",
+            "details": "1. Implement field-level redaction based on configurable patterns\\n2. Add configurable privacy policies for different data types\\n3. Ensure generated objects are sanitized before sending to Langfuse\\n4. Add support for schema-based sensitive field annotation\\n5. Create comprehensive tests for various redaction scenarios\\n6. Integrate with existing Langfuse masking functionality",
+            "status": "pending",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 7
+          },
+          {
+            "id": 5,
+            "title": "Integration and Testing",
+            "description": "Integrate enhanced schema capture with _instrumentedGenerateObject() and add comprehensive testing",
+            "details": "1. Integrate enhanced schema capture with _instrumentedGenerateObject() method\\n2. Add comprehensive integration tests with real generateObject() calls\\n3. Performance testing and optimization validation\\n4. End-to-end tracing verification in Langfuse\\n5. Backwards compatibility testing with existing functionality\\n6. Documentation and code review preparation\\n7. Verify all success criteria are met",
+            "status": "pending",
+            "dependencies": [],
+            "testStrategy": "",
+            "parentTaskId": 7
+          }
+        ]
       },
       {
         "id": 8,
@@ -530,7 +581,7 @@
     ],
     "metadata": {
       "created": "2025-06-20T05:29:44.844Z",
-      "updated": "2025-06-21T23:40:48.618Z",
+      "updated": "2025-06-21T22:45:53.851Z",
       "description": "Tasks for feat-langfuse-integration context"
     }
   }

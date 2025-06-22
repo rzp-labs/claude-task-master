@@ -37,54 +37,54 @@ import { createStandardLogger } from '../utils/logger-utils.js';
 
 // Logger instance for this module
 const logger = createStandardLogger();
-      
-      // Enhanced configuration imports for new features  
-      import { 
-      	getLangfuseSamplingRate,
-      	getLangfuseRedactionPatterns,
-      	getLangfuseBatchSize
-      } from '../../scripts/modules/config-manager.js';
+
+// Enhanced configuration imports for new features
+import {
+	getLangfuseBatchSize,
+	getLangfuseRedactionPatterns,
+	getLangfuseSamplingRate
+} from '../../scripts/modules/config-manager.js';
 // Singleton instance
 let langfuseClient = null;
 let initializationAttempted = false;
 let initializationError = null;
-    
-    // Batching counter for simple batching consideration
-    let activeTraceCount = 0;
-    
-    /**
-     * Create a masking function based on configured redaction patterns
-     * @returns {Function|null} Masking function or null if no patterns configured
-     */
-    function createMaskingFunction() {
-    	const patterns = getLangfuseRedactionPatterns();
-    	
-    	if (!patterns || patterns.length === 0) {
-    		return null; // No masking needed
-    	}
-    	
-    	return function maskingFunction(params) {
-    		const { data } = params;
-    		
-    		if (typeof data === 'string') {
-    			// Apply pattern matching
-    			for (const pattern of patterns) {
-    				if (typeof pattern === 'string') {
-    					if (data.includes(pattern)) {
-    						return '[REDACTED]';
-    					}
-    				} else if (pattern instanceof RegExp) {
-    					if (pattern.test(data)) {
-    						return '[REDACTED]';
-    					}
-    				}
-    			}
-    		}
-    		
-    		// For objects and arrays, return unchanged (Langfuse handles recursive masking)
-    		return data;
-    	};
-    }
+
+// Batching counter for simple batching consideration
+let activeTraceCount = 0;
+
+/**
+ * Create a masking function based on configured redaction patterns
+ * @returns {Function|null} Masking function or null if no patterns configured
+ */
+function createMaskingFunction() {
+	const patterns = getLangfuseRedactionPatterns();
+
+	if (!patterns || patterns.length === 0) {
+		return null; // No masking needed
+	}
+
+	return function maskingFunction(params) {
+		const { data } = params;
+
+		if (typeof data === 'string') {
+			// Apply pattern matching
+			for (const pattern of patterns) {
+				if (typeof pattern === 'string') {
+					if (data.includes(pattern)) {
+						return '[REDACTED]';
+					}
+				} else if (pattern instanceof RegExp) {
+					if (pattern.test(data)) {
+						return '[REDACTED]';
+					}
+				}
+			}
+		}
+
+		// For objects and arrays, return unchanged (Langfuse handles recursive masking)
+		return data;
+	};
+}
 /**
  * Get Langfuse configuration from environment variables and config.json
  * Environment variables take precedence over config.json
@@ -195,7 +195,11 @@ export async function getClient() {
 export async function createTrace(traceOptions = {}) {
 	// Apply sampling logic first for efficiency
 	const samplingRate = getLangfuseSamplingRate();
-	if (samplingRate !== false && typeof samplingRate === 'number' && Math.random() >= samplingRate) {
+	if (
+		samplingRate !== false &&
+		typeof samplingRate === 'number' &&
+		Math.random() >= samplingRate
+	) {
 		logger.debug(`Trace sampled out (rate: ${samplingRate})`);
 		return null;
 	}
@@ -237,7 +241,6 @@ export async function createTrace(traceOptions = {}) {
 		return null;
 	}
 }
-
 
 /**
  * Create a span within an existing trace
@@ -348,7 +351,7 @@ async function initializeLangfuseClient() {
 
 		// Create masking function if redaction patterns are configured
 		const maskingFunction = createMaskingFunction();
-		
+
 		// Build client options
 		const clientOptions = {
 			secretKey: config.secretKey,
@@ -398,7 +401,6 @@ async function initializeLangfuseClient() {
 		return null;
 	}
 }
-
 
 /**
  * Flush any pending traces to Langfuse

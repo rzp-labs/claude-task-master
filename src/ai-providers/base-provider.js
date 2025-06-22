@@ -1,6 +1,15 @@
 import { generateObject, generateText, streamText } from 'ai';
+import {
+	generateObject as aiGenerateObject,
+	generateText as aiGenerateText,
+	streamText as aiStreamText
+} from 'ai';
 import { log } from '../../scripts/init.js';
 import { createTrace, isEnabled } from '../observability/langfuse-tracer.js';
+import {
+	captureZodSchema,
+	safeSerializeObject
+} from '../observability/schema-capture.js';
 import { StreamTraceWrapper } from '../observability/stream-trace-wrapper.js';
 import { calculateAiCost } from '../utils/cost-calculator.js';
 import {
@@ -195,7 +204,7 @@ export class BaseAIProvider {
 			);
 
 			const client = this.getClient(params);
-			const result = await generateObject({
+			const result = await aiGenerateObject({
 				model: client(params.modelId),
 				messages: params.messages,
 				schema: params.schema,
@@ -222,6 +231,409 @@ export class BaseAIProvider {
 		}
 	}
 
+	/**
+	 * Instrumented version of generateObject with Langfuse tracing and schema capture
+	 * @private
+	 * @param {object} params - Parameters for object generation
+	 * @returns {Promise<object>} Generated object result with usage metrics
+	 */
+	async _instrumentedGenerateObject(params) {
+		// Double-check that instrumentation is still enabled (defensive programming)
+		if (!this._instrumentationEnabled || !isEnabled()) {
+			// Fall back to original method if instrumentation was disabled
+			return await this._originalGenerateObject(params);
+		}
+
+		// Start timing
+		const startTime = performance.now();
+		let trace = null;
+		let generation = null;
+		let result = null;
+		let error = null;
+
+		try {
+			// Create Langfuse trace for this generation (never throw on failure)
+			try {
+				// Prepare base metadata
+				const traceMetadata = {
+					provider: this.name,
+					model: params.modelId,
+					temperature: params.temperature,
+					maxTokens: params.maxTokens,
+					objectName: params.objectName
+				};
+
+				// Add Task Master context if available
+				if (params.taskMasterContext) {
+					traceMetadata.taskMaster = {
+						taskId: params.taskMasterContext.taskId,
+						tag: params.taskMasterContext.tag,
+						command: params.taskMasterContext.command,
+						role: params.taskMasterContext.role,
+						projectRoot: params.taskMasterContext.projectRoot
+					};
+				}
+
+				// Capture comprehensive schema information safely
+				try {
+					if (params.schema) {
+						const schemaCapture = captureZodSchema(params.schema, {
+							name: params.objectName || 'anonymous',
+							cache: true
+						});
+						traceMetadata.schema = schemaCapture;
+					}
+				} catch (schemaError) {
+					log(
+						'debug',
+						`${this.name} Schema capture failed: ${schemaError.message}`
+					);
+					// Continue without schema metadata
+				}
+
+				trace = await createTrace({
+					name: `${this.name} generateObject`,
+					metadata: traceMetadata,
+					tags: ['ai-generation', 'generateObject', this.name.toLowerCase()]
+				});
+			} catch (traceError) {
+				// Log but never propagate Langfuse trace creation errors
+				log(
+					'debug',
+					`${this.name} Langfuse trace creation failed: ${traceError.message}`
+				);
+				trace = null;
+			}
+
+			// Create generation within the trace if trace was created successfully
+			if (trace) {
+				try {
+					// Prepare generation metadata
+					const generationMetadata = {
+						provider: this.name,
+						temperature: params.temperature,
+						maxTokens: params.maxTokens,
+						objectName: params.objectName
+					};
+
+					// Add Task Master context to generation metadata if available
+					if (params.taskMasterContext) {
+						generationMetadata.taskMaster = {
+							taskId: params.taskMasterContext.taskId,
+							tag: params.taskMasterContext.tag,
+							command: params.taskMasterContext.command,
+							role: params.taskMasterContext.role
+						};
+					}
+
+					generation = trace.generation({
+						name: `${this.name}-${params.modelId}-object`,
+						model: params.modelId,
+						input: params.messages,
+						metadata: generationMetadata
+					});
+				} catch (generationError) {
+					// Log but never propagate Langfuse generation creation errors
+					log(
+						'debug',
+						`${this.name} Langfuse generation creation failed: ${generationError.message}`
+					);
+					generation = null;
+				}
+			}
+
+			// Call original generateObject method (this is the critical operation)
+			result = await this._originalGenerateObject(params);
+
+			// Record successful generation if trace exists (never throw on failure)
+			if (generation && result) {
+				try {
+					const endTime = performance.now();
+					const latencyMs = endTime - startTime;
+
+					// Calculate cost for this generation
+					let costData = null;
+					try {
+						costData = calculateAiCost(
+							this.name.toLowerCase(),
+							params.modelId,
+							result.usage?.inputTokens || 0,
+							result.usage?.outputTokens || 0
+						);
+					} catch (costError) {
+						log(
+							'debug',
+							`${this.name} Cost calculation failed: ${costError.message}`
+						);
+					}
+
+					// Check cost thresholds and log alerts if needed
+					if (costData && !shouldSkipCostTracking()) {
+						try {
+							const taskId = params.taskMasterContext?.taskId;
+							const projectRoot = params.taskMasterContext?.projectRoot;
+							checkCostThresholds(
+								costData,
+								taskId,
+								this.name.toLowerCase(),
+								projectRoot
+							);
+						} catch (thresholdError) {
+							log(
+								'debug',
+								`${this.name} Cost threshold check failed: ${thresholdError.message}`
+							);
+						}
+					}
+
+					// Calculate object size metrics and serialize safely
+					let objectMetrics = null;
+					try {
+						objectMetrics = this._calculateObjectMetrics(result.object);
+					} catch (metricsError) {
+						log(
+							'debug',
+							`${this.name} Object metrics calculation failed: ${metricsError.message}`
+						);
+					}
+
+					// Prepare generation end data with cost and object information
+					const generationEndData = {
+						output: JSON.stringify(result.object),
+						usage: {
+							input: result.usage?.inputTokens || 0,
+							output: result.usage?.outputTokens || 0,
+							total: result.usage?.totalTokens || 0
+						},
+						metadata: {
+							latencyMs: Math.round(latencyMs * 100) / 100,
+							completedAt: new Date().toISOString(),
+							objectName: params.objectName,
+							generationSuccess: true
+						}
+					};
+
+					// Add cost metadata if calculation was successful
+					if (costData && costData.totalCost !== undefined) {
+						generationEndData.metadata.cost = {
+							totalCost: costData.totalCost,
+							inputCost: costData.inputCost,
+							outputCost: costData.outputCost,
+							currency: costData.currency,
+							breakdown: costData.metadata
+						};
+					}
+
+					// Add object metrics if calculation was successful
+					if (objectMetrics) {
+						generationEndData.metadata.objectMetrics = objectMetrics;
+					}
+
+					generation.end(generationEndData);
+				} catch (endError) {
+					// Log but never propagate Langfuse generation end errors
+					log(
+						'debug',
+						`${this.name} Langfuse generation end failed: ${endError.message}`
+					);
+				}
+			}
+
+			return result;
+		} catch (err) {
+			error = err;
+
+			// Record error in generation if trace exists (never throw on failure)
+			if (generation) {
+				try {
+					const endTime = performance.now();
+					const latencyMs = endTime - startTime;
+
+					generation.end({
+						level: 'ERROR',
+						statusMessage: err.message,
+						metadata: {
+							error: err.message,
+							latencyMs: Math.round(latencyMs * 100) / 100,
+							failedAt: new Date().toISOString(),
+							objectName: params.objectName,
+							generationSuccess: false
+						}
+					});
+				} catch (endError) {
+					// Log but never propagate Langfuse generation end errors
+					log(
+						'debug',
+						`${this.name} Langfuse error generation end failed: ${endError.message}`
+					);
+				}
+			}
+
+			// Re-throw the original error to preserve exact error handling behavior
+			throw err;
+		} finally {
+			// Log tracing attempt for debugging (only if trace was attempted)
+			if (trace) {
+				const endTime = performance.now();
+				const latencyMs = endTime - startTime;
+
+				log(
+					'debug',
+					`${this.name} generateObject trace recorded - ` +
+						`latency: ${Math.round(latencyMs)}ms, ` +
+						`success: ${!error}, ` +
+						`model: ${params.modelId}, ` +
+						`object: ${params.objectName}`
+				);
+			}
+		}
+	}
+
+	/**
+	 * Calculates comprehensive metrics for generated objects
+	 * @private
+	 * @param {any} obj - Generated object to analyze
+	 * @returns {object} Object metrics including size, depth, and complexity
+	 */
+	_calculateObjectMetrics(obj) {
+		try {
+			// Use safe serialization to handle circular references and calculate size
+			const serialization = safeSerializeObject(obj, {
+				maxDepth: 20, // Allow deeper analysis for metrics
+				maskFields: [] // Don't mask for metrics calculation
+			});
+
+			if (!serialization.success) {
+				return {
+					error: serialization.error,
+					fallback: true,
+					sizeBytes: 0,
+					depth: 0,
+					fieldCount: 0,
+					timestamp: new Date().toISOString()
+				};
+			}
+
+			// Calculate additional metrics
+			const metrics = {
+				sizeBytes: serialization.sizeBytes,
+				depth: serialization.depth,
+				isCircular: this._detectCircularReferences(obj),
+				timestamp: new Date().toISOString()
+			};
+
+			// Add type-specific metrics
+			if (Array.isArray(obj)) {
+				metrics.type = 'array';
+				metrics.length = obj.length;
+			} else if (obj !== null && typeof obj === 'object') {
+				metrics.type = 'object';
+				metrics.fieldCount = Object.keys(obj).length;
+
+				// Calculate field type distribution
+				const fieldTypes = {};
+				for (const [key, value] of Object.entries(obj)) {
+					const type = Array.isArray(value) ? 'array' : typeof value;
+					fieldTypes[type] = (fieldTypes[type] || 0) + 1;
+				}
+				metrics.fieldTypes = fieldTypes;
+			} else {
+				metrics.type = typeof obj;
+			}
+
+			// Calculate complexity score based on structure
+			metrics.complexityScore = this._calculateObjectComplexity(obj);
+
+			return metrics;
+		} catch (error) {
+			return {
+				error: error.message,
+				fallback: true,
+				sizeBytes: 0,
+				depth: 0,
+				fieldCount: 0,
+				timestamp: new Date().toISOString()
+			};
+		}
+	}
+
+	/**
+	 * Detects circular references in an object
+	 * @private
+	 * @param {any} obj - Object to check
+	 * @returns {boolean} True if circular references are detected
+	 */
+	_detectCircularReferences(obj) {
+		const visited = new WeakSet();
+
+		function check(value) {
+			if (value === null || typeof value !== 'object') {
+				return false;
+			}
+
+			if (visited.has(value)) {
+				return true;
+			}
+
+			visited.add(value);
+
+			try {
+				if (Array.isArray(value)) {
+					return value.some((item) => check(item));
+				} else {
+					return Object.values(value).some((val) => check(val));
+				}
+			} finally {
+				visited.delete(value);
+			}
+		}
+
+		return check(obj);
+	}
+
+	/**
+	 * Calculates complexity score for an object based on its structure
+	 * @private
+	 * @param {any} obj - Object to analyze
+	 * @param {number} depth - Current depth (for recursion tracking)
+	 * @returns {number} Complexity score (1-10)
+	 */
+	_calculateObjectComplexity(obj, depth = 0) {
+		if (depth > 10) return 10; // Prevent infinite recursion
+
+		if (obj === null || typeof obj !== 'object') {
+			return 1; // Primitive values have minimal complexity
+		}
+
+		let complexity = 1;
+
+		if (Array.isArray(obj)) {
+			complexity += Math.min(obj.length * 0.1, 2); // Array length adds complexity
+
+			// Add complexity for nested elements
+			for (const item of obj.slice(0, 10)) {
+				// Limit analysis to first 10 items
+				complexity += this._calculateObjectComplexity(item, depth + 1) * 0.3;
+			}
+		} else {
+			const keys = Object.keys(obj);
+			complexity += Math.min(keys.length * 0.1, 2); // Field count adds complexity
+
+			// Add complexity for nested objects
+			for (const key of keys.slice(0, 20)) {
+				// Limit analysis to first 20 fields
+				complexity +=
+					this._calculateObjectComplexity(obj[key], depth + 1) * 0.5;
+			}
+		}
+
+		// Add penalty for deep nesting
+		if (depth > 3) {
+			complexity += (depth - 3) * 0.5;
+		}
+
+		return Math.min(Math.round(complexity * 10) / 10, 10); // Round and cap at 10
+	}
 	/**
 	 * Instrumented version of generateText with Langfuse tracing
 	 * @private
@@ -552,7 +964,7 @@ export class BaseAIProvider {
 
 		log(
 			'debug',
-			`${this.name} Langfuse instrumentation enabled - wrapping generateText method`
+			`${this.name} Langfuse instrumentation enabled - wrapping generateText, streamText, and generateObject methods`
 		);
 
 		// Store reference to original generateText method
@@ -567,12 +979,18 @@ export class BaseAIProvider {
 			this.streamText = this._instrumentedStreamText.bind(this);
 		}
 
+		// Store reference to original generateObject method and replace with instrumented version
+		if (this.generateObject) {
+			this._originalGenerateObject = this.generateObject.bind(this);
+			this.generateObject = this._instrumentedGenerateObject.bind(this);
+		}
+
 		// Set flag to indicate instrumentation is active
 		this._instrumentationEnabled = true;
 
 		log(
 			'debug',
-			`${this.name} generateText method successfully wrapped with Langfuse instrumentation`
+			`${this.name} generateText, streamText, and generateObject methods successfully wrapped with Langfuse instrumentation`
 		);
 	}
 }
