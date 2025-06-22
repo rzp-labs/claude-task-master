@@ -3,6 +3,7 @@
  * Tests cost metadata integration in AI provider calls
  */
 
+import { jest } from '@jest/globals';
 import { BaseAIProvider } from '../../src/ai-providers/base-provider.js';
 import { calculateAiCost } from '../../src/utils/cost-calculator.js';
 import {
@@ -10,16 +11,15 @@ import {
 	resetSessionCosts
 } from '../../src/utils/cost-monitor.js';
 
+// Create mock functions that we can control
+const mockCreateTrace = jest.fn();
+const mockIsEnabled = jest.fn();
+const mockGenerateText = jest.fn();
+
 // Mock Langfuse tracer to avoid external dependencies
 jest.mock('../../src/observability/langfuse-tracer.js', () => ({
-	isEnabled: jest.fn(() => true),
-	createTrace: jest.fn(() =>
-		Promise.resolve({
-			generation: jest.fn(() => ({
-				end: jest.fn()
-			}))
-		})
-	)
+	isEnabled: mockIsEnabled,
+	createTrace: mockCreateTrace
 }));
 
 // Mock config manager
@@ -45,23 +45,11 @@ jest.mock('../../scripts/modules/config-manager.js', () => ({
 
 // Mock AI SDK
 jest.mock('ai', () => ({
-	generateText: jest.fn(() =>
-		Promise.resolve({
-			text: 'Test response',
-			usage: {
-				promptTokens: 1000,
-				completionTokens: 500,
-				totalTokens: 1500
-			}
-		})
-	)
+	generateText: mockGenerateText
 }));
 
 import { generateText } from 'ai';
-import {
-	createTrace,
-	isEnabled
-} from '../../src/observability/langfuse-tracer.js';
+import * as langfuseTracer from '../../src/observability/langfuse-tracer.js';
 
 describe('Cost Tracking Integration', () => {
 	// Test provider implementation
@@ -100,11 +88,12 @@ describe('Cost Tracking Integration', () => {
 			generation: jest.fn(() => mockGeneration)
 		};
 
-		createTrace.mockResolvedValue(mockTrace);
-		isEnabled.mockReturnValue(true);
+		// Use the declared mock functions
+		mockCreateTrace.mockResolvedValue(mockTrace);
+		mockIsEnabled.mockReturnValue(true);
 
 		// Setup mock AI SDK response
-		generateText.mockResolvedValue({
+		mockGenerateText.mockResolvedValue({
 			text: 'Test response',
 			usage: {
 				promptTokens: 1000,
@@ -128,7 +117,7 @@ describe('Cost Tracking Integration', () => {
 			await provider.generateText(params);
 
 			// Verify trace creation was called
-			expect(createTrace).toHaveBeenCalledWith(
+			expect(mockCreateTrace).toHaveBeenCalledWith(
 				expect.objectContaining({
 					name: 'TestProvider generateText',
 					metadata: expect.objectContaining({

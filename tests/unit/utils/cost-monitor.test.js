@@ -3,17 +3,9 @@
  * Tests cost threshold monitoring and alerting functionality
  */
 
-import {
-	checkCostThresholds,
-	formatCostAlert,
-	getDailyCostSummary,
-	getSessionCostSummary,
-	resetDailyCosts,
-	resetSessionCosts,
-	shouldSkipCostTracking
-} from '../../../src/utils/cost-monitor.js';
+import { jest } from '@jest/globals';
 
-// Create simple mock functions
+// Mock config manager before importing cost-monitor
 const mockIsCostAlertsEnabled = jest.fn(() => true);
 const mockGetCostAlertThresholds = jest.fn(() => ({
 	sessionLimit: 1.0,
@@ -21,11 +13,27 @@ const mockGetCostAlertThresholds = jest.fn(() => ({
 	dailyLimit: 5.0
 }));
 
-// Mock config manager
-jest.doMock('../../../scripts/modules/config-manager.js', () => ({
+// Mock all dependencies to simplify testing
+jest.unstable_mockModule('../../../scripts/modules/config-manager.js', () => ({
 	isCostAlertsEnabled: mockIsCostAlertsEnabled,
-	getCostAlertThresholds: mockGetCostAlertThresholds
+	getCostAlertThresholds: mockGetCostAlertThresholds,
+	// Add any other exports that might be needed
+	getDebugFlag: jest.fn(() => false)
 }));
+
+jest.unstable_mockModule('../../../scripts/init.js', () => ({
+	log: jest.fn()
+}));
+
+const {
+	checkCostThresholds,
+	formatCostAlert,
+	getDailyCostSummary,
+	getSessionCostSummary,
+	resetDailyCosts,
+	resetSessionCosts,
+	shouldSkipCostTracking
+} = await import('../../../src/utils/cost-monitor.js');
 
 describe('cost-monitor', () => {
 	beforeEach(() => {
@@ -66,7 +74,7 @@ describe('cost-monitor', () => {
 
 		test('should trigger session limit alert', () => {
 			const costData = {
-				totalCost: 1.5, // Exceeds session limit of 1.0
+				totalCost: 1.5, // Exceeds session limit of 1.0 and task limit of 0.5
 				inputCost: 0.75,
 				outputCost: 0.75,
 				currency: 'USD'
@@ -79,11 +87,22 @@ describe('cost-monitor', () => {
 				'/test/root'
 			);
 
-			expect(result.alerts).toHaveLength(1);
-			expect(result.alerts[0].type).toBe('session');
-			expect(result.alerts[0].threshold).toBe(1.0);
-			expect(result.alerts[0].current).toBe(1.5);
-			expect(result.alerts[0].message).toContain('Session cost limit exceeded');
+			// Should trigger both session and task alerts since 1.5 > 1.0 and 1.5 > 0.5
+			expect(result.alerts).toHaveLength(2);
+			
+			// Find session alert
+			const sessionAlert = result.alerts.find(alert => alert.type === 'session');
+			expect(sessionAlert).toBeDefined();
+			expect(sessionAlert.threshold).toBe(1.0);
+			expect(sessionAlert.current).toBe(1.5);
+			expect(sessionAlert.message).toContain('Session cost limit exceeded');
+			
+			// Find task alert
+			const taskAlert = result.alerts.find(alert => alert.type === 'task');
+			expect(taskAlert).toBeDefined();
+			expect(taskAlert.threshold).toBe(0.5);
+			expect(taskAlert.current).toBe(1.5);
+			expect(taskAlert.taskId).toBe('task-1');
 		});
 
 		test('should handle disabled cost alerts', () => {

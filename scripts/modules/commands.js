@@ -144,6 +144,11 @@ import {
 	generateProfileRemovalSummary,
 	categorizeRemovalResults
 } from '../../src/utils/profiles.js';
+import {
+	RULES_ACTIONS,
+	RULES_SETUP_ACTION,
+	isValidRulesAction
+} from '../../src/constants/rules-actions.js';
 
 /**
  * Runs the interactive setup process for model configuration.
