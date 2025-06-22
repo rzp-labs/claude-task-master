@@ -92,7 +92,10 @@ dev-debug.log
 *.njsproj
 *.sln
 *.sw?
-# Worktrees
 
+# Worktrees
 worktrees/
 .taskmaster/state.json
+
+#uzi
+uzi.yaml

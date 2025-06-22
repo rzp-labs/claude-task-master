@@ -198,7 +198,7 @@ Analyze the complexity of these software development tasks and provide recommend
 
 For each task, assign a complexity score from 1-100 based on:
 - Technical difficulty (30%): algorithms, architecture, technical debt
-- Scope/size (25%): lines of code, number of components, breadth of changes  
+- Scope/size (25%): lines of code, number of components, breadth of changes
 - Dependencies (20%): number of dependencies, external integrations
 - Risk (15%): potential for bugs, security concerns, performance impact
 - Testing difficulty (10%): test complexity, edge cases
@@ -234,7 +234,7 @@ Return a JSON object with this structure:
       "score": number,      // 1-100
       "factors": {
         "technical": number,     // 1-100
-        "scope": number,         // 1-100  
+        "scope": number,         // 1-100
         "dependencies": number,  // 1-100
         "risk": number,         // 1-100
         "testing": number       // 1-100
@@ -261,7 +261,7 @@ User instruction: ${prompt}
 
 Please update the tasks according to the instruction. You can modify:
 - title
-- description  
+- description
 - details
 - testStrategy
 - priority
@@ -280,7 +280,7 @@ Return ONLY a JSON object with this structure:
     {
       "id": number,
       "title": "string",
-      "description": "string", 
+      "description": "string",
       "details": "string",
       "testStrategy": "string",
       "status": "string",
@@ -307,7 +307,7 @@ User instruction: ${prompt}
 Please update the task according to the instruction. You can modify:
 - title
 - description
-- details  
+- details
 - testStrategy
 - priority
 - dependencies (use task IDs as numbers)
@@ -353,7 +353,7 @@ Return ONLY the new description as plain text.
 All MCP tools use the same prompts as their CLI counterparts through shared direct functions:
 
 - `parse_prd` → uses parse-prd.js prompts
-- `expand_task` → uses expand-task.js prompts  
+- `expand_task` → uses expand-task.js prompts
 - `analyze_project_complexity` → uses analyze-task-complexity.js prompts
 - `update_tasks` → uses update-tasks.js prompts
 - `update_task` → uses update-task-by-id.js prompts
@@ -364,26 +364,33 @@ This ensures consistency between CLI and MCP interfaces.
 ## Prompt Engineering Patterns
 
 ### 1. Structured Output
+
 All prompts explicitly define the expected JSON structure to ensure consistent parsing.
 
 ### 2. Role Definition
+
 Prompts begin with clear role definitions (e.g., "senior software architect", "Perplexity AI").
 
 ### 3. Explicit Rules
+
 Numbered rules provide clear constraints and expectations for the AI.
 
 ### 4. Context Preservation
+
 Update prompts emphasize preserving existing data and only modifying specified fields.
 
 ### 5. Template Variables
+
 Dynamic content is inserted using `${variable}` syntax for flexibility.
 
 ### 6. Research Mode Variants
+
 Separate prompts for research-enabled providers (Perplexity) with emphasis on current best practices.
 
 ## Template Variables Reference
 
 ### Common Variables
+
 - `${numTasks}` - Number of tasks to generate
 - `${task.id}` - Task identifier
 - `${task.title}` - Task title
@@ -394,6 +401,7 @@ Separate prompts for research-enabled providers (Perplexity) with emphasis on cu
 - `${task.priority}` - Task priority level
 
 ### Command-Specific Variables
+
 - `${prdContent}` - Product requirements document content (parse-prd)
 - `${numSubtasks}` - Number of subtasks to generate (expand)
 - `${promptAdditionalContext}` - Additional user-provided context (expand)
@@ -401,6 +409,7 @@ Separate prompts for research-enabled providers (Perplexity) with emphasis on cu
 - `${prompt}` - User instruction for updates (various update commands)
 
 ### Computed Variables
+
 - `${JSON.stringify(tasks, null, 2)}` - Formatted task JSON
 - `${tasksToUpdate}` - Filtered list of tasks to update
 - `${parentTask}` - Parent task object for subtask updates
