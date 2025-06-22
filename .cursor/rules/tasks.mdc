@@ -49,9 +49,9 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   const tasksData = readJSON(tasksPath);
   const currentTag = getCurrentTag() || 'master';
   const tasks = getTasksForTag(tasksData, currentTag);
-  
+
   // Manipulate tasks as normal...
-  
+
   // Save back to the tagged structure
   setTasksForTag(tasksData, currentTag, tasks);
   writeJSON(tasksPath, tasksData);
@@ -100,7 +100,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   // ✅ DO: Parse into current tag context
   const tasksData = readJSON(tasksPath) || {};
   const currentTag = getCurrentTag() || 'master';
-  
+
   // Parse tasks and add to current tag
   const newTasks = await parseTasksFromPRD(prdContent);
   setTasksForTag(tasksData, currentTag, newTasks);
@@ -120,18 +120,18 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
     const tasksData = readJSON(tasksPath);
     const currentTag = getCurrentTag() || 'master';
     const tasks = getTasksForTag(tasksData, currentTag);
-    
+
     // Check if it's a subtask (e.g., "1.2")
     if (taskIdInput.includes('.')) {
       const [parentId, subtaskId] = taskIdInput.split('.').map(id => parseInt(id, 10));
-      
+
       // Find the parent task and subtask
       const parentTask = tasks.find(t => t.id === parentId);
       const subtask = parentTask.subtasks.find(st => st.id === subtaskId);
-      
+
       // Update subtask status
       subtask.status = newStatus;
-      
+
       // Check if all subtasks are done
       if (newStatus === 'done') {
         const allSubtasksDone = parentTask.subtasks.every(st => st.status === 'done');
@@ -143,7 +143,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
       // Handle regular task
       const task = tasks.find(t => t.id === parseInt(taskIdInput, 10));
       task.status = newStatus;
-      
+
       // If marking as done, also mark subtasks
       if (newStatus === 'done' && task.subtasks && task.subtasks.length > 0) {
         task.subtasks.forEach(subtask => {
@@ -151,7 +151,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
         });
       }
     }
-    
+
     // Save updated tasks back to tagged structure
     setTasksForTag(tasksData, currentTag, tasks);
     writeJSON(tasksPath, tasksData);
@@ -168,17 +168,17 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   const tasksData = readJSON(tasksPath);
   const currentTag = getCurrentTag() || 'master';
   const tasks = getTasksForTag(tasksData, currentTag);
-  
+
   if (taskAnalysis) {
     log('info', `Found complexity analysis for task ${taskId}: Score ${taskAnalysis.complexityScore}/10`);
-    
+
     // Use recommended number of subtasks if available
     if (taskAnalysis.recommendedSubtasks && numSubtasks === CONFIG.defaultSubtasks) {
       numSubtasks = taskAnalysis.recommendedSubtasks;
       log('info', `Using recommended number of subtasks: ${numSubtasks}`);
     }
   }
-  
+
   // Generate subtasks and save back
   // ... subtask generation logic ...
   setTasksForTag(tasksData, currentTag, tasks);
@@ -197,7 +197,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   let content = `# Task ID: ${task.id}\n`;
   content += `# Title: ${task.title}\n`;
   content += `# Status: ${task.status || 'pending'}\n`;
-  
+
   // Format dependencies with their status
   if (task.dependencies && task.dependencies.length > 0) {
     content += `# Dependencies: ${formatDependenciesWithStatus(task.dependencies, tasks)}\n`;
@@ -217,7 +217,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
     const tasksData = readJSON(tasksPath);
     const currentTag = getCurrentTag() || 'master';
     const tasks = getTasksForTag(tasksData, currentTag);
-    
+
     // Add tag context to file header
     let content = `# Tag Context: ${currentTag}\n`;
     content += `# Task ID: ${task.id}\n`;
@@ -237,10 +237,10 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   const tasksData = readJSON(tasksPath);
   const currentTag = getCurrentTag() || 'master';
   const tasks = getTasksForTag(tasksData, currentTag);
-  
+
   // Filter tasks by status if specified
-  const filteredTasks = statusFilter 
-    ? tasks.filter(task => 
+  const filteredTasks = statusFilter
+    ? tasks.filter(task =>
         task.status && task.status.toLowerCase() === statusFilter.toLowerCase())
     : tasks;
   ```
@@ -255,21 +255,21 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   const tasksData = readJSON(tasksPath);
   const currentTag = getCurrentTag() || 'master';
   const tasks = getTasksForTag(tasksData, currentTag);
-  
+
   // Calculate completion statistics
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => 
+  const completedTasks = tasks.filter(task =>
     task.status === 'done' || task.status === 'completed').length;
   const completionPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  
+
   // Count subtasks
   let totalSubtasks = 0;
   let completedSubtasks = 0;
-  
+
   tasks.forEach(task => {
     if (task.subtasks && task.subtasks.length > 0) {
       totalSubtasks += task.subtasks.length;
-      completedSubtasks += task.subtasks.filter(st => 
+      completedSubtasks += task.subtasks.filter(st =>
         st.status === 'done' || st.status === 'completed').length;
     }
   });
@@ -286,7 +286,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
   // ✅ DO: Handle silent migration (implemented in utils.js)
   function readJSON(filepath) {
     let data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
-    
+
     // Silent migration for tasks.json files
     if (data.tasks && Array.isArray(data.tasks) && !data.master && isTasksFile) {
       const migratedData = {
@@ -297,7 +297,7 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
       writeJSON(filepath, migratedData);
       data = migratedData;
     }
-    
+
     return data;
   }
   ```
@@ -314,14 +314,14 @@ Task Master now uses a **tagged task lists system** for multi-context task manag
       // Legacy format - return as-is
       return data.tasks;
     }
-    
+
     if (data[tagName] && data[tagName].tasks) {
       // Tagged format - return tasks for specified tag
       return data[tagName].tasks;
     }
-    
+
     return [];
   }
   ```
 
-Refer to [`task-manager.js`](mdc:scripts/modules/task-manager.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines. 
+Refer to [`task-manager.js`](mdc:scripts/modules/task-manager.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines.

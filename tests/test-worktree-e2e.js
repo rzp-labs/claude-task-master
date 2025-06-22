@@ -26,12 +26,12 @@ async function testWorktreeE2E() {
 	try {
 		// Import all modules
 		console.log('1. Importing modules...');
-		const worktreeManager = await import('./modules/utils/worktree-manager.js');
+		const worktreeManager = await import('../scripts/modules/utils/worktree-manager.js');
 		const worktreeStateManager = await import(
-			'./modules/utils/worktree-state-manager.js'
+			'../scripts/modules/utils/worktree-state-manager.js'
 		);
-		const gitUtils = await import('./modules/utils/git-utils.js');
-		const configManager = await import('./modules/config-manager.js');
+		const gitUtils = await import('../scripts/modules/utils/git-utils.js');
+		const configManager = await import('../scripts/modules/config-manager.js');
 
 		// Setup event emission tracking (Task 8)
 		const { worktreeEvents } = worktreeManager;

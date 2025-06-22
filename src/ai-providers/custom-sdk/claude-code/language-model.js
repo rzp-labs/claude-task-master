@@ -168,6 +168,7 @@ export class ClaudeCodeLanguageModel {
 		let rawUsage;
 		const warnings = this.generateUnsupportedWarnings(options);
 
+
 		try {
 			const response = query({
 				prompt: messagesPrompt,
@@ -183,6 +184,11 @@ export class ClaudeCodeLanguageModel {
 					this.sessionId = message.session_id;
 					costUsd = message.total_cost_usd;
 					durationMs = message.duration_ms;
+
+					// Extract the final result text if available
+					if (message.result && typeof message.result === 'string') {
+						text = message.result;
+					}
 
 					if ('usage' in message) {
 						rawUsage = message.usage;

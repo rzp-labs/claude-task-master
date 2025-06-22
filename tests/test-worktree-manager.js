@@ -37,7 +37,7 @@ async function runTests() {
 	try {
 		// Test 1: Module Import
 		console.log('1. Testing module import...');
-		wm = await import('./modules/utils/worktree-manager.js');
+		wm = await import('../scripts/modules/utils/worktree-manager.js');
 		console.log('✓ Module imports successfully');
 		console.log('✓ Functions available:', Object.keys(wm));
 		console.log('');

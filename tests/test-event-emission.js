@@ -25,7 +25,7 @@ import {
 	createWorktree,
 	removeWorktree,
 	worktreeEvents
-} from './modules/utils/worktree-manager.js';
+} from '../scripts/modules/utils/worktree-manager.js';
 
 const execAsync = promisify(exec);
 

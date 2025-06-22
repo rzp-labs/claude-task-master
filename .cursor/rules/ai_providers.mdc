@@ -1,6 +1,6 @@
 ---
 description: Guidelines for managing Task Master AI providers and models.
-globs: 
+globs:
 alwaysApply: false
 ---
 # Task Master AI Provider Management

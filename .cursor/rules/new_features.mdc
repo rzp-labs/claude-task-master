@@ -24,12 +24,12 @@ alwaysApply: false
 The standard pattern for adding a feature follows this workflow:
 
 1. **Core Logic**: Implement the business logic in the appropriate module (e.g., [`task-manager.js`](mdc:scripts/modules/task-manager.js)).
-2. **Context Gathering (If Applicable)**: 
+2. **Context Gathering (If Applicable)**:
    - For AI-powered commands that benefit from project context, use the standardized context gathering patterns from [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc).
    - Import `ContextGatherer` and `FuzzyTaskSearch` utilities for reusable context extraction.
    - Support multiple context types: tasks, files, custom text, project tree.
    - Implement detailed token breakdown display for transparency.
-3. **AI Integration (If Applicable)**: 
+3. **AI Integration (If Applicable)**:
    - Import necessary service functions (e.g., `generateTextService`, `streamTextService`) from [`ai-services-unified.js`](mdc:scripts/modules/ai-services-unified.js).
    - Prepare parameters (`role`, `session`, `systemPrompt`, `prompt`).
    - Call the service function.
@@ -73,18 +73,18 @@ The standard pattern for adding a feature follows this workflow:
   ```javascript
   // ✅ DO: Pass all required parameters
   await generateTaskFiles(tasksPath, path.dirname(tasksPath));
-  
+
   // ❌ DON'T: Omit required parameters
   await generateTaskFiles(tasksPath); // Error - missing outputDir parameter
   ```
-  
+
   **Example**: Properly match direct function parameters to core function:
   ```javascript
   // Core function signature
   async function expandTask(tasksPath, taskId, numSubtasks, useResearch = false, additionalContext = '', options = {}) {
     // Implementation...
   }
-  
+
   // ✅ DO: Match direct function parameters to core function
   export async function expandTaskDirect(args, log, context = {}) {
     // Extract only parameters that exist in the core function
@@ -92,7 +92,7 @@ The standard pattern for adding a feature follows this workflow:
     const numSubtasks = args.num ? parseInt(args.num, 10) : undefined;
     const useResearch = args.research === true;
     const additionalContext = args.prompt || '';
-    
+
     // Call core function with matched parameters
     const result = await expandTask(
       tasksPath,
@@ -102,16 +102,16 @@ The standard pattern for adding a feature follows this workflow:
       additionalContext,
       { mcpLog: log, session: context.session }
     );
-    
+
     // Return result
     return { success: true, data: result, fromCache: false };
   }
-  
+
   // ❌ DON'T: Use parameters that don't exist in the core function
   export async function expandTaskDirect(args, log, context = {}) {
     // DON'T extract parameters that don't exist in the core function!
     const force = args.force === true; // ❌ WRONG - 'force' doesn't exist in core function
-    
+
     // DON'T pass non-existent parameters to core functions
     const result = await expandTask(
       tasksPath,
@@ -134,11 +134,11 @@ The standard pattern for adding a feature follows this workflow:
   ```javascript
   // ✅ DO: Use consistent file naming and path.join
   const taskFileName = path.join(
-    path.dirname(tasksPath), 
+    path.dirname(tasksPath),
     `task_${taskId.toString().padStart(3, '0')}.txt`
   );
-  
-  // ❌ DON'T: Use inconsistent naming or string concatenation 
+
+  // ❌ DON'T: Use inconsistent naming or string concatenation
   const taskFileName = path.dirname(tasksPath) + '/' + taskId + '.md';
   ```
 
@@ -172,7 +172,7 @@ The standard pattern for adding a feature follows this workflow:
     // Direct Function Example:
     try {
       // Prefer passing 'json' if the core function reliably handles it
-      const result = await coreFunction(...args, 'json'); 
+      const result = await coreFunction(...args, 'json');
       // OR, if outputFormat is not enough/unreliable:
       // enableSilentMode(); // Enable *before* the call
       // const result = await coreFunction(...args);
@@ -184,7 +184,7 @@ The standard pattern for adding a feature follows this workflow:
        return { success: false, error: { message: error.message } };
     } finally {
        // If you used enable/disable, ensure disable is called here
-       // disableSilentMode(); 
+       // disableSilentMode();
     }
     ```
   - ✅ **DO**: Core functions themselves *should* ideally check `outputFormat === 'text'` before displaying UI elements (banners, spinners, boxes) and use internal logging (`log`/`report`) that respects silent mode. The `enable/disableSilentMode` wrapper in the direct function is a safety net.
@@ -279,9 +279,9 @@ programInstance
   .action(async (options) => {
     const tasksPath = options.file;
     const archivePath = options.output;
-    
+
     console.log(chalk.blue(`Archiving completed tasks from ${tasksPath} to ${archivePath}...`));
-    
+
     const archivedCount = await archiveTasks(tasksPath, archivePath);
     displayArchiveResults(archivePath, archivedCount);
   });
@@ -298,10 +298,10 @@ For features requiring components in multiple modules:
     // Implementation...
     return difficultyScores;
   }
-  
+
   // In ui.js - depends on task-manager.js
   import { analyzeTasksDifficulty } from './task-manager.js';
-  
+
   function displayDifficultyReport(tasks) {
     const scores = analyzeTasksDifficulty(tasks);
     // Render the scores...
@@ -312,12 +312,12 @@ For features requiring components in multiple modules:
   ```javascript
   // In task-manager.js - depends on ui.js
   import { displayDifficultyReport } from './ui.js';
-  
+
   function analyzeTasks() {
     // Implementation...
     displayDifficultyReport(tasks); // WRONG! Don't call UI functions from task-manager
   }
-  
+
   // In ui.js - depends on task-manager.js
   import { analyzeTasks } from './task-manager.js';
   ```
@@ -326,7 +326,7 @@ For features requiring components in multiple modules:
 
 - **Naming Conventions**:
   - Use kebab-case for command names (`analyze-complexity`, not `analyzeComplexity`)
-  - Use kebab-case for option names (`--output-format`, not `--outputFormat`) 
+  - Use kebab-case for option names (`--output-format`, not `--outputFormat`)
   - Use the same option names across commands when they represent the same concept
 
 - **Command Structure**:
@@ -374,7 +374,7 @@ When implementing new features, follow these guidelines to ensure your code is t
     fileSystem.writeFile('task.json', JSON.stringify(task));
     logger.info('Task processed');
   }
-  
+
   // ❌ DON'T: Use hard-coded dependencies
   function processTask(task) {
     fs.writeFile('task.json', JSON.stringify(task));
@@ -391,7 +391,7 @@ When implementing new features, follow these guidelines to ensure your code is t
     // Pure logic that returns a value
     return computedPriority;
   }
-  
+
   function displayTaskPriority(task, dependencies) {
     const priority = calculateTaskPriority(task, dependencies);
     console.log(`Task priority: ${priority}`);
@@ -407,10 +407,10 @@ When implementing new features, follow these guidelines to ensure your code is t
     // Logic to determine version
     return version;
   }
-  
+
   // In setupCLI
   programInstance.version(getVersionString);
-  
+
   // In tests
   test('getVersionString returns correct version', () => {
     expect(getVersionString()).toBe('1.5.0');
@@ -441,7 +441,7 @@ Every new feature **must** include comprehensive tests following the guidelines 
      test('should perform expected operation with valid input', () => {
        expect(newFeatureUtil('valid input')).toBe('expected result');
      });
-     
+
      test('should handle edge cases appropriately', () => {
        expect(newFeatureUtil('')).toBeNull();
      });
@@ -540,8 +540,8 @@ Integrating Task Master commands with the MCP server (for use by tools like Curs
           const { projectRoot /*, other args */ } = args;
           // ... resolve tasks path if needed using normalized projectRoot ...
           const result = await yourCommandDirect(
-              { /* other args */, projectRoot /* if needed by direct func */ }, 
-              log, 
+              { /* other args */, projectRoot /* if needed by direct func */ },
+              log,
               { session }
           );
           return handleApiResult(result, log);
@@ -565,14 +565,14 @@ For long-running operations that should not block the client, use the AsyncOpera
 2. **Use AsyncOperationManager in MCP Tools**:
    ```javascript
    import { asyncOperationManager } from '../core/utils/async-manager.js';
-   
+
    // In execute method:
    const operationId = asyncOperationManager.addOperation(
      expandTaskDirect, // The direct function to run in background
      { ...args, projectRoot: rootFolder }, // Args to pass to the function
      { log, reportProgress, session } // Context to preserve for the operation
    );
-   
+
    // Return immediate response with operation ID
    return createContentResponse({
      message: "Operation started successfully",
@@ -610,7 +610,7 @@ When implementing project initialization commands:
    // In initialize-project.js MCP tool:
    import { z } from "zod";
    import { initializeProjectDirect } from "../core/task-master-core.js";
-   
+
    export function registerInitializeProjectTool(server) {
      server.addTool({
        name: "initialize_project",
@@ -650,14 +650,14 @@ When implementing project initialization commands:
     const tasksData = readJSON(tasksPath);
     const currentTag = getCurrentTag() || 'master';
     const tasks = getTasksForTag(tasksData, currentTag);
-    
+
     // Perform feature logic on tasks array
     const result = performFeatureLogic(tasks, featureParams);
-    
+
     // Save back using tag resolution
     setTasksForTag(tasksData, currentTag, tasks);
     writeJSON(tasksPath, tasksData);
-    
+
     return result;
   }
   ```
@@ -691,20 +691,20 @@ When implementing project initialization commands:
           console.error('Not in a Task Master project directory');
           process.exit(1);
         }
-        
+
         // Use specified tag or current tag
         const targetTag = options.tag || getCurrentTag() || 'master';
-        
+
         const result = await newFeatureCore(
           path.join(projectRoot, '.taskmaster', 'tasks', 'tasks.json'),
           { param: options.param },
-          { 
+          {
             force: options.force,
             targetTag: targetTag,
             outputFormat: 'text'
           }
         );
-        
+
         console.log('Feature executed successfully');
       } catch (error) {
         console.error(`Error: ${error.message}`);
@@ -732,15 +732,15 @@ When implementing project initialization commands:
   export async function newFeatureDirect(args, log, context = {}) {
     try {
       const tasksPath = findTasksJsonPath(args, log);
-      
+
       // Enable silent mode for clean MCP responses
       enableSilentMode();
-      
+
       try {
         const result = await newFeatureCore(
           tasksPath,
           { param: args.param },
-          { 
+          {
             force: args.force,
             targetTag: args.tag || 'master', // Support tag specification
             mcpLog: log,
@@ -748,7 +748,7 @@ When implementing project initialization commands:
             outputFormat: 'json'
           }
         );
-        
+
         return {
           success: true,
           data: result,
@@ -819,36 +819,36 @@ When implementing project initialization commands:
     beforeEach(() => {
       jest.clearAllMocks();
     });
-    
+
     it('should work with legacy task format', async () => {
       const legacyData = { tasks: [/* test data */] };
       fs.readFileSync.mockReturnValue(JSON.stringify(legacyData));
-      
+
       const result = await newFeatureCore('/test/tasks.json', { param: 'test' });
-      
+
       expect(result).toBeDefined();
       // Test legacy format handling
     });
-    
+
     it('should work with tagged task format', async () => {
-      const taggedData = { 
+      const taggedData = {
         master: { tasks: [/* test data */] },
         feature: { tasks: [/* test data */] }
       };
       fs.readFileSync.mockReturnValue(JSON.stringify(taggedData));
-      
+
       const result = await newFeatureCore('/test/tasks.json', { param: 'test' });
-      
+
       expect(result).toBeDefined();
       // Test tagged format handling
     });
-    
+
     it('should handle tag migration during feature usage', async () => {
       const legacyData = { tasks: [/* test data */] };
       fs.readFileSync.mockReturnValue(JSON.stringify(legacyData));
-      
+
       await newFeatureCore('/test/tasks.json', { param: 'test' });
-      
+
       // Verify migration occurred
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         '/test/tasks.json',

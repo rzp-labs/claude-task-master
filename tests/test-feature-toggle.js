@@ -21,8 +21,8 @@ async function testFeatureToggle() {
 	try {
 		// Import modules
 		console.log('1. Importing modules...');
-		const configManager = await import('./modules/config-manager.js');
-		const worktreeManager = await import('./modules/utils/worktree-manager.js');
+		const configManager = await import('../scripts/modules/config-manager.js');
+		const worktreeManager = await import('../scripts/modules/utils/worktree-manager.js');
 		console.log('✓ All modules imported successfully\n');
 
 		// Backup original config

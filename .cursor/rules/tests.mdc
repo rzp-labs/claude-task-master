@@ -5,7 +5,7 @@ globs: "**/*.test.js,tests/**/*"
 
 # Testing Guidelines for Task Master CLI
 
-*Note:* Never use asynchronous operations in tests. Always mock tests properly based on the way the tested functions are defined and used. Do not arbitrarily create tests. Based them on the low-level details and execution of the underlying code being tested. 
+*Note:* Never use asynchronous operations in tests. Always mock tests properly based on the way the tested functions are defined and used. Do not arbitrarily create tests. Based them on the low-level details and execution of the underlying code being tested.
 
 ## Test Organization Structure
 
@@ -66,11 +66,11 @@ describe('Feature or Function Name', () => {
     jest.clearAllMocks();
     // Additional setup code
   });
-  
+
   afterEach(() => {
     // Cleanup code
   });
-  
+
   // 7. Grouped tests for related functionality
   describe('specific functionality', () => {
     // 8. Individual test cases with clear descriptions
@@ -78,10 +78,10 @@ describe('Feature or Function Name', () => {
       // Arrange - set up test data
       const input = testFixture.sampleInput;
       mockReadFileSync.mockReturnValue('mocked content');
-      
+
       // Act - call the function being tested
       const result = functionToTest(input);
-      
+
       // Assert - verify the result
       expect(result).toBe(expectedOutput);
       expect(mockReadFileSync).toHaveBeenCalledWith(expect.stringContaining('path'));
@@ -100,24 +100,24 @@ When testing CLI commands built with Commander.js, several special consideration
   - ✅ **DO**: Explicitly handle all options, including defaults and shorthand flags (e.g., `-p` for `--prompt`)
   - ✅ **DO**: Include null/undefined checks in test implementations for parameters that might be optional
   - ✅ **DO**: Use fixtures from `tests/fixtures/` for consistent sample data across tests
-  
+
   ```javascript
   // ✅ DO: Create a simplified test version of the command handler
   const testAddTaskAction = async (options) => {
     options = options || {}; // Ensure options aren't undefined
-    
+
     // Validate parameters
     const isManualCreation = options.title && options.description;
     const prompt = options.prompt || options.p; // Handle shorthand flags
-    
+
     if (!prompt && !isManualCreation) {
       throw new Error('Expected error message');
     }
-    
+
     // Call the mocked task manager
     return mockTaskManager.addTask(/* parameters */);
   };
-  
+
   test('should handle required parameters correctly', async () => {
     // Call the test implementation directly
     await expect(async () => {
@@ -131,7 +131,7 @@ When testing CLI commands built with Commander.js, several special consideration
   - ✅ **DO**: Return `this` (or the mock object) from all chainable method mocks
   - ✅ **DO**: Remember to mock not only the initial object but also all objects returned by methods
   - ✅ **DO**: Implement a mechanism to capture the action handler for direct testing
-  
+
   ```javascript
   // If you must mock the Commander.js chain:
   const mockCommand = {
@@ -139,9 +139,9 @@ When testing CLI commands built with Commander.js, several special consideration
     description: jest.fn().mockReturnThis(),
     option: jest.fn().mockReturnThis(),
     argument: jest.fn().mockReturnThis(), // Don't forget this one
-    action: jest.fn(fn => { 
+    action: jest.fn(fn => {
       actionHandler = fn; // Capture the handler for testing
-      return mockCommand; 
+      return mockCommand;
     }),
     on: jest.fn().mockReturnThis() // Don't forget this one
   };
@@ -152,10 +152,10 @@ When testing CLI commands built with Commander.js, several special consideration
   - ✅ **DO**: Handle parameters like Commander would (comma-separated lists, etc.)
   - ✅ **DO**: Set proper default values as defined in the command
   - ✅ **DO**: Validate that required parameters are actually required in tests
-  
+
   ```javascript
   // Parse dependencies like Commander would
-  const dependencies = options.dependencies 
+  const dependencies = options.dependencies
     ? options.dependencies.split(',').map(id => id.trim())
     : [];
   ```
@@ -164,11 +164,11 @@ When testing CLI commands built with Commander.js, several special consideration
   - ✅ **DO**: Properly mock session objects when required by functions
   - ✅ **DO**: Reset environment variables between tests if modified
   - ✅ **DO**: Use a consistent pattern for environment-dependent tests
-  
+
   ```javascript
   // Session parameter mock pattern
   const sessionMock = { session: process.env };
-  
+
   // In test:
   expect(mockAddTask).toHaveBeenCalledWith(
     expect.any(String),
@@ -191,13 +191,13 @@ When testing CLI commands built with Commander.js, several special consideration
   - ❌ **DON'T**: Access variables before initialization in your test implementations
   - ❌ **DON'T**: Include actual command execution in unit tests
   - ❌ **DON'T**: Overwrite the same file path in multiple tests
-  
+
   ```javascript
   // ❌ DON'T: Create circular references in mocks
   const badMock = {
     method: jest.fn().mockImplementation(() => badMock.method())
   };
-  
+
   // ❌ DON'T: Access uninitialized variables
   const badImplementation = () => {
     const result = uninitialized;
@@ -217,7 +217,7 @@ When testing CLI commands built with Commander.js, several special consideration
   // ✅ DO: Place mocks before imports
   jest.mock('commander');
   import { program } from 'commander';
-  
+
   // ❌ DON'T: Define variables and then try to use them in mocks
   const mockFn = jest.fn();
   jest.mock('module', () => ({
@@ -228,21 +228,21 @@ When testing CLI commands built with Commander.js, several special consideration
 - **Mocking Modules with Function References**
   - Use `jest.spyOn()` after imports to create spies on mock functions
   - Reference these spies in test assertions
-  
+
   ```javascript
   // Mock the module first
   jest.mock('fs');
-  
+
   // Import the mocked module
   import fs from 'fs';
-  
+
   // Create spies on the mock functions
   const mockExistsSync = jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-  
+
   test('should call existsSync', () => {
     // Call function that uses fs.existsSync
     const result = functionUnderTest();
-    
+
     // Verify the mock was called correctly
     expect(mockExistsSync).toHaveBeenCalled();
   });
@@ -252,22 +252,22 @@ When testing CLI commands built with Commander.js, several special consideration
   - Get the callback from your mock's call arguments
   - Execute it directly with test inputs
   - Verify the results match expectations
-  
+
   ```javascript
   jest.mock('commander');
   import { program } from 'commander';
   import { setupCLI } from '../../scripts/modules/commands.js';
-  
+
   const mockVersion = jest.spyOn(program, 'version').mockReturnValue(program);
-  
+
   test('version callback should return correct version', () => {
     // Call the function that registers the callback
     setupCLI();
-    
+
     // Extract the callback function
     const versionCallback = mockVersion.mock.calls[0][0];
     expect(typeof versionCallback).toBe('function');
-    
+
     // Execute the callback and verify results
     const result = versionCallback();
     expect(result).toBe('1.5.0');
@@ -380,7 +380,7 @@ When testing ES modules (`"type": "module"` in package.json), traditional mockin
 - **File System Operations**
   ```javascript
   import mockFs from 'mock-fs';
-  
+
   beforeEach(() => {
     mockFs({
       'tasks': {
@@ -391,7 +391,7 @@ When testing ES modules (`"type": "module"` in package.json), traditional mockin
       }
     });
   });
-  
+
   afterEach(() => {
     mockFs.restore();
   });
@@ -400,9 +400,9 @@ When testing ES modules (`"type": "module"` in package.json), traditional mockin
 - **API Calls (Anthropic/Claude)**
   ```javascript
   import { Anthropic } from '@anthropic-ai/sdk';
-  
+
   jest.mock('@anthropic-ai/sdk');
-  
+
   beforeEach(() => {
     Anthropic.mockImplementation(() => ({
       messages: {
@@ -417,13 +417,13 @@ When testing ES modules (`"type": "module"` in package.json), traditional mockin
 - **Environment Variables**
   ```javascript
   const originalEnv = process.env;
-  
+
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
     process.env.MODEL = 'test-model';
   });
-  
+
   afterEach(() => {
     process.env = originalEnv;
   });
@@ -477,19 +477,19 @@ When testing ES modules (`"type": "module"` in package.json), traditional mockin
   - ✅ DO: Verify modifications on the in-memory task objects passed to `writeJSON`
   - ❌ DON'T: Modify real task files (tasks.json) during tests
   - ❌ DON'T: Skip testing file operations because they're "just I/O"
-  
+
   ```javascript
   // ✅ DO: Test file operations without real file system changes
   test('should update task status in tasks.json', async () => {
     // Setup mock to return sample data
     readJSON.mockResolvedValue(JSON.parse(JSON.stringify(sampleTasks)));
-    
+
     // Use test-specific file path
     await setTaskStatus('test-tasks.json', '2', 'done');
-    
+
     // Verify correct file path was read
     expect(readJSON).toHaveBeenCalledWith('test-tasks.json');
-    
+
     // Verify correct file path was written with updated content
     expect(writeJSON).toHaveBeenCalledWith(
       'test-tasks.json',
@@ -554,12 +554,12 @@ npm test -- -t "pattern to match"
     action() { /* ... */ }
     // Many methods to implement
   }
-  
+
   // ✅ DO: Test the command handlers directly
   test('should use default PRD path when no arguments provided', async () => {
     // Call the action handler directly with the right params
     await parsePrdAction(undefined, { numTasks: '10', output: 'tasks/tasks.json' });
-    
+
     // Assert on behavior
     expect(mockParsePRD).toHaveBeenCalledWith('scripts/prd.txt', 'tasks/tasks.json', 10);
   });
@@ -572,16 +572,16 @@ npm test -- -t "pattern to match"
   // ❌ DON'T: Try to modify imported modules
   import { detectCamelCaseFlags } from '../../scripts/modules/utils.js';
   detectCamelCaseFlags = jest.fn(); // Error: Assignment to constant variable
-  
+
   // ❌ DON'T: Try to use require with ES modules
   const utils = require('../../scripts/modules/utils.js'); // Error in ES modules
-  
+
   // ✅ DO: Use Jest module factory pattern
   jest.mock('../../scripts/modules/utils.js', () => ({
     detectCamelCaseFlags: jest.fn(),
     toKebabCase: jest.fn()
   }));
-  
+
   // Import after mocks are defined
   import { detectCamelCaseFlags } from '../../scripts/modules/utils.js';
   ```
@@ -592,10 +592,10 @@ npm test -- -t "pattern to match"
   ```javascript
   // ❌ DON'T: Redefine imported functions with the same name
   import { detectCamelCaseFlags } from '../../scripts/modules/utils.js';
-  
+
   function detectCamelCaseFlags() { /* Test implementation */ }
   // Error: Identifier has already been declared
-  
+
   // ✅ DO: Use a different name for test implementations
   function testDetectCamelCaseFlags() { /* Test implementation */ }
   ```
@@ -607,7 +607,7 @@ npm test -- -t "pattern to match"
   // ❌ DON'T: Create circular references with console.log
   const mockConsoleLog = jest.spyOn(console, 'log');
   mockConsoleLog.mockImplementation(console.log); // Creates infinite recursion
-  
+
   // ✅ DO: Use a non-recursive mock implementation
   const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
   ```
@@ -619,7 +619,7 @@ npm test -- -t "pattern to match"
   // ❌ DON'T: Try to use jest methods on imported functions without proper mocking
   import { parsePRD } from '../../scripts/modules/task-manager.js';
   parsePRD.mockClear(); // Error: parsePRD.mockClear is not a function
-  
+
   // ✅ DO: Create proper jest.fn() mocks
   const mockParsePRD = jest.fn().mockResolvedValue(undefined);
   jest.mock('../../scripts/modules/task-manager.js', () => ({
@@ -640,7 +640,7 @@ npm test -- -t "pattern to match"
       this.setMaxListeners(20); // Avoid MaxListenersExceededWarning
     }
   }
-  
+
   // Option 2 (preferred): Test command handlers directly instead
   // (as shown in the first example)
   ```
@@ -651,7 +651,7 @@ npm test -- -t "pattern to match"
   ```javascript
   // ❌ DON'T: Allow mock state to persist between tests
   const globalMock = jest.fn().mockReturnValue('test');
-  
+
   // ✅ DO: Clear mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
@@ -708,11 +708,11 @@ npm test -- -t "pattern to match"
   // ✅ DO: Test with bypassed initialization or manual task paths
   test('should handle manual task creation without AI', () => {
     // Using a path that doesn't require AI client initialization
-    const result = addTaskDirect({ 
-      title: 'Manual Task', 
+    const result = addTaskDirect({
+      title: 'Manual Task',
       description: 'Test Description'
     }, mockLogger);
-    
+
     expect(result.success).toBe(true);
   });
   ```
@@ -750,7 +750,7 @@ npm test -- -t "pattern to match"
   expect(result.success).toBe(false);
   expect(result.error).toContain('Could not connect');
   // Or even better:
-  expect(result).toMatchObject({ 
+  expect(result).toMatchObject({
     success: false,
     error: expect.stringContaining('connect')
   });
@@ -762,7 +762,7 @@ npm test -- -t "pattern to match"
   - Create simplified versions of complex functions that focus only on core logic
   - Remove file system operations, API calls, and other external dependencies
   - Pass all dependencies as parameters to make testing easier
-  
+
   ```javascript
   // Original function (hard to test)
   const setTaskStatus = async (taskId, newStatus) => {
@@ -772,7 +772,7 @@ npm test -- -t "pattern to match"
     await writeJSON(tasksPath, data);
     return { success: true };
   };
-  
+
   // Test-friendly version (easier to test)
   const updateTaskStatus = (tasks, taskId, newStatus) => {
     // Pure logic without side effects
@@ -797,17 +797,17 @@ When testing ES modules or working with complex module imports, you may encounte
   - ✅ **DO**: Use proper function declarations to avoid hoisting issues
   - ✅ **DO**: Initialize variables before they are referenced, especially in imported modules
   - ✅ **DO**: Be aware that imports are hoisted to the top of the file
-  
+
   ```javascript
   // ✅ DO: Define global state variables at the top of the module
   let silentMode = false; // Declare and initialize first
-  
+
   const CONFIG = { /* configuration */ };
-  
+
   function isSilentMode() {
     return silentMode; // Reference variable after it's initialized
   }
-  
+
   function log(level, message) {
     if (isSilentMode()) return; // Use the function instead of accessing variable directly
     // ...
@@ -818,7 +818,7 @@ When testing ES modules or working with complex module imports, you may encounte
   - ✅ **DO**: Create test-specific implementations that initialize all variables correctly
   - ✅ **DO**: Use factory functions in mocks to ensure proper initialization order
   - ✅ **DO**: Be careful with how you mock or stub functions that depend on module state
-  
+
   ```javascript
   // ✅ DO: Test-specific implementation that avoids initialization issues
   const testLog = (level, ...args) => {
@@ -834,20 +834,20 @@ When testing ES modules or working with complex module imports, you may encounte
   - ❌ **DON'T**: Create circular dependencies between modules
   - ❌ **DON'T**: Rely on variable initialization order across module boundaries
   - ❌ **DON'T**: Define functions that use hoisted variables before they're initialized
-  
+
   ```javascript
   // ❌ DON'T: Create reference-before-initialization patterns
   function badFunction() {
     if (silentMode) { /* ... */ } // ReferenceError if silentMode is declared later
   }
-  
+
   let silentMode = false;
-  
+
   // ❌ DON'T: Create cross-module references that depend on initialization order
   // module-a.js
   import { getSetting } from './module-b.js';
   export const config = { value: getSetting() };
-  
+
   // module-b.js
   import { config } from './module-a.js';
   export function getSetting() {
@@ -859,13 +859,13 @@ When testing ES modules or working with complex module imports, you may encounte
   - ✅ **DO**: Use dynamic imports (`import()`) to avoid initialization order issues
   - ✅ **DO**: Structure modules to avoid circular dependencies that cause initialization issues
   - ✅ **DO**: Consider factory functions for modules with complex state
-  
+
   ```javascript
   // ✅ DO: Use dynamic imports to avoid initialization issues
   async function getTaskManager() {
     return import('./task-manager.js');
   }
-  
+
   async function someFunction() {
     const taskManager = await getTaskManager();
     return taskManager.someMethod();
@@ -876,7 +876,7 @@ When testing ES modules or working with complex module imports, you may encounte
   - ✅ **DO**: Create self-contained test implementations rather than using real implementations
   - ✅ **DO**: Mock dependencies at module boundaries instead of trying to mock deep dependencies
   - ✅ **DO**: Isolate module-specific state in tests
-  
+
   ```javascript
   // ✅ DO: Create isolated test implementation instead of reusing module code
   test('should log messages when not in silent mode', () => {
@@ -885,8 +885,8 @@ When testing ES modules or working with complex module imports, you may encounte
       if (false) return; // Always non-silent for this test
       mockConsole(level, message);
     };
-    
+
     testLog('info', 'test message');
     expect(mockConsole).toHaveBeenCalledWith('info', 'test message');
   });
-  ``` 
+  ```

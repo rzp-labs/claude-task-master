@@ -18,7 +18,7 @@ alwaysApply: false
   // ✅ DO: Use consistent dependency formats
   // For main tasks
   task.dependencies = [1, 2, 3]; // Dependencies on other main tasks
-  
+
   // For subtasks
   subtask.dependencies = [1, "3.2"]; // Dependency on main task 1 and subtask 2 of task 3
   ```
@@ -88,9 +88,9 @@ alwaysApply: false
 
   ```javascript
   // ✅ DO: Format IDs consistently when adding dependencies
-  const formattedTaskId = typeof taskId === 'string' && taskId.includes('.') 
+  const formattedTaskId = typeof taskId === 'string' && taskId.includes('.')
     ? taskId : parseInt(taskId, 10);
-  
+
   const formattedDependencyId = formatTaskId(dependencyId);
   ```
 
@@ -104,21 +104,21 @@ alwaysApply: false
   const dependencyIndex = targetTask.dependencies.findIndex(dep => {
     // Convert both to strings for comparison
     let depStr = String(dep);
-    
+
     // Handle relative subtask references
     if (typeof dep === 'number' && dep < 100 && isSubtask) {
       const [parentId] = formattedTaskId.split('.');
       depStr = `${parentId}.${dep}`;
     }
-    
+
     return depStr === normalizedDependencyId;
   });
-  
+
   if (dependencyIndex === -1) {
     log('info', `Task ${formattedTaskId} does not depend on ${formattedDependencyId}, no changes made.`);
     return;
   }
-  
+
   // Remove the dependency
   targetTask.dependencies.splice(dependencyIndex, 1);
   ```
@@ -173,14 +173,14 @@ alwaysApply: false
     if (!dependencies || dependencies.length === 0) {
       return 'None';
     }
-    
+
     return dependencies.map(depId => {
       const depTask = findTaskById(allTasks, depId);
       if (!depTask) return `${depId} (Not found)`;
-      
+
       const isDone = depTask.status === 'done' || depTask.status === 'completed';
       const statusIcon = isDone ? '✅' : '⏱️';
-      
+
       return `${statusIcon} ${depId} (${depTask.status})`;
     }).join(', ');
   }
@@ -199,26 +199,26 @@ alwaysApply: false
     // Mark the current node as visited and part of recursion stack
     visited.add(subtaskId);
     recursionStack.add(subtaskId);
-    
+
     const cyclesToBreak = [];
     const dependencies = dependencyMap.get(subtaskId) || [];
-    
+
     for (const depId of dependencies) {
       if (!visited.has(depId)) {
         const cycles = findCycles(depId, dependencyMap, visited, recursionStack);
         cyclesToBreak.push(...cycles);
-      } 
+      }
       else if (recursionStack.has(depId)) {
         // Found a cycle, add the edge to break
         cyclesToBreak.push(depId);
       }
     }
-    
+
     // Remove the node from recursion stack before returning
     recursionStack.delete(subtaskId);
-    
+
     return cyclesToBreak;
   }
   ```
 
-Refer to [`dependency-manager.js`](mdc:scripts/modules/dependency-manager.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines. 
+Refer to [`dependency-manager.js`](mdc:scripts/modules/dependency-manager.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines.

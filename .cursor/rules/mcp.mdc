@@ -39,7 +39,7 @@ When implementing a new direct function in `mcp-server/src/core/direct-functions
      async function generateTaskFilesDirect(args, log) {
        const tasksPath = findTasksJsonPath(args, log);
        const outputDir = args.output || path.dirname(tasksPath);
-       
+
        try {
          // Pass all required parameters
          const result = await generateTaskFiles(tasksPath, outputDir);
@@ -104,7 +104,7 @@ When implementing a new direct function in `mcp-server/src/core/direct-functions
      // ... later when calling the core function ...
      await coreFunction(
        // ... other arguments ...
-       { 
+       {
          mcpLog: logWrapper, // Pass the wrapper object
          session // Also pass session if needed by core logic or AI service
        },
@@ -508,7 +508,7 @@ Follow these steps to add MCP support for an existing Task Master command (see [
   - ✅ DO: Include the core action in the tool name without redundant words: Use `list_tasks` instead of `list_all_tasks`
 
 - **Examples**:
-  - File: `list-tasks.js` 
+  - File: `list-tasks.js`
   - Direct Function: `listTasksDirect`
   - Tool Registration: `registerListTasksTool`
   - MCP Tool Name: `list_tasks`

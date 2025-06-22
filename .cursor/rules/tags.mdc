@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: scripts/modules/*
 alwaysApply: false
 ---
@@ -20,19 +20,19 @@ All command files must import `getCurrentTag`:
 
 ```javascript
 // ✅ DO: Import getCurrentTag in commands.js
-import { 
-  log, 
-  readJSON, 
-  writeJSON, 
-  findProjectRoot, 
-  getCurrentTag 
+import {
+  log,
+  readJSON,
+  writeJSON,
+  findProjectRoot,
+  getCurrentTag
 } from './utils.js';
 
 // ✅ DO: Import getCurrentTag in task-manager files
-import { 
-  readJSON, 
-  writeJSON, 
-  getCurrentTag 
+import {
+  readJSON,
+  writeJSON,
+  getCurrentTag
 } from '../utils.js';
 ```
 
@@ -79,12 +79,12 @@ async function coreFunction(
   context = {} // REQUIRED context parameter
 ) {
   const { projectRoot, tag } = context;
-  
+
   // Use tag-aware readJSON/writeJSON
   const data = readJSON(tasksPath, projectRoot, tag);
-  
+
   // ... function logic ...
-  
+
   writeJSON(tasksPath, data, projectRoot, tag);
 }
 ```
@@ -94,7 +94,7 @@ async function coreFunction(
 The tag resolution follows this exact priority order:
 
 1. **Explicit `--tag` flag**: `options.tag`
-2. **Current active tag**: `getCurrentTag(projectRoot)`  
+2. **Current active tag**: `getCurrentTag(projectRoot)`
 3. **Default fallback**: `'master'`
 
 ```javascript
@@ -106,7 +106,7 @@ const tag = options.tag || getCurrentTag(projectRoot) || 'master';
 
 ### High Priority (Core Task Operations)
 - [x] `add-task` - ✅ Fixed
-- [x] `list` - ✅ Fixed  
+- [x] `list` - ✅ Fixed
 - [x] `update-task` - ✅ Fixed
 - [x] `update-subtask` - ✅ Fixed
 - [x] `set-status` - ✅ Already correct
@@ -140,14 +140,14 @@ MCP direct functions must also follow the tag-aware pattern:
 export async function coreActionDirect(args, log, context = {}) {
   const { session } = context;
   const { projectRoot, tag } = args; // MCP passes these in args
-  
+
   try {
     const result = await coreAction(
       tasksPath,
       // ... other parameters ...
       { projectRoot, tag, session, mcpLog: logWrapper }
     );
-    
+
     return { success: true, data: result };
   } catch (error) {
     return { success: false, error: { code: 'ERROR_CODE', message: error.message } };
@@ -161,7 +161,7 @@ The `generate` command must use tag-aware file naming:
 
 ```javascript
 // ✅ DO: Tag-aware file naming
-const taskFileName = targetTag === 'master' 
+const taskFileName = targetTag === 'master'
   ? `task_${task.id.toString().padStart(3, '0')}.txt`
   : `task_${task.id.toString().padStart(3, '0')}_${targetTag}.txt`;
 ```
@@ -215,7 +215,7 @@ node bin/task-master use-tag test-tag
 node bin/task-master command-name
 
 # Test with master tag (default)
-node bin/task-master use-tag master  
+node bin/task-master use-tag master
 node bin/task-master command-name
 ```
 

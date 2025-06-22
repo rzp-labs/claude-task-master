@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Note on Interaction Method:**
 
-While this document details the implementation of Task Master's **CLI commands**, the **preferred method for interacting with Task Master in integrated environments (like Cursor) is through the MCP server tools**. 
+While this document details the implementation of Task Master's **CLI commands**, the **preferred method for interacting with Task Master in integrated environments (like Cursor) is through the MCP server tools**.
 
 - **Use MCP Tools First**: Always prefer using the MCP tools (e.g., `get_tasks`, `add_task`) when interacting programmatically or via an integrated tool. They offer better performance, structured data, and richer error handling. See [`taskmaster.mdc`](mdc:.cursor/rules/taskmaster.mdc) for a comprehensive list of MCP tools and their corresponding CLI commands.
 - **CLI as Fallback/User Interface**: The `task-master` CLI commands described here are primarily intended for:
@@ -57,7 +57,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
     .option('-y, --yes', 'Skip confirmation prompt', false)
     .action(async (options) => {
       // Validation code...
-      
+
       if (!options.yes) {
         const confirm = await inquirer.prompt([{
           type: 'confirm',
@@ -65,13 +65,13 @@ When implementing commands that delete or remove data (like `remove-task` or `re
           message: `Are you sure you want to permanently delete task ${taskId}? This cannot be undone.`,
           default: false
         }]);
-        
+
         if (!confirm.proceed) {
           console.log(chalk.yellow('Operation cancelled.'));
           return;
         }
       }
-      
+
       // Proceed with removal...
     });
   ```
@@ -89,7 +89,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
     path.dirname(tasksPath),
     `task_${taskId.toString().padStart(3, '0')}.txt`
   );
-  
+
   // ✅ DO: Check existence before deletion
   if (fs.existsSync(taskFilePath)) {
     try {
@@ -111,7 +111,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
   // ✅ DO: Clean up references when deleting items
   console.log(chalk.blue('Cleaning up task dependencies...'));
   let referencesRemoved = 0;
-  
+
   // Update dependencies in other tasks
   data.tasks.forEach(task => {
     if (task.dependencies && task.dependencies.includes(taskId)) {
@@ -119,7 +119,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
       referencesRemoved++;
     }
   });
-  
+
   if (referencesRemoved > 0) {
     console.log(chalk.green(`Removed ${referencesRemoved} references to task ${taskId} from other tasks`));
   }
@@ -175,7 +175,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
   // ✅ DO: Use consistent option naming
   .option('-f, --file <path>', 'Path to the tasks file', 'tasks/tasks.json')
   .option('-o, --output <dir>', 'Output directory', 'tasks')
-  
+
   // ❌ DON'T: Use inconsistent naming
   .option('-f, --file <path>', 'Path to the tasks file')
   .option('-p, --path <dir>', 'Output directory') // Should be --output
@@ -189,10 +189,10 @@ When implementing commands that delete or remove data (like `remove-task` or `re
   - ✅ DO: Use consistent flag handling across all commands
 
   ```javascript
-  // ✅ DO: Use positive flag with skip- prefix 
+  // ✅ DO: Use positive flag with skip- prefix
   .option('--skip-generate', 'Skip generating task files')
-  
-  // ❌ DON'T: Use --no- prefix 
+
+  // ❌ DON'T: Use --no- prefix
   .option('--no-generate', 'Skip generating task files')
   ```
 
@@ -200,7 +200,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
   ```javascript
   // ✅ DO: Use clear variable naming that matches the flag's intent
   const generateFiles = !options.skipGenerate;
-  
+
   // ❌ DON'T: Use confusing double negatives
   const dontSkipGenerate = !options.skipGenerate;
   ```
@@ -249,7 +249,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
     }
     process.exit(1);
   }
-  
+
   // ✅ DO: Validate task ID
   const taskId = parseInt(options.id, 10);
   if (isNaN(taskId) || taskId <= 0) {
@@ -257,7 +257,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
     console.log(chalk.yellow("Usage example: task-master update-task --id='23' --prompt='Update with new information.\\nEnsure proper error handling.'"));
     process.exit(1);
   }
-  
+
   // ✅ DO: Check for required API keys
   if (useResearch && !process.env.PERPLEXITY_API_KEY) {
     console.log(chalk.yellow('Warning: PERPLEXITY_API_KEY environment variable is missing. Research-backed updates will not be available.'));
@@ -276,7 +276,7 @@ When implementing commands that delete or remove data (like `remove-task` or `re
   // ✅ DO: Show operation status
   console.log(chalk.blue(`Parsing PRD file: ${file}`));
   console.log(chalk.blue(`Generating ${numTasks} tasks...`));
-  
+
   try {
     await parsePRD(file, outputPath, numTasks);
     console.log(chalk.green('Successfully generated tasks from PRD'));
@@ -354,11 +354,11 @@ For AI-powered commands that benefit from project context, follow the research c
       // 1. Parameter validation and parsing
       const taskIds = options.id ? parseTaskIds(options.id) : [];
       const filePaths = options.files ? parseFilePaths(options.files) : [];
-      
+
       // 2. Initialize context gatherer
       const projectRoot = findProjectRoot() || '.';
       const gatherer = new ContextGatherer(projectRoot, tasksPath);
-      
+
       // 3. Auto-discover relevant tasks if none specified
       if (taskIds.length === 0) {
         const fuzzySearch = new FuzzyTaskSearch(tasksData.tasks, 'research');
@@ -367,7 +367,7 @@ For AI-powered commands that benefit from project context, follow the research c
         );
         taskIds.push(...discoveredIds);
       }
-      
+
       // 4. Gather context with token breakdown
       const contextResult = await gatherer.gather({
         tasks: taskIds,
@@ -377,7 +377,7 @@ For AI-powered commands that benefit from project context, follow the research c
         format: 'research',
         includeTokenCounts: true
       });
-      
+
       // 5. Display token breakdown and execute AI call
       // Implementation continues...
     });
@@ -396,11 +396,11 @@ For AI-powered commands that benefit from project context, follow the research c
     // Command implementation
   } catch (error) {
     console.error(chalk.red(`Error: ${error.message}`));
-    
+
     if (CONFIG.debug) {
       console.error(error);
     }
-    
+
     process.exit(1);
   }
   ```
@@ -419,7 +419,7 @@ For AI-powered commands that benefit from project context, follow the research c
     console.error(chalk.yellow(`Run 'task-master ${commandName} --help' to see available options`));
     process.exit(1);
   });
-  
+
   // ✅ DO: Add command-specific help displays
   function showCommandHelp() {
     console.log(boxen(
@@ -451,7 +451,7 @@ For AI-powered commands that benefit from project context, follow the research c
       console.error(chalk.yellow("Run 'task-master <command> --help' to see available options"));
       process.exit(1);
     }
-    
+
     // Handle other error types...
     console.error(chalk.red(`Error: ${err.message}`));
     process.exit(1);
@@ -469,7 +469,7 @@ For AI-powered commands that benefit from project context, follow the research c
     // Implementation
   } catch (error) {
     console.error(chalk.red(`Error: ${error.message}`));
-    
+
     // Provide more helpful error messages for common issues
     if (error.message.includes('task') && error.message.includes('not found')) {
       console.log(chalk.yellow('\nTo fix this issue:'));
@@ -478,11 +478,11 @@ For AI-powered commands that benefit from project context, follow the research c
     } else if (error.message.includes('API key')) {
       console.log(chalk.yellow('\nThis error is related to API keys. Check your environment variables.'));
     }
-    
+
     if (CONFIG.debug) {
       console.error(error);
     }
-    
+
     process.exit(1);
   }
   ```
@@ -500,7 +500,7 @@ For AI-powered commands that benefit from project context, follow the research c
   import path from 'path';
   import chalk from 'chalk';
   import https from 'https';
-  
+
   import { CONFIG, log, readJSON } from './utils.js';
   import { displayBanner, displayHelp } from './ui.js';
   import { parsePRD, listTasks } from './task-manager.js';
@@ -531,7 +531,7 @@ For AI-powered commands that benefit from project context, follow the research c
         showAddSubtaskHelp(); // Show contextual help
         process.exit(1);
       }
-      
+
       // Implementation with detailed error handling
     });
   ```
@@ -570,16 +570,16 @@ For AI-powered commands that benefit from project context, follow the research c
     // Example return structure:
     return { currentVersion, latestVersion, updateAvailable };
   }
-  
+
   // ✅ DO: Implement semantic version comparison
   function compareVersions(v1, v2) {
     const v1Parts = v1.split('.').map(p => parseInt(p, 10));
     const v2Parts = v2.split('.').map(p => parseInt(p, 10));
-    
+
     // Implementation details...
     return result; // -1, 0, or 1
   }
-  
+
   // ✅ DO: Display attractive update notifications
   function displayUpgradeNotification(currentVersion, latestVersion) {
     const message = boxen(
@@ -592,20 +592,20 @@ For AI-powered commands that benefit from project context, follow the research c
         borderStyle: 'round'
       }
     );
-    
+
     console.log(message);
   }
-  
+
   // ✅ DO: Integrate version checking in CLI run function
   async function runCLI(argv = process.argv) {
     try {
       // Start the update check in the background - don't await yet
       const updateCheckPromise = checkForUpdate();
-      
+
       // Setup and parse
       const programInstance = setupCLI();
       await programInstance.parseAsync(argv);
-      
+
       // After command execution, check if an update is available
       const updateInfo = await updateCheckPromise;
       if (updateInfo.updateAvailable) {
@@ -617,7 +617,7 @@ For AI-powered commands that benefit from project context, follow the research c
   }
   ```
 
-Refer to [`commands.js`](mdc:scripts/modules/commands.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines. 
+Refer to [`commands.js`](mdc:scripts/modules/commands.js) for implementation examples and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines.
 // Helper function to show add-subtask command help
 function showAddSubtaskHelp() {
   console.log(boxen(
@@ -659,4 +659,4 @@ function showRemoveSubtaskHelp() {
     '  task-master remove-subtask --id=\'5.2\' --convert',
     { padding: 1, borderColor: 'blue', borderStyle: 'round' }
   ));
-} 
+}

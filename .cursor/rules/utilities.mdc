@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
 # Utility Function Guidelines
@@ -35,10 +35,10 @@ alwaysApply: false
     if (!text || text.length <= maxLength) {
       return text;
     }
-    
+
     // Side effect - modifying global state or logging
     console.log(`Truncating text from ${text.length} to ${maxLength} chars`);
-    
+
     return text.slice(0, maxLength - 3) + '...';
   }
   ```
@@ -112,7 +112,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
   - ❌ DON'T: Add direct console.log calls outside the logging utility
   - **Note on Passed Loggers**: When a logger object (like the FastMCP `log` object) is passed *as a parameter* (e.g., as `mcpLog`) into core Task Master functions, the receiving function often expects specific methods (`.info`, `.warn`, `.error`, etc.) to be directly callable on that object (e.g., `mcpLog[level](mdc:...)`). If the passed logger doesn't have this exact structure, a wrapper object may be needed. See the **Handling Logging Context (`mcpLog`)** section in [`mcp.mdc`](mdc:.cursor/rules/mcp.mdc) for the standard pattern used in direct functions.
 
-- **Logger Wrapper Pattern**: 
+- **Logger Wrapper Pattern**:
   - ✅ DO: Use the logger wrapper pattern when passing loggers to prevent `mcpLog[level] is not a function` errors:
   ```javascript
   // Standard logWrapper pattern to wrap FastMCP's log object
@@ -123,7 +123,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     debug: (message, ...args) => log.debug && log.debug(message, ...args),
     success: (message, ...args) => log.info(message, ...args) // Map success to info
   };
-  
+
   // Pass this wrapper as mcpLog to ensure consistent method availability
   // This also ensures output format is set to 'json' in many core functions
   const options = { mcpLog: logWrapper, session };
@@ -142,7 +142,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     warn: 2,
     error: 3
   };
-  
+
   function log(level, ...args) {
     const icons = {
       debug: chalk.gray('🔍'),
@@ -151,7 +151,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
       error: chalk.red('❌'),
       success: chalk.green('✅')
     };
-    
+
     if (LOG_LEVELS[level] >= LOG_LEVELS[CONFIG.logLevel]) {
       const icon = icons[level] || '';
       console.log(`${icon} ${args.join(' ')}`);
@@ -170,35 +170,35 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
 
   ```javascript
   // ✅ DO: Use the silent mode control functions properly
-  
+
   // Example of proper implementation in utils.js:
-  
+
   // Global silent mode flag (private to the module)
   let silentMode = false;
-  
+
   // Enable silent mode
   function enableSilentMode() {
     silentMode = true;
   }
-  
+
   // Disable silent mode
   function disableSilentMode() {
     silentMode = false;
   }
-  
+
   // Check if silent mode is enabled
   function isSilentMode() {
     return silentMode;
   }
-  
+
   // Example of proper usage in another module:
   import { enableSilentMode, disableSilentMode, isSilentMode } from './utils.js';
-  
+
   // Check current status
   if (!isSilentMode()) {
     console.log('Silent mode is not enabled');
   }
-  
+
   // Use try/finally pattern to ensure silent mode is disabled
   try {
     enableSilentMode();
@@ -217,7 +217,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     if (isSilentMode()) {
       return;
     }
-    
+
     // Rest of logging logic...
   }
   ```
@@ -231,7 +231,7 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
   export async function someOperationDirect(args, log) {
     let result;
     const tasksPath = findTasksJsonPath(args, log); // Get path first
-    
+
     // Option 1: Core function handles 'json' format (Preferred)
     try {
       result = await coreFunction(tasksPath, ...otherArgs, 'json'); // Pass 'json'
@@ -305,11 +305,11 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     if (typeof id === 'string' && id.includes('.')) {
       return id; // Already formatted as a string with a dot (e.g., "1.2")
     }
-    
+
     if (typeof id === 'number') {
       return id.toString();
     }
-    
+
     return id;
   }
   ```
@@ -331,30 +331,30 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     if (!taskId || !tasks || !Array.isArray(tasks)) {
       return null;
     }
-    
+
     // Check if it's a subtask ID (e.g., "1.2")
     if (typeof taskId === 'string' && taskId.includes('.')) {
       const [parentId, subtaskId] = taskId.split('.').map(id => parseInt(id, 10));
       const parentTask = tasks.find(t => t.id === parentId);
-      
+
       if (!parentTask || !parentTask.subtasks) {
         return null;
       }
-      
+
       const subtask = parentTask.subtasks.find(st => st.id === subtaskId);
       if (subtask) {
         // Add reference to parent task for context
-        subtask.parentTask = { 
-          id: parentTask.id, 
+        subtask.parentTask = {
+          id: parentTask.id,
           title: parentTask.title,
           status: parentTask.status
         };
         subtask.isSubtask = true;
       }
-      
+
       return subtask || null;
     }
-    
+
     const id = parseInt(taskId, 10);
     return tasks.find(t => t.id === id) || null;
   }
@@ -382,29 +382,29 @@ Taskmaster configuration (excluding API keys) is primarily managed through the `
     visited.add(subtaskId);
     recursionStack.add(subtaskId);
     path.push(subtaskId);
-    
+
     const cyclesToBreak = [];
-    
+
     // Get all dependencies of the current subtask
     const dependencies = dependencyMap.get(subtaskId) || [];
-    
+
     // For each dependency
     for (const depId of dependencies) {
       // If not visited, recursively check for cycles
       if (!visited.has(depId)) {
         const cycles = findCycles(depId, dependencyMap, visited, recursionStack, [...path]);
         cyclesToBreak.push(...cycles);
-      } 
+      }
       // If the dependency is in the recursion stack, we found a cycle
       else if (recursionStack.has(depId)) {
         // The last edge in the cycle is what we want to remove
         cyclesToBreak.push(depId);
       }
     }
-    
+
     // Remove the node from recursion stack before returning
     recursionStack.delete(subtaskId);
-    
+
     return cyclesToBreak;
   }
   ```
@@ -441,7 +441,7 @@ These utilities specifically support the implementation and execution of MCP too
 
 - **`withNormalizedProjectRoot(executeFn)`**:
     - **Purpose**: A Higher-Order Function (HOF) designed to wrap a tool's `execute` method.
-    - **Logic**: 
+    - **Logic**:
         1. Determines the raw project root (from `args.projectRoot` or `getRawProjectRootFromSession`).
         2. Normalizes the raw path using `normalizeProjectRoot`.
         3. Injects the normalized, absolute path back into the `args` object as `args.projectRoot`.
@@ -451,7 +451,7 @@ These utilities specifically support the implementation and execution of MCP too
       ```javascript
       // In mcp-server/src/tools/your-tool.js
       import { withNormalizedProjectRoot } from './utils.js';
-      
+
       export function registerYourTool(server) {
           server.addTool({
               // ... name, description, parameters ...
@@ -488,8 +488,8 @@ These utilities specifically support the implementation and execution of MCP too
     - **Purpose**: Legacy function to extract *and normalize* the project root from the session. Replaced by the HOF pattern but potentially still used.
     - **Recommendation**: Prefer using the `withNormalizedProjectRoot` HOF in tools instead of calling this directly.
 
-- **`executeTaskMasterCommand(...)`**: 
-    - **Purpose**: Executes `task-master` CLI command as a fallback. 
+- **`executeTaskMasterCommand(...)`**:
+    - **Purpose**: Executes `task-master` CLI command as a fallback.
     - **Recommendation**: Deprecated for most uses; prefer direct function calls.
 
 ## Export Organization
@@ -508,21 +508,21 @@ export {
   // Configuration
   CONFIG,
   LOG_LEVELS,
-  
+
   // Logging
   log,
-  
+
   // File operations
   readJSON,
   writeJSON,
-  
+
   // String manipulation
   sanitizePrompt,
   truncate,
-  
+
   // Task utilities
   // ... (taskExists, formatTaskId, findTaskById, etc.)
-  
+
   // Graph algorithms
   findCycles,
 };
@@ -561,7 +561,7 @@ export {
   ```javascript
   // ✅ DO: Use ContextGatherer for consistent context extraction
   import { ContextGatherer } from '../utils/contextGatherer.js';
-  
+
   const gatherer = new ContextGatherer(projectRoot, tasksPath);
   const result = await gatherer.gather({
     tasks: ['15', '16.2'],
@@ -584,7 +584,7 @@ export {
   ```javascript
   // ✅ DO: Use FuzzyTaskSearch for intelligent task discovery
   import { FuzzyTaskSearch } from '../utils/fuzzyTaskSearch.js';
-  
+
   const fuzzySearch = new FuzzyTaskSearch(tasksData.tasks, 'research');
   const searchResults = fuzzySearch.findRelevantTasks(query, {
     maxResults: 8,
@@ -600,7 +600,7 @@ export {
   - ✅ DO: Sort discovered task IDs numerically for better readability
   - ❌ DON'T: Replace explicit user task selections with fuzzy results
 
-Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for detailed implementation patterns, [`mcp.mdc`](mdc:.cursor/rules/mcp.mdc) and [`architecture.mdc`](mdc:.cursor/rules/architecture.mdc) for more context on MCP server architecture and integration. 
+Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for detailed implementation patterns, [`mcp.mdc`](mdc:.cursor/rules/mcp.mdc) and [`architecture.mdc`](mdc:.cursor/rules/architecture.mdc) for more context on MCP server architecture and integration.
 
 ## File System Operations
 
@@ -617,12 +617,12 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       if (!fs.existsSync(filepath)) {
         return null; // or appropriate default
       }
-      
+
       let data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
-      
+
       // Silent migration for tasks.json files: Transform old format to tagged format
       const isTasksFile = filepath.includes('tasks.json') || path.basename(filepath) === 'tasks.json';
-      
+
       if (data && data.tasks && Array.isArray(data.tasks) && !data.master && isTasksFile) {
         // Migrate from old format { "tasks": [...] } to new format { "master": { "tasks": [...] } }
         const migratedData = {
@@ -630,23 +630,23 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
             tasks: data.tasks
           }
         };
-        
+
         writeJSON(filepath, migratedData);
-        
+
         // Set global flag for CLI notice and perform complete migration
         global.taskMasterMigrationOccurred = true;
         performCompleteTagMigration(filepath);
-        
+
         data = migratedData;
       }
-      
+
       return data;
     } catch (error) {
       log('error', `Failed to read JSON from ${filepath}: ${error.message}`);
       return null;
     }
   }
-  
+
   function writeJSON(filepath, data) {
     try {
       const dirPath = path.dirname(filepath);
@@ -671,7 +671,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
   function findProjectRoot(startPath = process.cwd()) {
     let currentPath = path.resolve(startPath);
     const rootPath = path.parse(currentPath).root;
-    
+
     while (currentPath !== rootPath) {
       const taskMasterPath = path.join(currentPath, '.taskmaster');
       if (fs.existsSync(taskMasterPath)) {
@@ -679,7 +679,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       }
       currentPath = path.dirname(currentPath);
     }
-    
+
     return null; // Not found
   }
   ```
@@ -697,43 +697,43 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     if (!data) {
       return [];
     }
-    
+
     // Handle legacy format - direct tasks array
     if (data.tasks && Array.isArray(data.tasks)) {
       return data.tasks;
     }
-    
+
     // Handle tagged format - tasks under specific tag
     if (data[tagName] && data[tagName].tasks && Array.isArray(data[tagName].tasks)) {
       return data[tagName].tasks;
     }
-    
+
     return [];
   }
-  
+
   function setTasksForTag(data, tagName = 'master', tasks) {
     // Ensure data object exists
     if (!data) {
       data = {};
     }
-    
+
     // Create tag structure if it doesn't exist
     if (!data[tagName]) {
       data[tagName] = {};
     }
-    
+
     // Set tasks for the tag
     data[tagName].tasks = tasks;
-    
+
     return data;
   }
-  
+
   function getCurrentTag() {
     // Get current tag from state.json or default to 'master'
     try {
       const projectRoot = findProjectRoot();
       if (!projectRoot) return 'master';
-      
+
       const statePath = path.join(projectRoot, '.taskmaster', 'state.json');
       if (fs.existsSync(statePath)) {
         const state = readJSON(statePath);
@@ -742,7 +742,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     } catch (error) {
       log('debug', `Error reading current tag: ${error.message}`);
     }
-    
+
     return 'master';
   }
   ```
@@ -758,19 +758,19 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     try {
       // Derive project root from tasks.json path
       const projectRoot = findProjectRoot(path.dirname(tasksJsonPath)) || path.dirname(tasksJsonPath);
-      
+
       // 1. Migrate config.json - add defaultTag and tags section
       const configPath = path.join(projectRoot, '.taskmaster', 'config.json');
       if (fs.existsSync(configPath)) {
         migrateConfigJson(configPath);
       }
-      
+
       // 2. Create state.json if it doesn't exist
       const statePath = path.join(projectRoot, '.taskmaster', 'state.json');
       if (!fs.existsSync(statePath)) {
         createStateJson(statePath);
       }
-      
+
       if (getDebugFlag()) {
         log('debug', 'Completed tagged task lists migration for project');
       }
@@ -780,14 +780,14 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       }
     }
   }
-  
+
   function migrateConfigJson(configPath) {
     try {
       const config = readJSON(configPath);
       if (!config) return;
-      
+
       let modified = false;
-      
+
       // Add global.defaultTag if missing
       if (!config.global) {
         config.global = {};
@@ -796,7 +796,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         config.global.defaultTag = 'master';
         modified = true;
       }
-      
+
       // Add tags section if missing
       if (!config.tags) {
         config.tags = {
@@ -804,7 +804,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         };
         modified = true;
       }
-      
+
       if (modified) {
         writeJSON(configPath, config);
         if (getDebugFlag()) {
@@ -817,7 +817,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       }
     }
   }
-  
+
   function createStateJson(statePath) {
     try {
       const initialState = {
@@ -825,7 +825,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         lastSwitched: new Date().toISOString(),
         migrationNoticeShown: false
       };
-      
+
       writeJSON(statePath, initialState);
       if (getDebugFlag()) {
         log('debug', 'Created initial state.json for tagged task system');
@@ -836,15 +836,15 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       }
     }
   }
-  
+
   function markMigrationForNotice() {
     try {
       const projectRoot = findProjectRoot();
       if (!projectRoot) return;
-      
+
       const statePath = path.join(projectRoot, '.taskmaster', 'state.json');
       const state = readJSON(statePath) || {};
-      
+
       state.migrationNoticeShown = false; // Reset to show notice
       writeJSON(statePath, state);
     } catch (error) {
@@ -865,15 +865,15 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
   ```javascript
   // ✅ DO: Implement consistent logging with silent mode
   let silentMode = false;
-  
+
   function log(level, ...messages) {
     if (silentMode && level !== 'error') {
       return; // Suppress non-error logs in silent mode
     }
-    
+
     const timestamp = new Date().toISOString();
     const formattedMessage = messages.join(' ');
-    
+
     switch (level) {
       case 'error':
         console.error(`[ERROR] ${formattedMessage}`);
@@ -893,15 +893,15 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         console.log(formattedMessage);
     }
   }
-  
+
   function enableSilentMode() {
     silentMode = true;
   }
-  
+
   function disableSilentMode() {
     silentMode = false;
   }
-  
+
   function isSilentMode() {
     return silentMode;
   }
@@ -922,30 +922,30 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     }
     return tasks.find(task => task.id === taskId) || null;
   }
-  
+
   function findSubtaskById(tasks, parentId, subtaskId) {
     const parentTask = findTaskById(tasks, parentId);
     if (!parentTask || !parentTask.subtasks) {
       return null;
     }
-    
+
     return parentTask.subtasks.find(subtask => subtask.id === subtaskId) || null;
   }
-  
+
   function getNextTaskId(tasks) {
     if (!Array.isArray(tasks) || tasks.length === 0) {
       return 1;
     }
-    
+
     const maxId = Math.max(...tasks.map(task => task.id));
     return maxId + 1;
   }
-  
+
   function getNextSubtaskId(parentTask) {
     if (!parentTask.subtasks || parentTask.subtasks.length === 0) {
       return 1;
     }
-    
+
     const maxId = Math.max(...parentTask.subtasks.map(subtask => subtask.id));
     return maxId + 1;
   }
@@ -964,19 +964,19 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     if (!str || typeof str !== 'string') {
       return '';
     }
-    
+
     if (str.length <= maxLength) {
       return str;
     }
-    
+
     return str.substring(0, maxLength - 3) + '...';
   }
-  
+
   function formatDuration(ms) {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -985,12 +985,12 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
       return `${seconds}s`;
     }
   }
-  
+
   function capitalizeFirst(str) {
     if (!str || typeof str !== 'string') {
       return '';
     }
-    
+
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
   ```
@@ -1008,7 +1008,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     const cycles = [];
     const visited = new Set();
     const recStack = new Set();
-    
+
     function dfs(taskId, path = []) {
       if (recStack.has(taskId)) {
         // Found a cycle
@@ -1017,37 +1017,37 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         cycles.push(cycle);
         return;
       }
-      
+
       if (visited.has(taskId)) {
         return;
       }
-      
+
       visited.add(taskId);
       recStack.add(taskId);
-      
+
       const task = findTaskById(tasks, taskId);
       if (task && task.dependencies) {
         task.dependencies.forEach(depId => {
           dfs(depId, path.concat([taskId]));
         });
       }
-      
+
       recStack.delete(taskId);
     }
-    
+
     tasks.forEach(task => {
       if (!visited.has(task.id)) {
         dfs(task.id);
       }
     });
-    
+
     return cycles;
   }
-  
+
   function validateDependencies(tasks) {
     const validationErrors = [];
     const taskIds = new Set(tasks.map(task => task.id));
-    
+
     tasks.forEach(task => {
       if (task.dependencies) {
         task.dependencies.forEach(depId => {
@@ -1061,7 +1061,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         });
       }
     });
-    
+
     return validationErrors;
   }
   ```
@@ -1080,12 +1080,12 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     if (sessionEnv && sessionEnv[key]) {
       return sessionEnv[key];
     }
-    
+
     // Then check process environment
     if (process.env[key]) {
       return process.env[key];
     }
-    
+
     // Finally try .env file if in project root
     try {
       const projectRoot = findProjectRoot();
@@ -1094,7 +1094,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
         if (fs.existsSync(envPath)) {
           const envContent = fs.readFileSync(envPath, 'utf8');
           const lines = envContent.split('\n');
-          
+
           for (const line of lines) {
             const [envKey, envValue] = line.split('=');
             if (envKey && envKey.trim() === key) {
@@ -1106,13 +1106,13 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     } catch (error) {
       log('debug', `Error reading .env file: ${error.message}`);
     }
-    
+
     return undefined;
   }
-  
+
   function getDebugFlag() {
-    const debugFlag = resolveEnvVariable('TASKMASTER_DEBUG') || 
-                     resolveEnvVariable('DEBUG') || 
+    const debugFlag = resolveEnvVariable('TASKMASTER_DEBUG') ||
+                     resolveEnvVariable('DEBUG') ||
                      'false';
     return debugFlag.toLowerCase() === 'true';
   }
@@ -1132,7 +1132,7 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     readJSON,
     writeJSON,
     findProjectRoot,
-    
+
     // Tagged task system utilities
     getTasksForTag,
     setTasksForTag,
@@ -1141,32 +1141,32 @@ Refer to [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for 
     migrateConfigJson,
     createStateJson,
     markMigrationForNotice,
-    
+
     // Logging utilities
     log,
     enableSilentMode,
     disableSilentMode,
     isSilentMode,
-    
+
     // Task utilities
     findTaskById,
     findSubtaskById,
     getNextTaskId,
     getNextSubtaskId,
-    
+
     // String utilities
     truncate,
     formatDuration,
     capitalizeFirst,
-    
+
     // Dependency utilities
     findCycles,
     validateDependencies,
-    
+
     // Environment utilities
     resolveEnvVariable,
     getDebugFlag,
-    
+
     // Legacy utilities (maintained for compatibility)
     aggregateTelemetry
   };

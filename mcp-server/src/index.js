@@ -28,11 +28,8 @@ class TaskMasterMCPServer {
 		};
 
 		this.server = new FastMCP(this.options);
-		this.initialized = false;
-
-		this.server.addResource({});
-
-		this.server.addResourceTemplate({});
+		// Resources and resource templates will be added by tool registration
+		// Remove empty placeholder objects that cause empty responses
 
 		// Bind methods
 		this.init = this.init.bind(this);
@@ -49,9 +46,8 @@ class TaskMasterMCPServer {
 	async init() {
 		if (this.initialized) return;
 
-		// Pass the manager instance to the tool registration function
-		registerTaskMasterTools(this.server, this.asyncManager);
-
+		// Register Task Master tools
+		registerTaskMasterTools(this.server);
 		this.initialized = true;
 
 		return this;

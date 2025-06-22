@@ -43,26 +43,26 @@ alwaysApply: false
   ```javascript
   // ✅ DO: Use consistent box styles by content type
   // For success messages:
-  boxen(content, { 
-    padding: 1, 
-    borderColor: 'green', 
-    borderStyle: 'round', 
-    margin: { top: 1 } 
+  boxen(content, {
+    padding: 1,
+    borderColor: 'green',
+    borderStyle: 'round',
+    margin: { top: 1 }
   })
 
   // For errors:
-  boxen(content, { 
-    padding: 1, 
-    borderColor: 'red', 
+  boxen(content, {
+    padding: 1,
+    borderColor: 'red',
     borderStyle: 'round'
   })
 
   // For information:
-  boxen(content, { 
-    padding: 1, 
-    borderColor: 'blue', 
-    borderStyle: 'round', 
-    margin: { top: 1, bottom: 1 } 
+  boxen(content, {
+    padding: 1,
+    borderColor: 'blue',
+    borderStyle: 'round',
+    margin: { top: 1, bottom: 1 }
   })
   ```
 
@@ -85,7 +85,7 @@ alwaysApply: false
     ],
     colWidths: [5, 40, 15, 10, 20]
   });
-  
+
   // Add content rows
   table.push([
     task.id,
@@ -94,7 +94,7 @@ alwaysApply: false
     chalk.white(task.priority || 'medium'),
     formatDependenciesWithStatus(task.dependencies, allTasks, true)
   ]);
-  
+
   console.log(table.toString());
   ```
 
@@ -127,7 +127,7 @@ alwaysApply: false
 - **Progress Reporting**:
   - Use visual indicators for progress (bars, percentages)
   - Include both numeric and visual representations
-  
+
   ```javascript
   // ✅ DO: Show clear progress indicators
   console.log(`${chalk.cyan('Tasks:')} ${completedTasks}/${totalTasks} (${completionPercentage.toFixed(1)}%)`);
@@ -161,14 +161,14 @@ alwaysApply: false
   // ✅ DO: Display detailed token breakdown
   function displayDetailedTokenBreakdown(tokenBreakdown, systemTokens, userTokens) {
     const sections = [];
-    
+
     if (tokenBreakdown.tasks?.length > 0) {
-      const taskDetails = tokenBreakdown.tasks.map(task => 
+      const taskDetails = tokenBreakdown.tasks.map(task =>
         `${task.type === 'subtask' ? '  ' : ''}${task.id}: ${task.tokens.toLocaleString()}`
       ).join('\n');
       sections.push(`Tasks (${tokenBreakdown.tasks.reduce((sum, t) => sum + t.tokens, 0).toLocaleString()}):\n${taskDetails}`);
     }
-    
+
     const content = sections.join('\n\n');
     console.log(boxen(content, {
       title: chalk.cyan('Token Usage'),
@@ -186,11 +186,11 @@ alwaysApply: false
   ```javascript
   // ✅ DO: Enhance code blocks with syntax highlighting
   import { highlight } from 'cli-highlight';
-  
+
   function processCodeBlocks(text) {
     return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
       try {
-        const highlighted = highlight(code.trim(), { 
+        const highlighted = highlight(code.trim(), {
           language: language || 'javascript',
           theme: 'default'
         });
@@ -222,7 +222,7 @@ alwaysApply: false
       }
     );
     console.log(header);
-    
+
     // Process and display main content
     const processedResult = processCodeBlocks(result);
     const contentBox = boxen(processedResult, {
@@ -232,9 +232,9 @@ alwaysApply: false
       borderColor: 'gray'
     });
     console.log(contentBox);
-    
+
     console.log(chalk.green('✓ Operation complete'));
   }
   ```
 
-Refer to [`ui.js`](mdc:scripts/modules/ui.js) for implementation examples, [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for context display patterns, and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines. 
+Refer to [`ui.js`](mdc:scripts/modules/ui.js) for implementation examples, [`context_gathering.mdc`](mdc:.cursor/rules/context_gathering.mdc) for context display patterns, and [`new_features.mdc`](mdc:.cursor/rules/new_features.mdc) for integration guidelines.

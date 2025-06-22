@@ -55,18 +55,18 @@ flowchart TD
     C --> D[Set task status: in-progress]
     D --> E[Get task context & expand if needed<br/>Tasks automatically use current tag]
     E --> F[Identify next subtask]
-    
+
     F --> G[Set subtask: in-progress]
     G --> H[Research & collect context<br/>update_subtask with findings]
     H --> I[Implement subtask]
     I --> J[Update subtask with completion]
     J --> K[Set subtask: done]
     K --> L[Git commit subtask]
-    
+
     L --> M{More subtasks?}
     M -->|Yes| F
     M -->|No| N[Run final tests]
-    
+
     N --> O[Commit tests if added]
     O --> P[Push task branch]
     P --> Q[Create Pull Request]
@@ -74,7 +74,7 @@ flowchart TD
     R --> S[Switch to main & pull]
     S --> T[Delete task branch]
     T --> U[Ready for next task]
-    
+
     style A fill:#e1f5fe
     style C fill:#f3e5f5
     style G fill:#fff3e0
@@ -299,7 +299,7 @@ Brief description of the main task objective.
 
 ## Subtasks Completed
 - [x] 4.1: Initialize project with npm and install dependencies
-- [x] 4.2: Configure TypeScript, ESLint and Prettier  
+- [x] 4.2: Configure TypeScript, ESLint and Prettier
 - [x] 4.3: Create basic Express app with middleware and health check route
 
 ## Implementation Details

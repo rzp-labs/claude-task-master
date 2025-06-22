@@ -265,12 +265,7 @@ function createDevScriptAction(commandName) {
 // 			});
 
 // 			child.on('close', (code) => {
-// 				process.exit(code);
-// 			});
-// 		});
-// }
-
-// Set up the command-line interface
+	// Set up the command-line interface
 const program = new Command();
 
 program
@@ -283,11 +278,8 @@ program
 		return ''; // Return empty string to prevent commander's default help
 	});
 
-// Add custom help option to directly call our help display
+// Add custom help option with our custom help display
 program.helpOption('-h, --help', 'Display help information');
-program.on('--help', () => {
-	displayHelp();
-});
 
 // // Add special case commands
 // registerInitCommand(program);
@@ -322,9 +314,6 @@ tempProgram.commands.forEach((cmd) => {
 	// Set the action to proxy to dev.js
 	newCmd.action(createDevScriptAction(cmd.name()));
 });
-
-// Parse the command line arguments
-program.parse(process.argv);
 
 // Add global error handling for unknown commands and options
 process.on('uncaughtException', (err) => {
@@ -374,6 +363,9 @@ if (process.argv.length <= 2) {
 	displayHelp();
 	process.exit(0);
 }
+
+// Parse the command line arguments
+program.parse(process.argv);
 
 // Add exports at the end of the file
 export { detectCamelCaseFlags };

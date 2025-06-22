@@ -130,7 +130,7 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
    ```javascript
    // Example: Core function signature
    // async function expandTask(tasksPath, taskId, numSubtasks, useResearch, additionalContext, options)
-   
+
    // Direct function implementation - extract only parameters that exist in core
    export async function expandTaskDirect(args, log, context = {}) {
      // Extract parameters that match the core function
@@ -138,13 +138,13 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
      const numSubtasks = args.num ? parseInt(args.num, 10) : undefined;
      const useResearch = args.research === true;
      const additionalContext = args.prompt || '';
-     
+
      // Later pass these parameters in the correct order to the core function
      const result = await expandTask(
-       tasksPath, 
-       taskId, 
-       numSubtasks, 
-       useResearch, 
+       tasksPath,
+       taskId,
+       numSubtasks,
+       useResearch,
        additionalContext,
        { mcpLog: log, session: context.session }
      );
@@ -160,7 +160,7 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
      // Only create a loading indicator if not in silent mode
      loadingIndicator = startLoadingIndicator('Processing...');
    }
-   
+
    // INCORRECT: Don't access global variables directly
    if (!silentMode) { // ❌ WRONG
      loadingIndicator = startLoadingIndicator('Processing...');
@@ -178,19 +178,19 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
        // Argument preparation
        const tasksPath = findTasksJsonPath(args, log);
        const someArg = args.someArg;
-       
+
        // Enable silent mode to prevent console logs
        enableSilentMode();
-       
+
        try {
          // Call core function which might produce console output
          const result = await someCoreFunction(tasksPath, someArg);
-         
+
          // Return standardized result object
-         return { 
-           success: true, 
-           data: result, 
-           fromCache: false 
+         return {
+           success: true,
+           data: result,
+           fromCache: false
          };
        } finally {
          // ALWAYS disable silent mode in finally block
@@ -199,10 +199,10 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
      } catch (error) {
        // Standard error handling
        log.error(`Error in direct function: ${error.message}`);
-       return { 
-         success: false, 
-         error: { code: 'OPERATION_ERROR', message: error.message }, 
-         fromCache: false 
+       return {
+         success: false,
+         error: { code: 'OPERATION_ERROR', message: error.message },
+         fromCache: false
        };
      }
    }
@@ -213,7 +213,7 @@ Direct functions (the `*Direct` functions in `mcp-server/src/core/direct-functio
    ```javascript
    // Check both the function parameter and global state
    const isSilent = options.silentMode || (typeof options.silentMode === 'undefined' && isSilentMode());
-   
+
    if (!isSilent) {
      console.log('Operation starting...');
    }

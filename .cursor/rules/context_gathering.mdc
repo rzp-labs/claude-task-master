@@ -1,6 +1,6 @@
 ---
 description: Standardized patterns for gathering and processing context from multiple sources in Task Master commands, particularly for AI-powered features.
-globs: 
+globs:
 alwaysApply: false
 ---
 # Context Gathering Patterns and Utilities
@@ -93,12 +93,12 @@ async function commandAction(prompt, options) {
     // 1. Parameter validation and parsing
     const taskIds = options.id ? parseTaskIds(options.id) : [];
     const filePaths = options.files ? parseFilePaths(options.files) : [];
-    
+
     // 2. Initialize context gatherer
     const projectRoot = findProjectRoot() || '.';
     const tasksPath = path.join(projectRoot, 'tasks', 'tasks.json');
     const gatherer = new ContextGatherer(projectRoot, tasksPath);
-    
+
     // 3. Auto-discover relevant tasks if none specified
     if (taskIds.length === 0) {
         const fuzzySearch = new FuzzyTaskSearch(tasksData.tasks, 'research');
@@ -107,7 +107,7 @@ async function commandAction(prompt, options) {
         );
         taskIds.push(...discoveredIds);
     }
-    
+
     // 4. Gather context with token breakdown
     const contextResult = await gatherer.gather({
         tasks: taskIds,
@@ -117,15 +117,15 @@ async function commandAction(prompt, options) {
         format: 'research',
         includeTokenCounts: true
     });
-    
+
     // 5. Display token breakdown (for CLI)
     if (outputFormat === 'text') {
         displayDetailedTokenBreakdown(contextResult.tokenBreakdown);
     }
-    
+
     // 6. Use context in AI call
     const aiResult = await generateTextService(role, session, systemPrompt, userPrompt);
-    
+
     // 7. Display results with enhanced formatting
     displayResults(aiResult, contextResult.tokenBreakdown);
 }
@@ -135,25 +135,25 @@ async function commandAction(prompt, options) {
 ```javascript
 function displayDetailedTokenBreakdown(tokenBreakdown, systemTokens, userTokens) {
     const sections = [];
-    
+
     // Build context breakdown
     if (tokenBreakdown.tasks?.length > 0) {
-        const taskDetails = tokenBreakdown.tasks.map(task => 
+        const taskDetails = tokenBreakdown.tasks.map(task =>
             `${task.type === 'subtask' ? '  ' : ''}${task.id}: ${task.tokens.toLocaleString()}`
         ).join('\n');
         sections.push(`Tasks (${tokenBreakdown.tasks.reduce((sum, t) => sum + t.tokens, 0).toLocaleString()}):\n${taskDetails}`);
     }
-    
+
     if (tokenBreakdown.files?.length > 0) {
         const fileDetails = tokenBreakdown.files.map(file =>
             `  ${file.path}: ${file.tokens.toLocaleString()} (${file.size})`
         ).join('\n');
         sections.push(`Files (${tokenBreakdown.files.reduce((sum, f) => sum + f.tokens, 0).toLocaleString()}):\n${fileDetails}`);
     }
-    
+
     // Add prompts breakdown
     sections.push(`Prompts: system ${systemTokens.toLocaleString()}, user ${userTokens.toLocaleString()}`);
-    
+
     // Display in clean box
     const content = sections.join('\n\n');
     console.log(boxen(content, {
@@ -181,10 +181,10 @@ function displayResults(result, query, detailLevel, tokenBreakdown) {
         }
     );
     console.log(header);
-    
+
     // Process and highlight code blocks
     const processedResult = processCodeBlocks(result);
-    
+
     // Main content in clean box
     const contentBox = boxen(processedResult, {
         padding: { top: 1, bottom: 1, left: 2, right: 2 },
@@ -193,7 +193,7 @@ function displayResults(result, query, detailLevel, tokenBreakdown) {
         borderColor: 'gray'
     });
     console.log(contentBox);
-    
+
     console.log(chalk.green('✓ Research complete'));
 }
 ```
@@ -207,7 +207,7 @@ import { highlight } from 'cli-highlight';
 function processCodeBlocks(text) {
     return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
         try {
-            const highlighted = highlight(code.trim(), { 
+            const highlighted = highlight(code.trim(), {
                 language: language || 'javascript',
                 theme: 'default'
             });
